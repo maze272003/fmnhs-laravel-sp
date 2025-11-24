@@ -4,6 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeacherAuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminStudentController;
+use App\Http\Controllers\AdminTeacherController;
 // 
 // make default is welcome blade
 Route::get('/', function () {
@@ -47,4 +49,9 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
+
+    Route::get('/admin/students', [AdminStudentController::class, 'index'])->name('admin.students.index');
+    
+    // Manage Teachers
+    Route::get('/admin/teachers', [AdminTeacherController::class, 'index'])->name('admin.teachers.index');
 });

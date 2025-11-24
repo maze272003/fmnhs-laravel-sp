@@ -17,36 +17,21 @@ class AuthController extends Controller
     // Process the login
     public function login(Request $request)
     {
-        // 1. Validation: Huwag na 'email' rule ang gamitin kasi baka LRN ang i-input
-        $request->validate([
-            'login_id' => ['required'], // Ito yung name sa form sa Step 1
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        // 2. Kunin ang input
-        $login_id = $request->input('login_id');
-
-        // 3. LOGIC: Check kung Email format ba ang input?
-        // Kung valid email format -> set field to 'email'
-        // Kung hindi -> set field to 'lrn'
-        $fieldType = filter_var($login_id, FILTER_VALIDATE_EMAIL) ? 'email' : 'lrn';
-
-        // 4. Buuin ang credentials array
-        $credentials = [
-            $fieldType => $login_id, // Magiging ['email' => '...'] OR ['lrn' => '...']
-            'password' => $request->input('password')
-        ];
-
-        // 5. Attempt Login
+        // PALITAN ITO: Magdagdag ng guard('student')
         if (Auth::guard('student')->attempt($credentials)) {
             $request->session()->regenerate();
+            
             return redirect()->route('student.dashboard');
         }
 
-        // 6. Error handling
         return back()->withErrors([
-            'login_id' => 'The provided credentials do not match our records.',
-        ])->onlyInput('login_id');
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
