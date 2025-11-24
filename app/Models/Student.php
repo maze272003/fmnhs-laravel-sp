@@ -28,4 +28,5 @@ class Student extends Authenticatable
         'password',
         'remember_token',
     ];
+    public function grades() { return $this->hasMany(Grade::class); }
 }

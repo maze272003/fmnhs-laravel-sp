@@ -4,8 +4,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeacherAuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\AdminStudentController;
-use App\Http\Controllers\AdminTeacherController;
+use App\Http\Controllers\Admin\AdminStudentController;
+use App\Http\Controllers\Admin\AdminTeacherController;
+use App\Http\Controllers\Student\StudentController;
 // 
 // make default is welcome blade
 Route::get('/', function () {
@@ -33,6 +34,8 @@ Route::middleware(['auth:student'])->group(function () {
     Route::get('/student/dashboard', function () {
         return view('student.dashboard'); 
     })->name('student.dashboard');
+
+   Route::get('/student/grades', [StudentController::class, 'grades'])->name('student.grades');
 });
 
 
