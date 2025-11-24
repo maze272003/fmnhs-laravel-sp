@@ -4,12 +4,16 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeacherAuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAuthController;
-
+// 
+// make default is welcome blade
+Route::get('/', function () {
+    return view('welcome');
+});
 // 1. The Login Form
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/student/login', [AuthController::class, 'showLoginForm'])->name('login');
 
 // 2. The Logic to Process Login
-Route::post('student/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/student/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.login');
