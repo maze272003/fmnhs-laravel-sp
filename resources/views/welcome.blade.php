@@ -105,10 +105,27 @@
                                 
                                 @if($news->image)
                                     <div class="w-full h-48 overflow-hidden relative group">
-                                        <img src="{{ asset('storage/' . $news->image) }}" 
-                                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                             alt="Announcement Image"
-                                             onerror="this.style.display='none'">
+                                        @php
+                                            // 1. Kukunin ang filename lang (para sa file_exists check sa public folder)
+                                            $filename = basename($news->image);
+
+                                            // 2. Titingnan kung saan banda nakasave ang file
+                                            if (file_exists(public_path('uploads/announcements/' . $filename))) {
+                                                // Scenario A: Naka-save sa public/uploads (Hostinger/Direct Upload)
+                                                $finalImage = asset('uploads/announcements/' . $filename);
+                                            } 
+                                            // 3. Kung wala, gagamitin ang Standard Local Path (Storage)
+                                            else {
+                                                // Scenario B: Naka-save sa storage/app/public (Standard Local)
+                                                // Gagamitin ang buong path galing sa DB
+                                                $finalImage = asset('storage/' . $news->image);
+                                            }
+                                        @endphp
+
+                                        <img src="{{ $finalImage }}" 
+                                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            alt="{{ $news->title }}"
+                                            onerror="this.style.display='none'">
                                         
                                         <div class="absolute top-2 right-2">
                                             @if($news->role == 'admin')
@@ -122,9 +139,9 @@
                                             @endif
                                         </div>
                                     </div>
-                                @else
-                                    <div class="w-full h-2 bg-gradient-to-r {{ $news->role == 'admin' ? 'from-slate-600 to-slate-800' : 'from-emerald-400 to-emerald-600' }}"></div>
                                 @endif
+                                    <div class="w-full h-2 bg-gradient-to-r {{ $news->role == 'admin' ? 'from-slate-600 to-slate-800' : 'from-emerald-400 to-emerald-600' }}"></div>
+                                
 
                                 <div class="p-6 flex flex-col flex-grow">
                                     <div class="flex justify-between items-start mb-2">

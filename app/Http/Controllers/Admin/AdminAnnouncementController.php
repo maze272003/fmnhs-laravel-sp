@@ -15,33 +15,53 @@ class AdminAnnouncementController extends Controller
         return view('admin.announcement', compact('announcements'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required',
-            'content' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4048'
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required',
+        'content' => 'required',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4048'
+    ]);
 
-        $imagePath = null;
+    $imagePath = null;
 
-        if ($request->hasFile('image')) {
-            // STANDARD LOCAL WAY:
-            // Ise-save ito sa: storage/app/public/announcements
-            // Ang value ng $imagePath ay magiging: "announcements/filename.jpg"
-            $imagePath = $request->file('image')->store('announcements', 'public');
+    if ($request->hasFile('image')) {
+
+        $file = $request->file('image');
+        $filename = time() . '_' . $file->getClientOriginalName();
+
+        // DOUBLE PATH: Local vs Production
+        if (app()->environment('local')) {
+
+            // LOCAL — use storage/app/public (symlink)
+            $imagePath = $file->storeAs('announcements', $filename, 'public');
+
+        } else {
+
+            // PRODUCTION — direct to public/uploads
+            $destinationPath = public_path('uploads/announcements');
+
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            $file->move($destinationPath, $filename);
+
+            // match format with storage path
+            $imagePath = 'announcements/' . $filename;
         }
-
-        Announcement::create([
-            'title' => $request->title,
-            'content' => $request->content,
-            'image' => $imagePath, // "announcements/image.jpg"
-            'author_name' => 'Admin System',
-            'role' => 'admin'
-        ]);
-
-        return back()->with('success', 'Announcement posted!');
     }
+
+    Announcement::create([
+        'title' => $request->title,
+        'content' => $request->content,
+        'image' => $imagePath,
+        'author_name' => 'Admin System',
+        'role' => 'admin'
+    ]);
+
+    return back()->with('success', 'Announcement posted!');
+}
 
     public function destroy($id)
     {

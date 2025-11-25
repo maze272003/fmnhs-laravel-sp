@@ -78,10 +78,25 @@
                                 </p>
 
                                @if($post->image)
-                                <div class="mb-4">
-                                    <img src="{{ asset('storage/' . $post->image) }}" class="w-full h-48 object-cover rounded-lg border border-gray-100">
-                                </div>
-                            @endif
+                                    <div class="mb-4">
+                                        @php
+                                            // 1. Kunin ang filename lang (para malinis, tanggalin ang folder path kung meron sa DB)
+                                            $filename = basename($post->image);
+
+                                            // 2. Check kung existing sa 'public/uploads/announcements' (Hostinger Path)
+                                            if (file_exists(public_path('uploads/announcements/' . $filename))) {
+                                                $finalImage = asset('uploads/announcements/' . $filename);
+                                            } 
+                                            // 3. Kung wala, gamitin ang Standard Local Path (Storage)
+                                            else {
+                                                // Dito gamitin natin ang buong string galing DB kasi usually kasama na folder name (e.g. 'announcements/img.jpg')
+                                                $finalImage = asset('storage/' . $post->image);
+                                            }
+                                        @endphp
+
+                                        <img src="{{ $finalImage }}" class="w-full h-48 object-cover rounded-lg border border-gray-100" alt="Announcement Image">
+                                    </div>
+                                @endif
 
                                 <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ $post->content }}</p>
                             </div>
