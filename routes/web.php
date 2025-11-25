@@ -45,6 +45,9 @@ Route::middleware(['auth:student'])->group(function () {
    Route::get('/student/grades', [StudentController::class, 'grades'])->name('student.grades');
    Route::get('/student/grades/pdf', [App\Http\Controllers\Student\StudentController::class, 'downloadGrades'])->name('student.grades.pdf');
    Route::get('/student/schedule', [StudentController::class, 'schedule'])->name('student.schedule');
+
+   Route::get('/student/assignments', [App\Http\Controllers\Student\StudentAssignmentController::class, 'index'])->name('student.assignments.index');
+    Route::post('/student/assignments/submit', [App\Http\Controllers\Student\StudentAssignmentController::class, 'submit'])->name('student.assignments.submit');
 });
 
 
@@ -63,7 +66,9 @@ Route::middleware(['auth:teacher'])->group(function () {
     Route::get('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'index'])->name('teacher.announcements.index');
     Route::post('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'store'])->name('teacher.announcements.store');
 
-    
+    Route::get('/teacher/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'index'])->name('teacher.assignments.index');
+    Route::post('/teacher/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'store'])->name('teacher.assignments.store');
+    Route::get('/teacher/assignments/{id}', [App\Http\Controllers\Teacher\AssignmentController::class, 'show'])->name('teacher.assignments.show');
 });
 
 
