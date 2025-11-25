@@ -28,6 +28,12 @@
             </a>
         </li>
         <li>
+            <a href="{{ route('student.attendance.index') }}" class="nav-link flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                <i class="fa-solid fa-house nav-icon w-6 text-center text-gray-500 dark:text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                <span class="nav-text ml-3 font-medium text-gray-700 dark:text-gray-300 md:hidden lg:block">Attendance</span>
+            </a>
+        </li>
+        <li>
             <a href="{{ route('student.grades') }}" class="nav-link flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20">
                 <i class="fa-solid fa-star nav-icon w-6 text-center text-gray-500 dark:text-gray-400 group-hover:text-blue-600 transition-colors"></i>
                 <span class="nav-text ml-3 font-medium text-gray-700 dark:text-gray-300 md:hidden lg:block">My Grades</span>

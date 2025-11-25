@@ -58,6 +58,13 @@
                 <span class="nav-text ml-3 font-medium text-gray-700 dark:text-gray-300 md:hidden lg:block">Announcement</span>
             </a>
         </li>
+        <li>
+            <a href="{{ route('admin.attendance.index') }}" 
+            class="nav-link flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-gray-50 dark:hover:bg-slate-800">
+                <i class="fa-solid fa-book nav-icon w-6 text-center text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 transition-colors"></i>
+                <span class="nav-text ml-3 font-medium text-gray-700 dark:text-gray-300 md:hidden lg:block">AttendanceLogs</span>
+            </a>
+        </li>
 
         <li>
             <a href="#" class="nav-link flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-gray-50 dark:hover:bg-slate-800">
