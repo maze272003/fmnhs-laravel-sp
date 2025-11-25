@@ -11,6 +11,8 @@ use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Admin\AdminSubjectController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Models\Announcement;
+// add aritsan command for php artisan migrate:fresh --seed
+
 // make default is welcome blade
 Route::get('/', function () {
     // Fetch latest 3 announcements
@@ -103,6 +105,10 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/schedules', [App\Http\Controllers\Admin\AdminScheduleController::class, 'store'])->name('admin.schedules.store');
     Route::delete('/admin/schedules/{id}', [App\Http\Controllers\Admin\AdminScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
     Route::get('/admin/attendance', [App\Http\Controllers\Admin\AdminAttendanceController::class, 'index'])->name('admin.attendance.index');
+
+    Route::post('/admin/students', [AdminStudentController::class, 'store'])->name('admin.students.store');
+    Route::put('/admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
+    Route::delete('/admin/students/{id}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
 });
 
 require __DIR__.'/db.php';
