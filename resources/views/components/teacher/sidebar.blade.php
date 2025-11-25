@@ -23,7 +23,7 @@
         </li>
 
         <li>
-            <a href="#" class="nav-link flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+            <a href="{{ route('teacher.classes.index') }}" class="nav-link flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
                 <i class="fa-solid fa-chalkboard-user nav-icon w-6 text-center text-gray-500 dark:text-gray-400 group-hover:text-emerald-600 transition-colors"></i>
                 <span class="nav-text ml-3 font-medium text-gray-700 dark:text-gray-300 md:hidden lg:block">My Classes</span>
             </a>

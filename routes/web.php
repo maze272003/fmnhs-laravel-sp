@@ -51,7 +51,7 @@ Route::middleware(['auth:teacher'])->group(function () {
     Route::get('/teacher/dashboard', function () {
         return view('teacher.dashboard');
     })->name('teacher.dashboard');
-
+    Route::get('/teacher/my-classes', [TeacherController::class, 'myClasses'])->name('teacher.classes.index');
     Route::get('/teacher/grading', [TeacherController::class, 'gradingSheet'])->name('teacher.grading.index');
     
     // 2. The Actual Grading Page (Using GET so we can share links easily)

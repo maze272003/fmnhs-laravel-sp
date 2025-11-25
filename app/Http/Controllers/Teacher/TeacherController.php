@@ -38,6 +38,31 @@ class TeacherController extends Controller
 
         return view('teacher.student', compact('sections', 'students', 'selectedSection'));
     }
+    public function myClasses()
+    {
+        $teacherId = Auth::guard('teacher')->id();
+
+        // Logic: Kunin lahat ng grades na binigay ni Teacher
+        // I-group natin base sa (Subject ID + Section Name) para makuha ang unique classes
+        $classes = Grade::where('teacher_id', $teacherId)
+            ->with(['subject', 'student']) // Eager load para mabilis
+            ->get()
+            ->groupBy(function($data) {
+                return $data->subject->id . '-' . $data->student->section;
+            })
+            ->map(function($group) {
+                // Gumawa ng summary para sa bawat class
+                return [
+                    'subject' => $group->first()->subject,
+                    'section' => $group->first()->student->section,
+                    'student_count' => $group->unique('student_id')->count(),
+                    'average_grade' => $group->avg('grade_value'),
+                    'last_updated' => $group->max('updated_at')
+                ];
+            });
+
+        return view('teacher.classes', compact('classes'));
+    }
 
     // 2. Show the actual students for grading
     public function showClass(Request $request)

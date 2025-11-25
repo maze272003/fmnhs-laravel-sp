@@ -51,6 +51,47 @@
                 </p>
             </div>
 
+            
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                <a href="{{ route('login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 group-hover:h-2 transition-all"></div>
+                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-3xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-inner">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">Student Portal</h2>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Access your grades, view class schedules, and manage your student profile.</p>
+                    <div class="flex items-center text-blue-600 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
+                        Login <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+                <a href="{{ route('teacher.login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-emerald-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 group-hover:h-2 transition-all"></div>
+                    <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-3xl mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-inner">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Faculty Portal</h2>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Manage your advisory classes, input student grades, and track academic performance.</p>
+                    <div class="flex items-center text-emerald-600 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
+                        Login <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+                <a href="{{ route('admin.login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-slate-400 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-600 to-slate-800 group-hover:h-2 transition-all"></div>
+                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-700 text-3xl mb-6 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300 shadow-inner">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-slate-700 transition-colors">Admin Portal</h2>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">System configuration, user management, subject encoding, and school data analytics.</p>
+                    <div class="flex items-center text-slate-700 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
+                        Access <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+
+            </div>
             <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-1 h-8 bg-red-500 rounded-full"></div>
@@ -121,46 +162,6 @@
                         <p class="text-gray-500">Check back later for school updates.</p>
                     </div>
                 @endif
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-                <a href="{{ route('login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 group-hover:h-2 transition-all"></div>
-                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-3xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-inner">
-                        <i class="fa-solid fa-user-graduate"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">Student Portal</h2>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Access your grades, view class schedules, and manage your student profile.</p>
-                    <div class="flex items-center text-blue-600 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
-                        Login <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                    </div>
-                </a>
-
-                <a href="{{ route('teacher.login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-emerald-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 group-hover:h-2 transition-all"></div>
-                    <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-3xl mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-inner">
-                        <i class="fa-solid fa-chalkboard-user"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Faculty Portal</h2>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Manage your advisory classes, input student grades, and track academic performance.</p>
-                    <div class="flex items-center text-emerald-600 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
-                        Login <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-slate-400 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-600 to-slate-800 group-hover:h-2 transition-all"></div>
-                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-700 text-3xl mb-6 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300 shadow-inner">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-slate-700 transition-colors">Admin Portal</h2>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">System configuration, user management, subject encoding, and school data analytics.</p>
-                    <div class="flex items-center text-slate-700 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
-                        Access <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                    </div>
-                </a>
-
             </div>
 
         </div>
