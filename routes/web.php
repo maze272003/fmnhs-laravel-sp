@@ -10,10 +10,12 @@ use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Teacher\TeacherController; 
 use App\Http\Controllers\Admin\AdminSubjectController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-// 
+use App\Models\Announcement;
 // make default is welcome blade
 Route::get('/', function () {
-    return view('welcome');
+    // Fetch latest 3 announcements
+    $announcements = Announcement::orderBy('created_at', 'desc')->take(3)->get();
+    return view('welcome', compact('announcements'));
 });
 // 1. The Login Form
 Route::get('/student/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -56,6 +58,9 @@ Route::middleware(['auth:teacher'])->group(function () {
     Route::get('/teacher/grading/show', [TeacherController::class, 'showClass'])->name('teacher.grading.show');
     Route::post('/teacher/grading/save', [TeacherController::class, 'storeGrades'])->name('teacher.grades.store');
     Route::get('/teacher/students', [TeacherController::class, 'myStudents'])->name('teacher.students.index');
+
+    Route::get('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'index'])->name('teacher.announcements.index');
+    Route::post('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'store'])->name('teacher.announcements.store');
 });
 
 
@@ -76,4 +81,8 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/subjects', [AdminSubjectController::class, 'store'])->name('admin.subjects.store');
     Route::put('/admin/subjects/{id}', [AdminSubjectController::class, 'update'])->name('admin.subjects.update');
     Route::delete('/admin/subjects/{id}', [AdminSubjectController::class, 'destroy'])->name('admin.subjects.destroy');
+
+    Route::get('/admin/announcements', [App\Http\Controllers\Admin\AdminAnnouncementController::class, 'index'])->name('admin.announcements.index');
+    Route::post('/admin/announcements', [App\Http\Controllers\Admin\AdminAnnouncementController::class, 'store'])->name('admin.announcements.store');
+    Route::delete('/admin/announcements/{id}', [App\Http\Controllers\Admin\AdminAnnouncementController::class, 'destroy'])->name('admin.announcements.destroy');
 });
