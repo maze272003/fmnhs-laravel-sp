@@ -28,11 +28,16 @@
 
         <main class="flex-1 p-6">
             
-            <div class="mb-6">
-                <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Academic Performance</h1>
-                <p class="text-gray-500 text-sm">School Year 2024-2025</p>
-            </div>
-
+            <div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Academic Performance</h1>
+        <p class="text-gray-500 text-sm">School Year 2024-2025</p>
+    </div>
+    
+    <a href="{{ route('student.grades.pdf') }}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2 transition">
+        <i class="fa-solid fa-file-pdf"></i> Download PDF
+    </a>
+</div>
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">

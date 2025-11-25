@@ -14,13 +14,29 @@ class TeacherController extends Controller
     // 1. Show the "Selector" page (Pick Subject & Section)
     public function gradingSheet()
     {
-        // Get all subjects so the teacher can pick one
         $subjects = Subject::all();
-        
-        // Get all unique sections from the Student table
         $sections = Student::select('section')->distinct()->pluck('section');
 
-        return view('teacher.grade', compact('subjects', 'sections'));
+        // BAGUHIN ITO: Ituro sa 'teacher.select'
+        return view('teacher.select', compact('subjects', 'sections'));
+    }
+    public function myStudents(Request $request)
+    {
+        // 1. Kunin lahat ng Sections para sa dropdown
+        $sections = Student::select('section')->distinct()->orderBy('section')->pluck('section');
+
+        // 2. Check kung may piniling section ang teacher
+        $selectedSection = $request->section;
+        $students = collect(); // Empty muna default
+
+        if ($selectedSection) {
+            // Kunin ang students sa section na 'yun
+            $students = Student::where('section', $selectedSection)
+                        ->orderBy('last_name')
+                        ->get();
+        }
+
+        return view('teacher.student', compact('sections', 'students', 'selectedSection'));
     }
 
     // 2. Show the actual students for grading

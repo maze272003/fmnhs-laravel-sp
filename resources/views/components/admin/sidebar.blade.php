@@ -1,3 +1,5 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity duration-300"></div>
 
 <nav id="sidebar" class="fixed top-0 left-0 h-full bg-white dark:bg-slate-900 shadow-xl w-64 p-4 flex flex-col transition-all duration-300 z-50 transform -translate-x-full md:translate-x-0 md:w-20 lg:w-64 border-r border-gray-200 dark:border-slate-800">
@@ -44,8 +46,6 @@
             </a>
         </li>
 
-        
-
         <li>
             <a href="#" class="nav-link flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-gray-50 dark:hover:bg-slate-800">
                 <i class="fa-solid fa-gear nav-icon w-6 text-center text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 transition-colors"></i>
@@ -58,7 +58,7 @@
         <li>
             <form action="{{ route('admin.logout') }}" id="logout-form" method="POST">
                 @csrf
-                <button type="button" id="logout-btn" class="w-full flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600">
+                <button type="button" onclick="confirmLogout()" class="w-full flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600">
                     <i class="fa-solid fa-right-from-bracket nav-icon w-6 text-center group-hover:text-red-700"></i>
                     <span class="nav-text ml-3 font-medium md:hidden lg:block">Logout</span>
                 </button>
@@ -66,3 +66,22 @@
         </li>
     </ul>
 </nav>
+
+<script>
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of the admin panel.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444', 
+            cancelButtonColor: '#6b7280', 
+            confirmButtonText: 'Yes, Logout'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit the form manually
+                document.getElementById('logout-form').submit();
+            }
+        });
+    }
+</script>

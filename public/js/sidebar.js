@@ -76,19 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- SweetAlert Logout Confirmation ---
     const logoutBtn = document.getElementById('logout-btn');
+
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+            // Stop any default browser behavior immediately
+            e.preventDefault(); 
+
             Swal.fire({
-                title: 'Ready to Leave?',
-                text: "You will be logged out of the admin portal.",
+                title: 'Are you sure?',
+                text: "You will be logged out of the session.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#4f46e5', // Indigo-600
-                cancelButtonColor: '#ef4444', // Red-500
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, Logout'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Manually find the form and submit it
                     document.getElementById('logout-form').submit();
                 }
             });
