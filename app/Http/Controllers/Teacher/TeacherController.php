@@ -8,17 +8,26 @@ use App\Models\Subject;
 use App\Models\Student;
 use App\Models\Grade;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Schedule;
 
 class TeacherController extends Controller
 {
     // 1. Show the "Selector" page (Pick Subject & Section)
     public function gradingSheet()
     {
-        $subjects = Subject::all();
-        $sections = Student::select('section')->distinct()->pluck('section');
+        $teacherId = Auth::guard('teacher')->id();
 
-        // BAGUHIN ITO: Ituro sa 'teacher.select'
-        return view('teacher.select', compact('subjects', 'sections'));
+        // NEW LOGIC: Fetch assigned classes only based on Schedule
+        // Group by Subject+Section to avoid duplicates if multiple schedule days exist
+        $assignedClasses = Schedule::where('teacher_id', $teacherId)
+            ->with('subject')
+            ->get()
+            ->unique(function ($item) {
+                return $item->subject_id . '-' . $item->section;
+            });
+
+        // Ipapasa natin ito sa view sa halip na hiwalay na subjects/sections
+        return view('teacher.select', compact('assignedClasses'));
     }
     public function myStudents(Request $request)
     {

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Subject;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Schedule;
 
 class StudentController extends Controller
 {
@@ -23,6 +24,18 @@ class StudentController extends Controller
         }])->get();
 
         return view('student.grades', compact('subjects'));
+    }
+    public function schedule()
+    {
+        $student = Auth::guard('student')->user();
+        
+        // Logic: Get schedules where the 'section' matches the student's section
+        $schedules = Schedule::where('section', $student->section)
+            ->with(['subject', 'teacher'])
+            ->orderBy('start_time')
+            ->get();
+
+        return view('student.schedule', compact('schedules'));
     }
     public function downloadGrades()
     {

@@ -44,6 +44,7 @@ Route::middleware(['auth:student'])->group(function () {
 
    Route::get('/student/grades', [StudentController::class, 'grades'])->name('student.grades');
    Route::get('/student/grades/pdf', [App\Http\Controllers\Student\StudentController::class, 'downloadGrades'])->name('student.grades.pdf');
+   Route::get('/student/schedule', [StudentController::class, 'schedule'])->name('student.schedule');
 });
 
 
@@ -61,6 +62,8 @@ Route::middleware(['auth:teacher'])->group(function () {
 
     Route::get('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'index'])->name('teacher.announcements.index');
     Route::post('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'store'])->name('teacher.announcements.store');
+
+    
 });
 
 
@@ -85,4 +88,8 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/announcements', [App\Http\Controllers\Admin\AdminAnnouncementController::class, 'index'])->name('admin.announcements.index');
     Route::post('/admin/announcements', [App\Http\Controllers\Admin\AdminAnnouncementController::class, 'store'])->name('admin.announcements.store');
     Route::delete('/admin/announcements/{id}', [App\Http\Controllers\Admin\AdminAnnouncementController::class, 'destroy'])->name('admin.announcements.destroy');
+
+    Route::get('/admin/schedules', [App\Http\Controllers\Admin\AdminScheduleController::class, 'index'])->name('admin.schedules.index');
+    Route::post('/admin/schedules', [App\Http\Controllers\Admin\AdminScheduleController::class, 'store'])->name('admin.schedules.store');
+    Route::delete('/admin/schedules/{id}', [App\Http\Controllers\Admin\AdminScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
 });
