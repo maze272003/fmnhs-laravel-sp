@@ -37,6 +37,7 @@ class AdminAnnouncementController extends Controller
             $imagePath = $file->storeAs('announcements', $filename, 'public');
 
         } else {
+            
 
             // PRODUCTION — direct to public/uploads
             $destinationPath = public_path('uploads/announcements');

@@ -26,6 +26,6 @@ class TeacherSeeder extends Seeder
         }
 
         // 2. RANDOM TEACHERS (Generate 20 more)
-        Teacher::factory(20)->create();
+        Teacher::factory(100)->create();
     }
 }

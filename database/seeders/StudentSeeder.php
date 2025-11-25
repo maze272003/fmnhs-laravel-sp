@@ -24,7 +24,7 @@ class StudentSeeder extends Seeder
 
         // 2. CREATE RANDOM STUDENTS (49 others)
         // Siguraduhin na ang Factory mo ay naglalagay din ng default password
-        Student::factory(49)->create([
+        Student::factory(1500)->create([
             'password' => Hash::make('password'), // Default pass ng random students
         ]);
     }

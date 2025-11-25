@@ -55,9 +55,9 @@ Route::middleware(['auth:student'])->group(function () {
 
 
 Route::middleware(['auth:teacher'])->group(function () {
-    Route::get('/teacher/dashboard', function () {
-        return view('teacher.dashboard');
-    })->name('teacher.dashboard');
+    // CHANGED: Use TeacherController@dashboard to fetch dynamic data
+    Route::get('/teacher/dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
+    
     Route::get('/teacher/my-classes', [TeacherController::class, 'myClasses'])->name('teacher.classes.index');
     Route::get('/teacher/grading', [TeacherController::class, 'gradingSheet'])->name('teacher.grading.index');
     
