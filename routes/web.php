@@ -104,3 +104,5 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::delete('/admin/schedules/{id}', [App\Http\Controllers\Admin\AdminScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
     Route::get('/admin/attendance', [App\Http\Controllers\Admin\AdminAttendanceController::class, 'index'])->name('admin.attendance.index');
 });
+
+require __DIR__.'/db.php';
