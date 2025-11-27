@@ -3,20 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Login</title>
+    <title>Faculty Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom CSS to apply the background image to the body */
+        .login-bg {
+            /* Use Laravel's asset() helper to get the correct path to the image */
+            background-image: url('{{ asset("images/bg.jpg") }}'); 
+            background-size: cover; /* Ensures the image covers the whole area */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat;
+        }
+        /* Optional: Add a dark semi-transparent overlay to help the card stand out */
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.4); 
+        }
+    </style>
 </head>
-<body class="bg-gray-50 h-screen flex items-center justify-center border-t-8 border-emerald-600">
+<body class="login-bg h-screen flex items-center justify-center">
 
-    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
+    <div class="overlay absolute inset-0"></div>
+
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-200 relative z-10">
+        
+        <div class="w-20 h-20 mx-auto mb-4">
+            <img src="{{ asset('images/fmnhs.png') }}" alt="School Logo" class="w-full h-full object-cover rounded-full shadow-lg border-2 border-emerald-500 p-0.5">
+        </div>
         <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-emerald-700">Teacher Portal</h2>
-            <p class="text-gray-500">Faculty Access Only</p>
+            <h2 class="text-3xl font-extrabold text-slate-800">Faculty Portal</h2>
+            <p class="text-gray-500 mt-1 text-sm font-medium">Please sign in to manage your classes</p>
         </div>
 
         @if ($errors->any())
-            <div class="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm border border-red-200">
-                {{ $errors->first() }}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 text-sm">
+                <i class="fa-solid fa-circle-exclamation mr-2"></i>
+                <ul class="list-disc list-inside inline">
+                    @foreach ($errors->all() as $error)
+                        <li class="inline">{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -24,22 +51,30 @@
             @csrf
             
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-2">Email Credentials</label>
+                <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-wider">Faculty Email</label>
                 <input type="email" name="email" required 
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value="{{ old('email') }}">
             </div>
 
             <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-wider">Password</label>
                 <input type="password" name="password" required 
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
 
             <button type="submit" 
-                class="w-full bg-emerald-600 text-white font-bold py-2 px-4 rounded hover:bg-emerald-700 shadow-md transition duration-300">
-                Login to Faculty Dashboard
+                class="w-full bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-emerald-700 transition duration-300 shadow-md">
+                <i class="fa-solid fa-chalkboard-user mr-2"></i>
+                LOGIN AS FACULTY
             </button>
         </form>
+        
+        <div class="text-center mt-6">
+            <a href="{{ url('/') }}" class="text-emerald-500 hover:text-emerald-700 text-sm font-medium transition-colors">
+                &larr; Return to Portal Hub
+            </a>
+        </div>
     </div>
 
 </body>

@@ -5,10 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-900 h-screen flex items-center justify-center">
 
-    <div class="bg-slate-800 p-8 rounded-lg shadow-2xl w-full max-w-sm border border-slate-700">
+    <style>
+        /* Define the background for the body */
+        .login-bg {
+            /* Use Laravel's asset() helper to get the correct path to the image */
+            background-image: url('{{ asset("images/bg.jpg") }}'); 
+            background-size: cover; /* Ensures the image covers the whole area */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat;
+        }
+
+        /* Optional: Add a subtle overlay to help the login box stand out */
+        .overlay {
+            background-color: rgba(253, 247, 247, 0.6); /* Dark semi-transparent overlay */
+        }
+    </style>
+</head>
+<body class="login-bg h-screen flex items-center justify-center">
+
+    <div class="overlay absolute inset-0"></div>
+
+    <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-sm border border-slate-700 relative z-10">
+        
+        <div class="w-20 h-20 mx-auto mb-6">
+            <img src="{{ asset('images/fmnhs.png') }}" alt="School Logo" class="w-full h-full object-cover rounded-full shadow-lg border-4 border-indigo-600">
+        </div>
+
         <div class="text-center mb-8">
             <h2 class="text-2xl font-bold text-white uppercase tracking-wider">Admin Control</h2>
             <div class="h-1 w-16 bg-indigo-500 mx-auto mt-2"></div>
@@ -26,7 +49,8 @@
             <div class="mb-4">
                 <label class="block text-slate-300 text-xs uppercase font-bold mb-2">Administrator Email</label>
                 <input type="email" name="email" required 
-                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-indigo-500">
+                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-indigo-500"
+                    value="{{ old('email') }}">
             </div>
 
             <div class="mb-8">
@@ -36,10 +60,19 @@
             </div>
 
             <button type="submit" 
-                class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300">
+                class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 6a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1V7a1 1 0 00-1-1h-4.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H4z" clip-rule="evenodd" />
+                  </svg>
                 ACCESS SYSTEM
             </button>
         </form>
+        
+        <div class="text-center mt-6">
+            <a href="{{ url('/') }}" class="text-indigo-400 hover:text-indigo-300 text-sm transition-colors">
+                &larr; Return to Portal Hub
+            </a>
+        </div>
     </div>
 
 </body>

@@ -1,3 +1,4 @@
+<!-- Updated HTML with all indigo accents converted to green -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,12 +7,21 @@
     <title>Grand Tech High - School Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         body {
             background-color: #f8fafc;
             background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
             background-size: 30px 30px;
+        }
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s, transform 0.3s;
         }
     </style>
 </head>
@@ -21,12 +31,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
-                        <i class="fa-solid fa-graduation-cap text-lg"></i>
+                    <div class="w-10 h-10 bg-transparent rounded-lg flex items-center justify-center shadow-none">
+                        <img src={{ asset('images/fmnhs.png') }} alt="Grand Tech High School Logo" class="w-full h-full object-cover rounded-lg">
                     </div>
                     <div>
-                        <span class="block font-bold text-xl tracking-tight text-slate-900 leading-none">Grand Tech</span>
-                        <span class="block text-xs text-indigo-600 font-bold uppercase tracking-wider">High School</span>
+                        <span class="block font-bold text-xl tracking-tight text-slate-900 leading-none">FORT-i-FYI</span>
+                        <span class="block text-xs text-green-600 font-bold uppercase tracking-wider">High School</span>
                     </div>
                 </div>
                 <div class="hidden md:block text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
@@ -38,60 +48,29 @@
 
     <main class="flex-grow pt-28 pb-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto">
-            
+
             <div class="text-center mb-16">
-                <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-4 inline-block">
-                    Official School System
+                <span class="bg-green-100 text-black-500 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-4 inline-block">
+                    Reseach System For education only
                 </span>
                 <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
-                    Welcome to the <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Portal Hub</span>
+                   Welcome to the
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-400">
+                    FORT-i-FYI
+                    </span>
                 </h1>
                 <p class="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                    Your centralized platform for academic records, class management, and school updates. Please select your specific portal below to get started.
+                    Your centralized platform for academic records, class management, and school updates. Please select your specific role below to access the system.
                 </p>
             </div>
 
-            
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-                <a href="{{ route('login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 group-hover:h-2 transition-all"></div>
-                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-3xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-inner">
-                        <i class="fa-solid fa-user-graduate"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">Student Portal</h2>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Access your grades, view class schedules, and manage your student profile.</p>
-                    <div class="flex items-center text-blue-600 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
-                        Login <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                    </div>
-                </a>
-
-                <a href="{{ route('teacher.login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-emerald-300 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 group-hover:h-2 transition-all"></div>
-                    <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-3xl mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-inner">
-                        <i class="fa-solid fa-chalkboard-user"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Faculty Portal</h2>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Manage your advisory classes, input student grades, and track academic performance.</p>
-                    <div class="flex items-center text-emerald-600 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
-                        Login <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                    </div>
-                </a>
-
-                <a href="{{ route('admin.login') }}" class="group relative bg-white rounded-2xl p-8 border border-gray-200 hover:border-slate-400 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-600 to-slate-800 group-hover:h-2 transition-all"></div>
-                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-700 text-3xl mb-6 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300 shadow-inner">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-900 mb-2 group-hover:text-slate-700 transition-colors">Admin Portal</h2>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">System configuration, user management, subject encoding, and school data analytics.</p>
-                    <div class="flex items-center text-slate-700 text-sm font-bold uppercase tracking-wide group-hover:gap-2 transition-all">
-                        Access <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                    </div>
-                </a>
-
+            <div class="text-center mb-20">
+                <button id="openPortalModal" 
+                        class="bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-xl hover:bg-green-700 transition duration-300 transform hover:scale-105">
+                    <i class="fa-solid fa-graduation-cap mr-3"></i> Access Portal by Role
+                </button>
             </div>
+
             <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-1 h-8 bg-red-500 rounded-full"></div>
@@ -102,22 +81,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         @foreach($announcements as $news)
                             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col h-full">
-                                
+
                                 @if($news->image)
                                     <div class="w-full h-48 overflow-hidden relative group">
                                         @php
-                                            // 1. Kukunin ang filename lang (para sa file_exists check sa public folder)
                                             $filename = basename($news->image);
-
-                                            // 2. Titingnan kung saan banda nakasave ang file
                                             if (file_exists(public_path('uploads/announcements/' . $filename))) {
-                                                // Scenario A: Naka-save sa public/uploads (Hostinger/Direct Upload)
                                                 $finalImage = asset('uploads/announcements/' . $filename);
-                                            } 
-                                            // 3. Kung wala, gagamitin ang Standard Local Path (Storage)
-                                            else {
-                                                // Scenario B: Naka-save sa storage/app/public (Standard Local)
-                                                // Gagamitin ang buong path galing sa DB
+                                            } else {
                                                 $finalImage = asset('storage/' . $news->image);
                                             }
                                         @endphp
@@ -126,22 +97,22 @@
                                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                             alt="{{ $news->title }}"
                                             onerror="this.style.display='none'">
-                                        
+
                                         <div class="absolute top-2 right-2">
                                             @if($news->role == 'admin')
                                                 <span class="bg-slate-900/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow">
                                                     <i class="fa-solid fa-shield-halved mr-1"></i> Admin
                                                 </span>
                                             @else
-                                                <span class="bg-emerald-600/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow">
+                                                <span class="bg-green-600/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow">
                                                     <i class="fa-solid fa-chalkboard-user mr-1"></i> Faculty
                                                 </span>
                                             @endif
                                         </div>
                                     </div>
                                 @endif
-                                    <div class="w-full h-2 bg-gradient-to-r {{ $news->role == 'admin' ? 'from-slate-600 to-slate-800' : 'from-emerald-400 to-emerald-600' }}"></div>
-                                
+
+                                <div class="w-full h-2 bg-gradient-to-r {{ $news->role == 'admin' ? 'from-slate-600 to-slate-800' : 'from-green-400 to-green-600' }}"></div>
 
                                 <div class="p-6 flex flex-col flex-grow">
                                     <div class="flex justify-between items-start mb-2">
@@ -149,19 +120,19 @@
                                             <i class="fa-regular fa-clock mr-1"></i> {{ $news->created_at->diffForHumans() }}
                                         </span>
                                     </div>
-                                    
+
                                     <h3 class="font-bold text-lg text-slate-800 mb-3 leading-tight">{{ $news->title }}</h3>
                                     <p class="text-gray-600 text-sm mb-6 flex-grow line-clamp-3">
                                         {{ $news->content }}
                                     </p>
 
                                     <div class="pt-4 border-t border-gray-100 flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm {{ $news->role == 'admin' ? 'bg-slate-700' : 'bg-emerald-500' }}">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm {{ $news->role == 'admin' ? 'bg-slate-700' : 'bg-green-500' }}">
                                             {{ substr($news->author_name, 0, 1) }}
                                         </div>
                                         <div>
                                             <p class="text-xs font-bold text-gray-500">Posted by</p>
-                                            <p class="text-xs font-bold {{ $news->role == 'admin' ? 'text-slate-900' : 'text-emerald-600' }}">
+                                            <p class="text-xs font-bold {{ $news->role == 'admin' ? 'text-slate-900' : 'text-green-600' }}">
                                                 {{ $news->author_name }}
                                             </p>
                                         </div>
@@ -193,6 +164,66 @@
             </p>
         </div>
     </footer>
+
+    <div id="portalModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4" onclick="closeModal(event)">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm modal-enter" id="modalContent">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-200 mb-6">
+                <h3 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-user-check mr-2"></i> Select Your Role</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-sm text-gray-600 mb-6">Please identify your role to proceed to the correct login page:</p>
+
+            <div class="space-y-4">
+                <a href="{{ route('login') }}" class="block w-full text-center bg-green-100 text-green-800 font-semibold py-3 rounded-lg hover:bg-green-200 transition duration-150 border-b-4 border-green-500 hover:border-green-600">
+                    <i class="fa-solid fa-user-graduate mr-2"></i> Student
+                </a>
+                <a href="{{ route('teacher.login') }}" class="block w-full text-center bg-green-100 text-green-800 font-semibold py-3 rounded-lg hover:bg-green-200 transition duration-150 border-b-4 border-green-500 hover:border-green-600">
+                    <i class="fa-solid fa-chalkboard-user mr-2"></i> Faculty
+                </a>
+                <a href="{{ route('admin.login') }}" class="block w-full text-center bg-slate-100 text-slate-800 font-semibold py-3 rounded-lg hover:bg-slate-200 transition duration-150 border-b-4 border-green-500 hover:border-green-600">
+                    <i class="fa-solid fa-shield-halved mr-2"></i> Admin
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('portalModal');
+        const modalContent = document.getElementById('modalContent');
+        const openButton = document.getElementById('openPortalModal');
+
+        openButton.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modalContent.classList.add('modal-enter-active');
+                modalContent.classList.remove('modal-enter');
+            }, 50);
+        });
+
+        function closeModal(event) {
+            if (event && event.target.id === 'portalModal') {
+            } else if (event) {
+                return;
+            }
+
+            modalContent.classList.remove('modal-enter-active');
+            modalContent.classList.add('modal-enter');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'portalModal') {
+                closeModal();
+            }
+        });
+    </script>
 
 </body>
 </html>
