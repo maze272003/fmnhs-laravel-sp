@@ -163,7 +163,7 @@
                 </svg>
                 <span class="font-medium text-slate-900">Powered by</span> 
                 <a href="https://coolify.io" target="_blank" class="font-bold text-green-600 hover:text-green-700 transition-colors">
-                    Coolify
+                    Coolify X JonatasDev
                 </a>
             </div>
             
