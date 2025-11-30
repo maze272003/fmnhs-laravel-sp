@@ -1,4 +1,3 @@
-<!-- Updated HTML with all indigo accents converted to green -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -156,12 +155,28 @@
     </main>
 
     <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-slate-900 font-bold mb-2">Grand Tech High School</p>
-            <p class="text-sm text-gray-500">
-                &copy; {{ date('Y') }} All rights reserved. <br>
-                <span class="text-xs opacity-75">Student Information System v1.0</span>
-            </p>
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            
+            <div class="text-sm text-gray-500 hidden md:flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11 1.95a1 1 0 0 1 2 0v2.54a1 1 0 0 1-2 0V1.95zm-3.05 1.5a1 1 0 0 1 0 2l-1.88.94a1 1 0 0 1-1.28-1.55l1.88-.94zm7.9 0l1.88.94a1 1 0 1 1-1.28 1.55l-1.88-.94a1 1 0 0 1 0-2zM12 7a5 5 0 0 0-5 5v5a5 5 0 0 0 10 0v-5a5 5 0 0 0-5-5zm-3 5v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-6 0z"/>
+                </svg>
+                <span class="font-medium text-slate-900">Powered by</span> 
+                <a href="https://coolify.io" target="_blank" class="font-bold text-green-600 hover:text-green-700 transition-colors">
+                    Coolify
+                </a>
+            </div>
+            
+            <div class="text-center w-full md:w-auto">
+                <p class="text-slate-900 font-bold mb-2">Grand Tech High School</p>
+                <p class="text-sm text-gray-500">
+                    &copy; {{ date('Y') }} All rights reserved. <br>
+                    <span class="text-xs opacity-75">Student Information System v1.0</span>
+                </p>
+            </div>
+
+            <div class="hidden md:block w-[140px]"></div>
+
         </div>
     </footer>
 
