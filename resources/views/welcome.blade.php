@@ -168,7 +168,7 @@
             </div>
             
             <div class="text-center w-full md:w-auto">
-                <p class="text-slate-900 font-bold mb-2">Grand Tech High School</p>
+                <p class="text-slate-900 font-bold mb-2">Fort Magsaysay National High School</p>
                 <p class="text-sm text-gray-500">
                     &copy; {{ date('Y') }} All rights reserved. <br>
                     <span class="text-xs opacity-75">Student Information System v1.0</span>
