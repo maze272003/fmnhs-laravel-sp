@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Select DOM elements
+    // --- Select DOM elements ---
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
@@ -10,14 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Mobile Menu Logic ---
     function toggleMobileMenu() {
-        // Toggle the transform class to slide in/out
         const isClosed = sidebar.classList.contains('-translate-x-full');
-        
         if (isClosed) {
-            sidebar.classList.remove('-translate-x-full'); // Open
+            sidebar.classList.remove('-translate-x-full');
             overlay.classList.remove('hidden');
         } else {
-            sidebar.classList.add('-translate-x-full'); // Close
+            sidebar.classList.add('-translate-x-full');
             overlay.classList.add('hidden');
         }
     }
@@ -28,21 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Desktop Collapse Logic ---
     if (desktopCollapseBtn) {
         desktopCollapseBtn.addEventListener('click', () => {
-            // Toggle sidebar width classes
             sidebar.classList.toggle('lg:w-64');
             sidebar.classList.toggle('lg:w-20');
-
-            // Adjust content margin
             contentWrapper.classList.toggle('lg:ml-64');
             contentWrapper.classList.toggle('lg:ml-20');
-
-            // Toggle Text Visibility
             navTextElements.forEach(el => el.classList.toggle('lg:hidden'));
-            
-            // Center Icons when collapsed
             navIcons.forEach(icon => icon.classList.toggle('lg:mx-auto'));
 
-            // Rotate/Change Arrow Icon
             const icon = desktopCollapseBtn.querySelector('i');
             if (sidebar.classList.contains('lg:w-20')) {
                 icon.classList.remove('fa-chevron-left');
@@ -60,12 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navLinks.forEach(link => {
         if (link.href === currentUrl) {
-            // Add Active Classes (Indigo theme)
             link.classList.add('bg-indigo-50', 'dark:bg-indigo-900/20', 'text-indigo-600', 'dark:text-indigo-400');
-            // Remove Inactive Hover Classes
             link.classList.remove('hover:bg-gray-50', 'dark:hover:bg-slate-800', 'text-gray-700');
-            
-            // Color the icon
             const icon = link.querySelector('i');
             if(icon) {
                 icon.classList.remove('text-gray-500');
@@ -74,13 +60,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- SweetAlert Logout Confirmation ---
+    // --- FIXED LOGOUT LOGIC ---
     const logoutBtn = document.getElementById('logout-btn');
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
-            // Stop any default browser behavior immediately
             e.preventDefault(); 
+
+            // Check if SweetAlert is loaded
+            if (typeof Swal === 'undefined') {
+                console.error('SweetAlert2 is not loaded!');
+                // Fallback if SweetAlert fails
+                if(confirm("Are you sure you want to logout?")) {
+                    document.getElementById('logout-form').submit();
+                }
+                return;
+            }
 
             Swal.fire({
                 title: 'Are you sure?',
@@ -92,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmButtonText: 'Yes, Logout'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Manually find the form and submit it
                     document.getElementById('logout-form').submit();
                 }
             });

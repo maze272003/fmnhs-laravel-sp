@@ -78,7 +78,7 @@
         <li>
             <form action="{{ route('admin.logout') }}" id="logout-form" method="POST">
                 @csrf
-                <button type="button" onclick="confirmLogout()" class="w-full flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600">
+                <button type="button" id="logout-btn" class="w-full flex items-center px-3 py-3 rounded-lg group transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600">
                     <i class="fa-solid fa-right-from-bracket nav-icon w-6 text-center group-hover:text-red-700"></i>
                     <span class="nav-text ml-3 font-medium md:hidden lg:block">Logout</span>
                 </button>
@@ -86,22 +86,3 @@
         </li>
     </ul>
 </nav>
-
-<script>
-    function confirmLogout() {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You will be logged out of the admin panel.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444', 
-            cancelButtonColor: '#6b7280', 
-            confirmButtonText: 'Yes, Logout'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Submit the form manually
-                document.getElementById('logout-form').submit();
-            }
-        });
-    }
-</script>

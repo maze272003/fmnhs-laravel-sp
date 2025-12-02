@@ -23,6 +23,16 @@
                 </div>
             @endif
 
+            @if($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <ul class="list-disc pl-5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 <div class="md:col-span-1">
@@ -43,15 +53,15 @@
                             </div>
 
                             <div class="mb-6">
-                                <label class="block text-sm font-bold mb-2">Attach Image (Optional)</label>
-                                <input type="file" name="image" accept="image/*" class="block w-full text-sm text-slate-500
+                                <label class="block text-sm font-bold mb-2">Attach Media (Optional)</label>
+                                <input type="file" name="image" accept="image/*,video/*" class="block w-full text-sm text-slate-500
                                   file:mr-4 file:py-2 file:px-4
                                   file:rounded-full file:border-0
                                   file:text-sm file:font-semibold
                                   file:bg-indigo-50 file:text-indigo-700
                                   hover:file:bg-indigo-100
                                 "/>
-                                <p class="text-xs text-gray-400 mt-1">JPG, PNG up to 2MB</p>
+                                <p class="text-xs text-gray-400 mt-1">Images (JPG, PNG) or Video (MP4) - Max 20MB</p>
                             </div>
 
                             <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2 rounded hover:bg-indigo-700 transition">Post Now</button>
@@ -80,21 +90,26 @@
                                @if($post->image)
                                     <div class="mb-4">
                                         @php
-                                            // 1. Kunin ang filename lang (para malinis, tanggalin ang folder path kung meron sa DB)
+                                            // 1. Get filename and extension
                                             $filename = basename($post->image);
+                                            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-                                            // 2. Check kung existing sa 'public/uploads/announcements' (Hostinger Path)
+                                            // 2. Check Path (Hostinger vs Local)
                                             if (file_exists(public_path('uploads/announcements/' . $filename))) {
-                                                $finalImage = asset('uploads/announcements/' . $filename);
-                                            } 
-                                            // 3. Kung wala, gamitin ang Standard Local Path (Storage)
-                                            else {
-                                                // Dito gamitin natin ang buong string galing DB kasi usually kasama na folder name (e.g. 'announcements/img.jpg')
-                                                $finalImage = asset('storage/' . $post->image);
+                                                $finalPath = asset('uploads/announcements/' . $filename);
+                                            } else {
+                                                $finalPath = asset('storage/' . $post->image);
                                             }
                                         @endphp
 
-                                        <img src="{{ $finalImage }}" class="w-full h-48 object-cover rounded-lg border border-gray-100" alt="Announcement Image">
+                                        @if(in_array($extension, ['mp4', 'mov', 'avi', 'wmv']))
+                                            <video controls class="w-full rounded-lg border border-gray-100 max-h-96 bg-black">
+                                                <source src="{{ $finalPath }}" type="video/{{ $extension === 'mov' ? 'quicktime' : 'mp4' }}">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        @else
+                                            <img src="{{ $finalPath }}" class="w-full h-48 object-cover rounded-lg border border-gray-100" alt="Announcement Media">
+                                        @endif
                                     </div>
                                 @endif
 
