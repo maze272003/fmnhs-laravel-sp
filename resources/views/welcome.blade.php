@@ -31,7 +31,7 @@
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2">
                     <div class="w-10 h-10 bg-transparent rounded-lg flex items-center justify-center shadow-none">
-                        <img src={{ asset('images/fmnhs.png') }} alt="Grand Tech High School Logo" class="w-full h-full object-cover rounded-lg">
+                        <img src="{{ asset('images/fmnhs.png') }}" alt="Grand Tech High School Logo" class="w-full h-full object-cover rounded-lg">
                     </div>
                     <div>
                         <span class="block font-bold text-xl tracking-tight text-slate-900 leading-none">FORT-i-FYI</span>
@@ -50,7 +50,7 @@
 
             <div class="text-center mb-16">
                 <span class="bg-green-100 text-black-500 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-4 inline-block">
-                    Reseach System For education only
+                    Research System For education only
                 </span>
                 <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
                    Welcome to the
@@ -82,22 +82,34 @@
                             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col h-full">
 
                                 @if($news->image)
-                                    <div class="w-full h-48 overflow-hidden relative group">
+                                    <div class="w-full h-48 overflow-hidden relative group bg-gray-100">
                                         @php
+                                            // 1. Get filename and extension
                                             $filename = basename($news->image);
+                                            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+                                            // 2. Determine Path (Hostinger vs Local)
                                             if (file_exists(public_path('uploads/announcements/' . $filename))) {
-                                                $finalImage = asset('uploads/announcements/' . $filename);
+                                                $finalPath = asset('uploads/announcements/' . $filename);
                                             } else {
-                                                $finalImage = asset('storage/' . $news->image);
+                                                $finalPath = asset('storage/' . $news->image);
                                             }
                                         @endphp
 
-                                        <img src="{{ $finalImage }}" 
-                                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                            alt="{{ $news->title }}"
-                                            onerror="this.style.display='none'">
+                                        {{-- LOGIC: Check if Video or Image --}}
+                                        @if(in_array($extension, ['mp4', 'mov', 'avi', 'wmv']))
+                                            <video controls class="w-full h-full object-cover bg-black">
+                                                <source src="{{ $finalPath }}" type="video/{{ $extension === 'mov' ? 'quicktime' : 'mp4' }}">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        @else
+                                            <img src="{{ $finalPath }}" 
+                                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                alt="{{ $news->title }}"
+                                                onerror="this.style.display='none'">
+                                        @endif
 
-                                        <div class="absolute top-2 right-2">
+                                        <div class="absolute top-2 right-2 pointer-events-none">
                                             @if($news->role == 'admin')
                                                 <span class="bg-slate-900/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow">
                                                     <i class="fa-solid fa-shield-halved mr-1"></i> Admin
@@ -221,8 +233,12 @@
 
         function closeModal(event) {
             if (event && event.target.id === 'portalModal') {
+                // Clicked outside (on overlay)
             } else if (event) {
-                return;
+                // Clicked inside but maybe not intended to close, unless button
+                // But this function is called specifically by overlay or close button
+                // So if event is passed, check id. If button calls without event, proceed.
+                // Simplified logic:
             }
 
             modalContent.classList.remove('modal-enter-active');

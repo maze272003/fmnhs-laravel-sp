@@ -17,17 +17,18 @@ class TeacherAnnouncementController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validate including image
+        // 1. UPDATE VALIDATION: Added video mimes (mp4, mov, avi) & increased max size to 20MB
         $request->validate([
             'title' => 'required',
             'content' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4048'
+            // Note: 'image' parin ang input name natin kahit video ang laman para di na magbago ang DB column
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40000' 
         ]);
 
         $teacher = Auth::guard('teacher')->user();
-        $imagePath = null;
+        $mediaPath = null;
 
-        // 2. Image Upload Logic (Copied from Admin)
+        // 2. Upload Logic (mga file handling)
         if ($request->hasFile('image')) {
 
             $file = $request->file('image');
@@ -35,10 +36,10 @@ class TeacherAnnouncementController extends Controller
 
             // DOUBLE PATH: Local vs Production Logic
             if (app()->environment('local')) {
-                // LOCAL — use storage/app/public (symlink)
-                $imagePath = $file->storeAs('announcements', $filename, 'public');
+                // LOCAL
+                $mediaPath = $file->storeAs('announcements', $filename, 'public');
             } else {
-                // PRODUCTION — direct to public/uploads
+                // PRODUCTION (Hostinger/cPanel)
                 $destinationPath = public_path('uploads/announcements');
 
                 if (!file_exists($destinationPath)) {
@@ -46,9 +47,7 @@ class TeacherAnnouncementController extends Controller
                 }
 
                 $file->move($destinationPath, $filename);
-
-                // match format with storage path
-                $imagePath = 'announcements/' . $filename;
+                $mediaPath = 'announcements/' . $filename;
             }
         }
 
@@ -56,7 +55,7 @@ class TeacherAnnouncementController extends Controller
         Announcement::create([
             'title' => $request->title,
             'content' => $request->content,
-            'image' => $imagePath, // Save the path
+            'image' => $mediaPath, // Saving path (image or video)
             'author_name' => 'Teacher ' . $teacher->last_name,
             'role' => 'teacher' 
         ]);
