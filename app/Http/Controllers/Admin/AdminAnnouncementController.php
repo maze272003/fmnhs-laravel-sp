@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Announcement;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage; // <--- IMPORTANT: Import Storage Facade
+use Illuminate\Support\Str;
 
 class AdminAnnouncementController extends Controller
 {
@@ -17,7 +19,6 @@ class AdminAnnouncementController extends Controller
 
    public function store(Request $request)
     {
-        // 1. UPDATE: Added video mimes & increased max size to 20MB
         $request->validate([
             'title' => 'required',
             'content' => 'required',
@@ -27,37 +28,26 @@ class AdminAnnouncementController extends Controller
         $imagePath = null;
 
         if ($request->hasFile('image')) {
-
             $file = $request->file('image');
-            $filename = time() . '_' . $file->getClientOriginalName();
 
-            // DOUBLE PATH: Local vs Production
-            if (app()->environment('local')) {
+            // 1. Create a clean, custom filename
+            // Example: "no-classes-on-monday-173335600.jpg"
+            // We use time() to make sure it's always unique even if titles are same
+            $filename = Str::slug($request->title) . '-' . time() . '.' . $file->getClientOriginalExtension();
 
-                // LOCAL — use storage/app/public (symlink)
-                $imagePath = $file->storeAs('announcements', $filename, 'public');
-
-            } else {
-                
-                // PRODUCTION — direct to public/uploads
-                $destinationPath = public_path('uploads/announcements');
-
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-
-                $file->move($destinationPath, $filename);
-
-                // match format with storage path
-                $imagePath = 'announcements/' . $filename;
-            }
+            // 2. Use putFileAs to upload with YOUR specific name
+            // Syntax: putFileAs(folder_name, file_object, custom_filename)
+            $path = Storage::disk('s3')->putFileAs('announcements', $file, $filename);
+            
+            // $path now equals: "announcements/no-classes-on-monday-173335600.jpg"
+            $imagePath = $path;
         }
 
         Announcement::create([
             'title' => $request->title,
             'content' => $request->content,
             'image' => $imagePath,
-            'author_name' => 'Admin System',
+            'author_name' => 'Admin System', // Or Auth::user()->name
             'role' => 'admin'
         ]);
 
@@ -66,7 +56,16 @@ class AdminAnnouncementController extends Controller
 
     public function destroy($id)
     {
-        Announcement::findOrFail($id)->delete();
+        $announcement = Announcement::findOrFail($id);
+
+        // S3 CLEANUP:
+        // Delete the file from the bucket if it exists to save space/cost
+        if ($announcement->image) {
+            Storage::disk('s3')->delete($announcement->image);
+        }
+
+        $announcement->delete();
+        
         return back()->with('success', 'Announcement deleted.');
     }
 }

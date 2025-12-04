@@ -61,7 +61,7 @@
                                   file:bg-indigo-50 file:text-indigo-700
                                   hover:file:bg-indigo-100
                                 "/>
-                                <p class="text-xs text-gray-400 mt-1">Images (JPG, PNG) or Video (MP4) - Max 20MB</p>
+                                <p class="text-xs text-gray-400 mt-1">Images (JPG, PNG) or Video (MP4) - Max 40MB</p>
                             </div>
 
                             <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2 rounded hover:bg-indigo-700 transition">Post Now</button>
@@ -90,16 +90,12 @@
                                @if($post->image)
                                     <div class="mb-4">
                                         @php
-                                            // 1. Get filename and extension
-                                            $filename = basename($post->image);
-                                            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                                            // 1. Get Extension for video/image check
+                                            $extension = strtolower(pathinfo($post->image, PATHINFO_EXTENSION));
 
-                                            // 2. Check Path (Hostinger vs Local)
-                                            if (file_exists(public_path('uploads/announcements/' . $filename))) {
-                                                $finalPath = asset('uploads/announcements/' . $filename);
-                                            } else {
-                                                $finalPath = asset('storage/' . $post->image);
-                                            }
+                                            // 2. Generate S3 URL
+                                            // Ensure you have: use Illuminate\Support\Facades\Storage; at the top of your Blade or use full namespace
+                                            $finalPath = \Illuminate\Support\Facades\Storage::disk('s3')->url($post->image);
                                         @endphp
 
                                         @if(in_array($extension, ['mp4', 'mov', 'avi', 'wmv']))
