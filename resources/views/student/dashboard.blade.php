@@ -8,13 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-gray-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200">
+<body class="bg-gray-50 font-sans text-slate-800">
 
     @include('components.student.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center">
+        <header class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-gray-200">
             
             <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600">
                 <i class="fa-solid fa-bars text-xl"></i>
@@ -41,17 +41,17 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div class="text-gray-500 text-sm font-medium uppercase mb-1">Current Section</div>
-                    <div class="text-2xl font-bold text-slate-800 dark:text-white">{{ Auth::guard('student')->user()->section }}</div>
+                    <div class="text-2xl font-bold text-slate-800">{{ Auth::guard('student')->user()->section }}</div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div class="text-gray-500 text-sm font-medium uppercase mb-1">Adviser</div>
-                    <div class="text-2xl font-bold text-slate-800 dark:text-white">--</div>
+                    <div class="text-2xl font-bold text-slate-800">--</div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div class="text-gray-500 text-sm font-medium uppercase mb-1">Status</div>
                     <div class="text-2xl font-bold text-emerald-500">Enrolled</div>
                 </div>
