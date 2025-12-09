@@ -11,6 +11,7 @@ use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Admin\AdminSubjectController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Models\Announcement;
+use App\Http\Controllers\Student\StudentDashboardController;
 // add aritsan command for php artisan migrate:fresh --seed
 
 // make default is welcome blade
@@ -38,9 +39,7 @@ Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admi
 // We use the 'auth' middleware to ensure only logged-in users can see this
 // Gamitin ang 'auth:student' sa halip na 'auth' lang
 Route::middleware(['auth:student'])->group(function () {
-    Route::get('/student/dashboard', function () {
-        return view('student.dashboard'); 
-    })->name('student.dashboard');
+    Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
     Route::get('/student/profile', [App\Http\Controllers\Student\StudentProfileController::class, 'index'])->name('student.profile');
     Route::post('/student/profile', [App\Http\Controllers\Student\StudentProfileController::class, 'update'])->name('student.profile.update');
 

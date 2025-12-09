@@ -14,49 +14,43 @@
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-gray-200">
-            
-            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+        <header class="bg-white shadow-sm sticky top-0 z-30 px-4 md:px-6 py-4 flex justify-between items-center border-b border-gray-200">
+            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600 mr-2">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
 
-            <h2 class="text-xl font-bold text-blue-600 hidden md:block">Student Portal</h2>
+            <h2 class="text-lg md:text-xl font-bold text-blue-600 truncate flex-1">Student Portal</h2>
 
             <div class="flex items-center gap-3 shrink-0">
-        
-        @php
-            // Define variables for avatar check
-            $student = Auth::guard('student')->user();
-            $avatarPath = 'avatars/' . $student->avatar;
-            $hasAvatar = !empty($student->avatar) && \Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath);
-        @endphp
+                @php
+                    $student = Auth::guard('student')->user();
+                    $avatarPath = 'avatars/' . $student->avatar;
+                    $hasAvatar = !empty($student->avatar) && \Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath);
+                @endphp
 
-        <div class="text-right hidden sm:block">
-            <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
-            <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
-        </div>
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
+                    <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
+                </div>
 
-        @if($hasAvatar)
-            <img src="{{ asset('storage/' . $avatarPath) }}" 
-                 alt="Profile" 
-                 class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
-        @else
-            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold border border-blue-200 text-sm md:text-base">
-                {{ substr($student->first_name, 0, 1) }}
+                @if($hasAvatar)
+                    <img src="{{ asset('storage/' . $avatarPath) }}" alt="Profile" class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
+                @else
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold border border-blue-200 text-sm md:text-base">
+                        {{ substr($student->first_name, 0, 1) }}
+                    </div>
+                @endif
             </div>
-        @endif
-
-    </div>
         </header>
 
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-4 md:p-6">
             
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg mb-6">
-                <h1 class="text-2xl font-bold mb-2">Hello, {{ Auth::guard('student')->user()->first_name }}! 👋</h1>
-                <p class="opacity-90">Welcome to your student dashboard. Here is your summary for today.</p>
+                <h1 class="text-xl md:text-2xl font-bold mb-2">Hello, {{ Auth::guard('student')->user()->first_name }}! 👋</h1>
+                <p class="opacity-90 text-sm md:text-base">Welcome to your student dashboard. Here is your summary for today.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div class="text-gray-500 text-sm font-medium uppercase mb-1">Current Section</div>
                     <div class="text-2xl font-bold text-slate-800">{{ Auth::guard('student')->user()->section }}</div>
@@ -70,6 +64,59 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div class="text-gray-500 text-sm font-medium uppercase mb-1">Status</div>
                     <div class="text-2xl font-bold text-emerald-500">Enrolled</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-bullhorn text-blue-600 text-xl"></i>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800">Latest Announcements</h3>
+                </div>
+
+                <div class="space-y-6">
+                    @forelse($announcements as $announcement)
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 transition-colors">
+                            
+                            <div class="flex flex-col gap-1 mb-4 border-b border-gray-100 pb-3">
+                                <h4 class="font-bold text-xl text-blue-700 leading-tight">{{ $announcement->title }}</h4>
+                                <div class="flex items-center text-xs text-gray-400 gap-2">
+                                    <span class="font-bold text-gray-500"><i class="fa-solid fa-user-pen mr-1"></i> {{ $announcement->author_name }}</span>
+                                    <span>•</span>
+                                    <span>{{ $announcement->created_at->format('M d, Y h:i A') }}</span>
+                                </div>
+                            </div>
+
+                            @if($announcement->image)
+                                <div class="mb-4">
+                                    @php
+                                        // 1. Get Extension
+                                        $extension = strtolower(pathinfo($announcement->image, PATHINFO_EXTENSION));
+
+                                        // 2. Generate S3 URL
+                                        $finalPath = \Illuminate\Support\Facades\Storage::disk('s3')->url($announcement->image);
+                                    @endphp
+
+                                    @if(in_array($extension, ['mp4', 'mov', 'avi', 'wmv']))
+                                        <video controls class="w-full rounded-lg border border-gray-100 max-h-96 bg-black">
+                                            <source src="{{ $finalPath }}" type="video/{{ $extension === 'mov' ? 'quicktime' : 'mp4' }}">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    @else
+                                        <img src="{{ $finalPath }}" class="w-full h-auto max-h-[500px] object-contain bg-gray-50 rounded-lg border border-gray-100" alt="Announcement Media">
+                                    @endif
+                                </div>
+                            @endif
+
+                            <p class="text-gray-700 text-sm md:text-base leading-relaxed whitespace-pre-wrap">{{ $announcement->content }}</p>
+                        </div>
+                    @empty
+                        <div class="bg-white p-8 rounded-xl shadow-sm border border-dashed border-gray-300 text-center">
+                            <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
+                                <i class="fa-regular fa-newspaper text-xl"></i>
+                            </div>
+                            <p class="text-gray-500 font-medium">No announcements posted yet.</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
