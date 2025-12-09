@@ -22,15 +22,31 @@
 
             <h2 class="text-xl font-bold text-blue-600 hidden md:block">Student Portal</h2>
 
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-bold">{{ Auth::guard('student')->user()->first_name }} {{ Auth::guard('student')->user()->last_name }}</p>
-                    <p class="text-xs text-gray-500">Grade {{ Auth::guard('student')->user()->grade_level }} - {{ Auth::guard('student')->user()->section }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold border border-blue-200">
-                    {{ substr(Auth::guard('student')->user()->first_name, 0, 1) }}
-                </div>
+            <div class="flex items-center gap-3 shrink-0">
+        
+        @php
+            // Define variables for avatar check
+            $student = Auth::guard('student')->user();
+            $avatarPath = 'avatars/' . $student->avatar;
+            $hasAvatar = !empty($student->avatar) && \Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath);
+        @endphp
+
+        <div class="text-right hidden sm:block">
+            <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
+            <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
+        </div>
+
+        @if($hasAvatar)
+            <img src="{{ asset('storage/' . $avatarPath) }}" 
+                 alt="Profile" 
+                 class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
+        @else
+            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold border border-blue-200 text-sm md:text-base">
+                {{ substr($student->first_name, 0, 1) }}
             </div>
+        @endif
+
+    </div>
         </header>
 
         <main class="flex-1 p-6">

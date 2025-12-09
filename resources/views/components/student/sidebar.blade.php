@@ -4,7 +4,23 @@
     
     <div class="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
         <div class="flex items-center gap-3 px-2">
-            <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xl">S</div>
+            
+            @php
+                $student = Auth::guard('student')->user();
+                $avatarPath = 'avatars/' . $student->avatar;
+                $hasAvatar = !empty($student->avatar) && \Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath);
+            @endphp
+
+            @if($hasAvatar)
+                <img src="{{ asset('storage/' . $avatarPath) }}" 
+                     alt="Profile" 
+                     class="w-8 h-8 rounded object-cover border border-gray-200 shadow-sm">
+            @else
+                <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                    {{ substr($student->first_name, 0, 1) }}
+                </div>
+            @endif
+
             <span class="nav-text font-bold text-xl text-slate-800 lg:block md:hidden">Student</span>
         </div>
         
