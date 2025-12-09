@@ -92,15 +92,15 @@
                             <label class="block w-full">
                                 <span class="sr-only">Choose profile photo</span>
                                 <input type="file" name="avatar" class="block w-full text-xs text-slate-500
-                                  file:mr-4 file:py-2 file:px-4
-                                  file:rounded-full file:border-0
-                                  file:text-xs file:font-bold
-                                  file:bg-blue-50 file:text-blue-700
-                                  hover:file:bg-blue-100
-                                  cursor-pointer
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-xs file:font-bold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100
+                                cursor-pointer
                                 "/>
                             </label>
-                            <p class="text-[10px] text-gray-400 mt-3">JPG, PNG up to 2MB</p>
+                            <p class="text-[10px] text-gray-400 mt-3">JPG, PNG up to 15MB</p>
                         </div>
 
                         <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">

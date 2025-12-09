@@ -22,14 +22,15 @@ class StudentProfileController extends Controller
         $student = Auth::guard('student')->user();
 
         $request->validate([
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            // CHANGED: max:2048 -> max:15360 (15MB)
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:15360', 
             'current_password' => 'nullable|required_with:new_password',
-            'new_password' => 'nullable|min:8|confirmed', // expects new_password_confirmation field
+            'new_password' => 'nullable|min:8|confirmed',
         ]);
 
         // 1. Handle Avatar Upload
         if ($request->hasFile('avatar')) {
-            // Delete old avatar if exists (optional, good practice)
+            // Delete old avatar if exists
             if ($student->avatar && $student->avatar !== 'default.png') {
                 Storage::delete('public/avatars/' . $student->avatar);
             }
@@ -38,7 +39,6 @@ class StudentProfileController extends Controller
             $filename = time() . '.' . $request->avatar->extension();
             $request->avatar->storeAs('avatars', $filename, 'public');
             
-            // Save filename to database (Note: You need to add 'avatar' column to students table first!)
             $student->avatar = $filename;
         }
 
