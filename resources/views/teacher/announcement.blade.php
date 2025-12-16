@@ -120,7 +120,7 @@
                                         </div>
                                     </div>
                                     
-                                    <form action="{{ route('admin.announcements.destroy', $post->id) }}" method="POST">
+                                    <form action="{{ route('teacher.announcements.destroy', $post->id) }}" method="POST">
                                         @csrf @method('DELETE')
                                         <button class="w-8 h-8 flex items-center justify-center rounded-full text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-all">
                                             <i class="fa-solid fa-trash-can text-sm"></i>
