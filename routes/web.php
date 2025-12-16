@@ -67,6 +67,7 @@ Route::middleware(['auth:teacher'])->group(function () {
 
     Route::get('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'index'])->name('teacher.announcements.index');
     Route::post('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'store'])->name('teacher.announcements.store');
+    Route::delete('/teacher/announcements/{id}', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'destroy'])->name('teacher.announcements.destroy');
 
     Route::get('/teacher/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'index'])->name('teacher.assignments.index');
     Route::post('/teacher/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'store'])->name('teacher.assignments.store');
