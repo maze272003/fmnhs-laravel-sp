@@ -43,9 +43,14 @@ Route::get('/dangerous-db-reset', function () {
     flush();
 
     // 4. Define All Commands to Run
+    // 4. Define All Commands to Run
     $commandsToRun = [
         // Command 1: The Big Reset
         [PHP_BINARY, 'artisan', 'migrate:fresh', '--seed', '--force'],
+        
+        // ADDED: Create the storage symbolic link
+        [PHP_BINARY, 'artisan', 'storage:link'],
+
         // Command 2: Clear Config
         [PHP_BINARY, 'artisan', 'config:clear'],
         // Command 3: Clear Cache
