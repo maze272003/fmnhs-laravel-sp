@@ -62,4 +62,11 @@ class TeacherAnnouncementController extends Controller
 
         return back()->with('success', 'Announcement posted!');
     }
+    public function destroy($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->delete();
+
+        return back()->with('success', 'Announcement deleted successfully!');
+    }
 }
