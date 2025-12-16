@@ -3,69 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard | FMNHS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200">
+<body class="bg-slate-50 font-sans text-slate-800 antialiased">
 
     @include('components.admin.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center">
-            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600"><i class="fa-solid fa-bars text-xl"></i></button>
-            <h2 class="text-xl font-bold text-indigo-600">Admin Dashboard</h2>
-            <div class="flex items-center gap-3"><span class="font-bold">{{ Auth::guard('admin')->user()->name }}</span></div>
+        <header class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-100">
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-50 text-slate-500">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-black text-slate-800 tracking-tight">System Overview</h2>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-black text-slate-800 uppercase leading-none">{{ Auth::guard('admin')->user()->name }}</p>
+                    <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mt-1">Super Admin</p>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-lg shadow-slate-200">
+                    {{ substr(Auth::guard('admin')->user()->name, 0, 1) }}
+                </div>
+            </div>
         </header>
 
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-6 lg:p-10">
+
+            <div class="mb-10">
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Dashboard Summary</h1>
+                <p class="text-slate-500 font-medium">Welcome back! Here's what's happening with the portal today.</p>
+            </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500 uppercase font-bold">Total Students</p>
-                            <h3 class="text-3xl font-bold">{{ $totalStudents }}</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-user-graduate"></i>
                         </div>
-                        <div class="text-blue-500 text-3xl"><i class="fa-solid fa-users"></i></div>
+                        <span class="text-[10px] font-black text-blue-400 bg-blue-50/50 px-3 py-1 rounded-full border border-blue-100 uppercase tracking-widest">Enrolled</span>
                     </div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Students</p>
+                    <h3 class="text-4xl font-black text-slate-900">{{ $totalStudents }}</h3>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border-l-4 border-emerald-500">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500 uppercase font-bold">Faculty Members</p>
-                            <h3 class="text-3xl font-bold">{{ $totalTeachers }}</h3>
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-chalkboard-user"></i>
                         </div>
-                        <div class="text-emerald-500 text-3xl"><i class="fa-solid fa-chalkboard-user"></i></div>
+                        <span class="text-[10px] font-black text-emerald-400 bg-emerald-50/50 px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">Faculty</span>
                     </div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Faculty Members</p>
+                    <h3 class="text-4xl font-black text-slate-900">{{ $totalTeachers }}</h3>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border-l-4 border-indigo-500">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500 uppercase font-bold">Active Subjects</p>
-                            <h3 class="text-3xl font-bold">{{ $totalSubjects }}</h3>
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-book-bookmark"></i>
                         </div>
-                        <div class="text-indigo-500 text-3xl"><i class="fa-solid fa-book"></i></div>
+                        <span class="text-[10px] font-black text-indigo-400 bg-indigo-50/50 px-3 py-1 rounded-full border border-indigo-100 uppercase tracking-widest">Curriculum</span>
                     </div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Active Subjects</p>
+                    <h3 class="text-4xl font-black text-slate-900">{{ $totalSubjects }}</h3>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm">
-                    <h3 class="font-bold text-lg mb-4 text-gray-700 dark:text-gray-300">Student Population by Grade</h3>
-                    <div class="relative h-64">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
+                        <h3 class="font-black text-lg text-slate-800 tracking-tight">Student Population</h3>
+                    </div>
+                    <div class="relative h-72">
                         <canvas id="studentChart"></canvas>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm">
-                    <h3 class="font-bold text-lg mb-4 text-gray-700 dark:text-gray-300">Faculty by Department</h3>
-                    <div class="relative h-64">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-2 h-6 bg-emerald-500 rounded-full"></div>
+                        <h3 class="font-black text-lg text-slate-800 tracking-tight">Faculty Distribution</h3>
+                    </div>
+                    <div class="relative h-72">
                         <canvas id="teacherChart"></canvas>
                     </div>
                 </div>
@@ -78,55 +110,63 @@
     <script src="{{ asset('js/sidebar.js') }}"></script>
     
     <script>
-        // --- 1. SETUP STUDENT DATA ---
-        // Convert PHP Collection to JS Array
+        // Universal Chart Colors
+        const colors = ['#6366f1', '#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'];
+
+        // --- 1. STUDENT CHART ---
         const studentData = @json($studentsPerGrade);
-        
         const gradeLabels = studentData.map(item => 'Grade ' + item.grade_level);
         const gradeCounts = studentData.map(item => item.total);
 
-        // Render Pie Chart
         new Chart(document.getElementById('studentChart'), {
             type: 'doughnut',
             data: {
                 labels: gradeLabels,
                 datasets: [{
                     data: gradeCounts,
-                    backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981'], // Tailwind colors
-                    borderWidth: 0
+                    backgroundColor: colors,
+                    hoverOffset: 20,
+                    borderWidth: 4,
+                    borderColor: '#ffffff'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '70%',
                 plugins: {
-                    legend: { position: 'right' }
+                    legend: { 
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20, font: { weight: 'bold', size: 11 } }
+                    }
                 }
             }
         });
 
-        // --- 2. SETUP TEACHER DATA ---
+        // --- 2. TEACHER CHART ---
         const teacherData = @json($teachersPerDept);
         const deptLabels = teacherData.map(item => item.department);
         const deptCounts = teacherData.map(item => item.total);
 
-        // Render Bar Chart
         new Chart(document.getElementById('teacherChart'), {
             type: 'bar',
             data: {
                 labels: deptLabels,
                 datasets: [{
-                    label: 'Teachers',
+                    label: 'Teachers per Dept',
                     data: deptCounts,
                     backgroundColor: '#10b981',
-                    borderRadius: 5
+                    borderRadius: 12,
+                    barThickness: 30
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'bold' } } },
+                    y: { grid: { color: '#f1f5f9' }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });

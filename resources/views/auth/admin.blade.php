@@ -3,74 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
+    <title>Admin Login | FMNHS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* Define the background for the body */
         .login-bg {
-            /* Use Laravel's asset() helper to get the correct path to the image */
             background-image: url('{{ asset("images/bg.jpg") }}'); 
-            background-size: cover; /* Ensures the image covers the whole area */
-            background-position: center; /* Centers the image */
+            background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
         }
 
-        /* Optional: Add a subtle overlay to help the login box stand out */
+        /* Mas maliwanag at malinis na overlay */
         .overlay {
-            background-color: rgba(253, 247, 247, 0.6); /* Dark semi-transparent overlay */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(240, 253, 244, 0.7));
+        }
+
+        /* Glassmorphism effect para sa login box */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body class="login-bg h-screen flex items-center justify-center">
+<body class="login-bg h-screen flex items-center justify-center p-4">
 
     <div class="overlay absolute inset-0"></div>
 
-    <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-sm border border-slate-700 relative z-10">
+    <div class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-white relative z-10 transition-all duration-500">
         
-        <div class="w-20 h-20 mx-auto mb-6">
-            <img src="{{ asset('images/fmnhs.png') }}" alt="School Logo" class="w-full h-full object-cover rounded-full shadow-lg border-4 border-indigo-600">
+        <div class="relative w-24 h-24 mx-auto mb-6">
+            <div class="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-20"></div>
+            <img src="{{ asset('images/fmnhs.png') }}" alt="School Logo" 
+                 class="relative w-full h-full object-cover rounded-full shadow-xl border-4 border-white z-10">
         </div>
 
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-white uppercase tracking-wider">Admin Control</h2>
-            <div class="h-1 w-16 bg-indigo-500 mx-auto mt-2"></div>
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight leading-none mb-2 uppercase">Admin Portal</h2>
+            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em]">Management System</p>
+            <div class="h-1.5 w-12 bg-emerald-500 mx-auto mt-4 rounded-full"></div>
         </div>
 
         @if ($errors->any())
-            <div class="bg-red-500/10 border border-red-500 text-red-400 px-4 py-2 rounded text-sm mb-4">
+            <div class="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl text-xs font-bold mb-6 flex items-center gap-3 animate-shake">
+                <i class="fa-solid fa-circle-exclamation text-lg"></i>
                 {{ $errors->first() }}
             </div>
         @endif
 
-        <form action="{{ route('admin.login.submit') }}" method="POST">
+        <form action="{{ route('admin.login.submit') }}" method="POST" class="space-y-5">
             @csrf
             
-            <div class="mb-4">
-                <label class="block text-slate-300 text-xs uppercase font-bold mb-2">Administrator Email</label>
-                <input type="email" name="email" required 
-                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-indigo-500"
-                    value="{{ old('email') }}">
+            <div>
+                <label class="block text-slate-400 text-[10px] uppercase font-black tracking-widest mb-2 ml-1">Administrator Email</label>
+                <div class="relative group">
+                    <input type="email" name="email" required 
+                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-semibold text-sm"
+                        value="{{ old('email') }}" placeholder="admin@fmnhs.edu.ph">
+                    <i class="fa-solid fa-envelope absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors"></i>
+                </div>
             </div>
 
-            <div class="mb-8">
-                <label class="block text-slate-300 text-xs uppercase font-bold mb-2">Password</label>
-                <input type="password" name="password" required 
-                    class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-indigo-500">
+            <div>
+                <label class="block text-slate-400 text-[10px] uppercase font-black tracking-widest mb-2 ml-1">Secure Password</label>
+                <div class="relative group">
+                    <input type="password" name="password" required 
+                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-semibold text-sm"
+                        placeholder="••••••••">
+                    <i class="fa-solid fa-lock absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors"></i>
+                </div>
             </div>
 
             <button type="submit" 
-                class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition duration-300 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 6a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1V7a1 1 0 00-1-1h-4.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H4z" clip-rule="evenodd" />
-                  </svg>
-                ACCESS SYSTEM
+                class="w-full bg-slate-900 text-white font-black py-4 px-4 rounded-2xl hover:bg-emerald-600 transition-all duration-300 shadow-xl shadow-slate-200 hover:shadow-emerald-100 active:scale-95 flex items-center justify-center gap-2 mt-8 group">
+                <i class="fa-solid fa-shield-halved text-xs group-hover:rotate-12 transition-transform"></i>
+                <span class="tracking-tight">AUTHENTICATE & ENTER</span>
             </button>
         </form>
         
-        <div class="text-center mt-6">
-            <a href="{{ url('/') }}" class="text-indigo-400 hover:text-indigo-300 text-sm transition-colors">
-                &larr; Return to Portal Hub
+        <div class="text-center mt-10">
+            <a href="{{ url('/') }}" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 text-[11px] font-black uppercase tracking-widest transition-all group">
+                <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                Return to Portal Hub
             </a>
         </div>
     </div>
