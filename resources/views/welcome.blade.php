@@ -31,7 +31,7 @@
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-2">
                     <div class="w-10 h-10 bg-transparent rounded-lg flex items-center justify-center shadow-none">
-                        <img src="{{ asset('images/fmnhs.png') }}" alt="Grand Tech High School Logo" class="w-full h-full object-cover rounded-lg">
+                        <img src="{{ asset('images/fmnhs.png') }}" alt="Logo" class="w-full h-full object-cover rounded-lg">
                     </div>
                     <div>
                         <span class="block font-bold text-xl tracking-tight text-slate-900 leading-none">FORT-i-FYI</span>
@@ -84,16 +84,12 @@
                                 @if($news->image)
                                     <div class="w-full h-48 overflow-hidden relative group bg-gray-100">
                                         @php
-                                            // 1. Get filename and extension
-                                            $filename = basename($news->image);
-                                            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                                            // 1. Get Extension
+                                            $extension = strtolower(pathinfo($news->image, PATHINFO_EXTENSION));
 
-                                            // 2. Determine Path (Hostinger vs Local)
-                                            if (file_exists(public_path('uploads/announcements/' . $filename))) {
-                                                $finalPath = asset('uploads/announcements/' . $filename);
-                                            } else {
-                                                $finalPath = asset('storage/' . $news->image);
-                                            }
+                                            // 2. Generate S3 URL (Ito ang fix)
+                                            // Kinukuha nito ang direct link galing sa S3 bucket mo
+                                            $finalPath = \Illuminate\Support\Facades\Storage::disk('s3')->url($news->image);
                                         @endphp
 
                                         {{-- LOGIC: Check if Video or Image --}}
@@ -167,30 +163,26 @@
     </main>
 
     <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
-            
-            <div class="text-sm text-gray-500 hidden md:flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11 1.95a1 1 0 0 1 2 0v2.54a1 1 0 0 1-2 0V1.95zm-3.05 1.5a1 1 0 0 1 0 2l-1.88.94a1 1 0 0 1-1.28-1.55l1.88-.94zm7.9 0l1.88.94a1 1 0 1 1-1.28 1.55l-1.88-.94a1 1 0 0 1 0-2zM12 7a5 5 0 0 0-5 5v5a5 5 0 0 0 10 0v-5a5 5 0 0 0-5-5zm-3 5v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-6 0z"/>
-                </svg>
-                <span class="font-medium text-slate-900">Powered by</span> 
-                <a href="https://coolify.io" target="_blank" class="font-bold text-green-600 hover:text-green-700 transition-colors">
-                    Coolify X JonatasDev
-                </a>
-            </div>
-            
-            <div class="text-center w-full md:w-auto">
-                <p class="text-slate-900 font-bold mb-2">Fort Magsaysay National High School</p>
-                <p class="text-sm text-gray-500">
-                    &copy; {{ date('Y') }} All rights reserved. <br>
-                    <span class="text-xs opacity-75">Student Information System v1.0</span>
-                </p>
-            </div>
-
-            <div class="hidden md:block w-[140px]"></div>
-
+    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <div class="text-sm text-gray-500 flex items-center gap-2">
+            <span class="font-medium text-slate-900">Powered by</span> 
+            <a href="#" class="font-bold text-green-600 hover:text-green-700 transition-colors">
+                Coolify X JonatasDev
+            </a>
         </div>
-    </footer>
+        
+        <div class="text-center">
+            <p class="text-slate-900 font-bold mb-2">Fort Magsaysay National High School</p>
+            <p class="text-sm text-gray-500">
+                &copy; {{ date('Y') }} All rights reserved. <br>
+                <span class="text-xs opacity-75">Student Information System v1.0</span>
+            </p>
+        </div>
+
+        <div class="hidden md:block w-[140px]"></div>
+    </div>
+</footer>
 
     <div id="portalModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4" onclick="closeModal(event)">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm modal-enter" id="modalContent">
@@ -233,12 +225,9 @@
 
         function closeModal(event) {
             if (event && event.target.id === 'portalModal') {
-                // Clicked outside (on overlay)
+                // Clicked outside
             } else if (event) {
-                // Clicked inside but maybe not intended to close, unless button
-                // But this function is called specifically by overlay or close button
-                // So if event is passed, check id. If button calls without event, proceed.
-                // Simplified logic:
+                // Clicked inside
             }
 
             modalContent.classList.remove('modal-enter-active');
