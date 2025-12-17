@@ -15,6 +15,9 @@
         
         <header class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-100">
             <div class="flex items-center gap-3">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 mr-2 transition-colors">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
                 <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
                     <i class="fa-solid fa-bullhorn text-sm"></i>
                 </div>
