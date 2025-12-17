@@ -27,24 +27,20 @@
             </div>
 
             <div class="flex items-center gap-3 shrink-0">
-                @php
-                    $student = Auth::guard('student')->user();
-                    $avatarPath = 'avatars/' . $student->avatar;
-                    $hasAvatar = !empty($student->avatar) && \Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath);
-                @endphp
+                
+                {{-- HELPER USED: Logic is now inside Student Model (avatar_url) --}}
+                @php $student = Auth::guard('student')->user(); @endphp
 
                 <div class="text-right hidden sm:block">
-                    <p class="text-xs font-black text-slate-800 uppercase leading-none">{{ $student->first_name }} {{ $student->last_name }}</p>
-                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Grade {{ $student->grade_level }} — {{ $student->section }}</p>
+                    <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
+                    <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
                 </div>
 
-                @if($hasAvatar)
-                    <img src="{{ asset('storage/' . $avatarPath) }}" alt="Profile" class="w-9 h-9 md:w-10 md:h-10 rounded-xl object-cover border-2 border-white shadow-sm">
-                @else
-                    <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black shadow-lg shadow-blue-100 text-sm">
-                        {{ substr($student->first_name, 0, 1) }}
-                    </div>
-                @endif
+                {{-- Since avatar_url always returns a valid link (S3 or UI Avatars), we always show the IMG tag --}}
+                <img src="{{ $student->avatar_url }}" 
+                     alt="Profile" 
+                     class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
+
             </div>
         </header>
 

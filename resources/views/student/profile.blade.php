@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>My Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>My Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -22,30 +23,21 @@
             <h2 class="text-lg md:text-xl font-bold text-blue-600 truncate flex-1">Account Settings</h2>
             
             <div class="flex items-center gap-3 shrink-0">
-        
-        @php
-            // Define variables for avatar check
-            $student = Auth::guard('student')->user();
-            $avatarPath = 'avatars/' . $student->avatar;
-            $hasAvatar = !empty($student->avatar) && \Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath);
-        @endphp
+                
+                {{-- HELPER USED: Logic is now inside Student Model (avatar_url) --}}
+                @php $student = Auth::guard('student')->user(); @endphp
 
-        <div class="text-right hidden sm:block">
-            <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
-            <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
-        </div>
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
+                    <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
+                </div>
 
-        @if($hasAvatar)
-            <img src="{{ asset('storage/' . $avatarPath) }}" 
-                 alt="Profile" 
-                 class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
-        @else
-            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold border border-blue-200 text-sm md:text-base">
-                {{ substr($student->first_name, 0, 1) }}
+                {{-- Since avatar_url always returns a valid link (S3 or UI Avatars), we always show the IMG tag --}}
+                <img src="{{ $student->avatar_url }}" 
+                     alt="Profile" 
+                     class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
+
             </div>
-        @endif
-
-    </div>
         </header>
 
         <main class="flex-1 p-4 md:p-6">
@@ -74,19 +66,9 @@
                             <h3 class="font-bold text-lg mb-4 text-slate-800">Profile Picture</h3>
                             
                             <div class="relative w-32 h-32 mx-auto mb-4 group">
-                                @php
-                                    $hasAvatar = !empty(Auth::guard('student')->user()->avatar);
-                                    $avatarPath = 'avatars/' . Auth::guard('student')->user()->avatar;
-                                    
-                                    if ($hasAvatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath)) {
-                                        $avatarSrc = asset('storage/' . $avatarPath);
-                                    } else {
-                                        $name = urlencode(Auth::guard('student')->user()->first_name);
-                                        $avatarSrc = "https://ui-avatars.com/api/?name={$name}&background=2563eb&color=fff";
-                                    }
-                                @endphp
-                                
-                                <img src="{{ $avatarSrc }}" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg">
+                                {{-- HELPER USED: Clean access to avatar_url --}}
+                                <img src="{{ Auth::guard('student')->user()->avatar_url }}" 
+                                     class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg">
                             </div>
 
                             <label class="block w-full">
