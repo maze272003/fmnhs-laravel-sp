@@ -25,6 +25,9 @@
         
         <header class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-100">
             <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 mr-2 transition-colors">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
                 <a href="{{ route('teacher.grading.index') }}" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
                     <i class="fa-solid fa-arrow-left text-sm"></i>
                 </a>

@@ -17,4 +17,6 @@ class Announcement extends Model
         'role', 
         'image' // <--- IDAGDAG MO ITO
     ];
+
+    
 }

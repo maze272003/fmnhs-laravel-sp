@@ -14,6 +14,9 @@
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         <header class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-30 px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 mr-2 transition-colors">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
                 <div class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
                     <i class="fa-solid fa-file-signature"></i>
                 </div>
