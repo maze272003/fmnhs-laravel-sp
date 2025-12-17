@@ -8,6 +8,9 @@ use App\Models\Announcement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; // <--- IMPORTANT: Import Storage Facade
 use Illuminate\Support\Str;
+use App\Models\Student; // IMPORT THIS
+use App\Mail\AnnouncementMail; // IMPORT THIS
+use Illuminate\Support\Facades\Mail; // IMPORT THIS
 
 class AdminAnnouncementController extends Controller
 {
@@ -29,29 +32,42 @@ class AdminAnnouncementController extends Controller
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-
-            // 1. Create a clean, custom filename
-            // Example: "no-classes-on-monday-173335600.jpg"
-            // We use time() to make sure it's always unique even if titles are same
             $filename = Str::slug($request->title) . '-' . time() . '.' . $file->getClientOriginalExtension();
-
-            // 2. Use putFileAs to upload with YOUR specific name
-            // Syntax: putFileAs(folder_name, file_object, custom_filename)
+            // Upload to S3
             $path = Storage::disk('s3')->putFileAs('announcements', $file, $filename);
             
-            // $path now equals: "announcements/no-classes-on-monday-173335600.jpg"
+            // IMPORTANT: Set visibility to public para ma-access ng students sa email
+            Storage::disk('s3')->setVisibility($path, 'public'); 
+            
             $imagePath = $path;
         }
 
-        Announcement::create([
+        // 1. Save Announcement
+        $announcement = Announcement::create([
             'title' => $request->title,
             'content' => $request->content,
             'image' => $imagePath,
-            'author_name' => 'Admin System', // Or Auth::user()->name
+            'author_name' => 'Admin System',
             'role' => 'admin'
         ]);
 
-        return back()->with('success', 'Announcement posted!');
+        // 2. Send Email to ALL Students (Background Queue is recommended for many students)
+        // Kunin lang ang mga students na may valid email
+        $students = Student::whereNotNull('email')->get();
+
+        foreach ($students as $student) {
+            // Gamit ang Mail Facade
+            // Kung marami kang students (e.g. 500+), mas maganda gumamit ng Queue (Mail::to()->queue())
+            // Pero sa ngayon, direct send muna:
+            try {
+                Mail::to($student->email)->send(new AnnouncementMail($announcement));
+            } catch (\Exception $e) {
+                // Log error kung may fail pero wag itigil ang loop
+                \Log::error("Failed sending email to " . $student->email . ": " . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', 'Announcement posted and emails sent!');
     }
 
     public function destroy($id)
