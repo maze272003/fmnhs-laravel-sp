@@ -59,37 +59,41 @@
                             <h3 class="font-black text-lg text-slate-800 tracking-tight">Post New Update</h3>
                         </div>
                         
-                        <form action="{{ route('teacher.announcements.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                        <form id="announcementForm" enctype="multipart/form-data" class="space-y-5">
                             @csrf
-                            
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Update Title</label>
-                                <input type="text" name="title" required 
-                                       class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-semibold" 
-                                       placeholder="e.g. Schedule for Final Exams">
+                                <input type="text" name="title" id="title" required 
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-semibold" 
+                                    placeholder="e.g. Schedule for Final Exams">
                             </div>
 
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Detailed Content</label>
-                                <textarea name="content" rows="4" required 
-                                          class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-semibold" 
-                                          placeholder="Share the details with your students..."></textarea>
+                                <textarea name="content" id="content" rows="4" required 
+                                        class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-semibold" 
+                                        placeholder="Share the details with your students..."></textarea>
                             </div>
 
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Attach Media (Optional)</label>
-                                <div class="relative group">
-                                    <input type="file" name="image" accept="image/*,video/*" 
-                                           class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 transition-all cursor-pointer shadow-sm"/>
-                                </div>
-                                <p class="text-[10px] text-slate-400 mt-3 font-medium leading-relaxed italic">
-                                    <i class="fa-solid fa-circle-info mr-1"></i> Images or MP4 Videos. Max: 40MB.
-                                </p>
+                                <input type="file" name="image" id="image" accept="image/*,video/*" 
+                                    class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 transition-all cursor-pointer shadow-sm"/>
                             </div>
 
-                            <button type="submit" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-emerald-600 shadow-xl shadow-slate-200 hover:shadow-emerald-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group">
+                            <div id="uploadProgressContainer" class="hidden space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Uploading...</span>
+                                    <span id="uploadPercentage" class="text-[10px] font-black text-emerald-600">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                                    <div id="uploadProgressBar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="submitBtn" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-emerald-600 shadow-xl transition-all flex items-center justify-center gap-3">
                                 <span>Publish Post</span>
-                                <i class="fa-solid fa-paper-plane text-xs group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
                             </button>
                         </form>
                     </div>
@@ -172,5 +176,49 @@
         </main>
     </div>
     <script src="{{ asset('js/sidebar.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+    document.getElementById('announcementForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitBtn = document.getElementById('submitBtn');
+        const progressContainer = document.getElementById('uploadProgressContainer');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const progressText = document.getElementById('uploadPercentage');
+
+        // Disable button and show progress
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        progressContainer.classList.remove('hidden');
+
+        axios.post("{{ route('teacher.announcements.store') }}", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: function(progressEvent) {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                progressBar.style.width = percentCompleted + '%';
+                progressText.innerText = percentCompleted + '%';
+                
+                if (percentCompleted === 100) {
+                    progressText.innerText = 'Processing on Server...';
+                }
+            }
+        })
+        .then(response => {
+            // Success: Refresh page to show new post
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Upload failed. Please check file size or connection.');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            progressContainer.classList.add('hidden');
+        });
+    });
+    </script>
 </body>
 </html>

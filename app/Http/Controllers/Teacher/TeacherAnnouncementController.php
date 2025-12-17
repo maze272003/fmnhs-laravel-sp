@@ -18,41 +18,39 @@ class TeacherAnnouncementController extends Controller
     }
 
     public function store(Request $request)
-    {
-        // 1. Validation: Max 40MB para sa video/images
-        $request->validate([
-            'title' => 'required',
-            'content' => 'required',
-            'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480' 
-        ]);
+{
+    $request->validate([
+        'title' => 'required',
+        'content' => 'required',
+        'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480' 
+    ]);
 
-        $teacher = Auth::guard('teacher')->user();
-        $mediaPath = null;
+    $teacher = Auth::guard('teacher')->user();
+    $mediaPath = null;
 
-        // 2. S3 Upload Logic
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-
-            // Gumawa ng unique filename base sa title at time
-            $filename = Str::slug($request->title) . '-' . time() . '.' . $file->getClientOriginalExtension();
-
-            // I-upload sa S3 'announcements' folder
-            $path = Storage::disk('s3')->putFileAs('announcements', $file, $filename);
-            
-            $mediaPath = $path;
-        }
-
-        // 3. Create Announcement record in Database
-        Announcement::create([
-            'title' => $request->title,
-            'content' => $request->content,
-            'image' => $mediaPath, 
-            'author_name' => 'Teacher ' . $teacher->last_name,
-            'role' => 'teacher' 
-        ]);
-
-        return back()->with('success', 'Announcement posted successfully to the board!');
+    if ($request->hasFile('image')) {
+        $file = $request->file('image');
+        $filename = Str::slug($request->title) . '-' . time() . '.' . $file->getClientOriginalExtension();
+        $path = Storage::disk('s3')->putFileAs('announcements', $file, $filename);
+        $mediaPath = $path;
     }
+
+    Announcement::create([
+        'title' => $request->title,
+        'content' => $request->content,
+        'image' => $mediaPath, 
+        'author_name' => 'Teacher ' . $teacher->last_name,
+        'role' => 'teacher' 
+    ]);
+
+    // Check if request is AJAX/Axios
+    if ($request->expectsJson()) {
+        session()->flash('success', 'Announcement posted successfully!');
+        return response()->json(['success' => true]);
+    }
+
+    return back()->with('success', 'Announcement posted successfully to the board!');
+}
 
     public function destroy($id)
     {
