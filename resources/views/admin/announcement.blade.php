@@ -3,160 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Announcements | Admin</title>
+    <title>Communications Hub | Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 antialiased">
+<body class="bg-[#f8fafc] text-slate-900 antialiased">
 
     @include('components.admin.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-100">
-            <div class="flex items-center gap-3">
-                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 mr-2 transition-colors">
-                    <i class="fa-solid fa-bars text-xl"></i>
+        <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 px-8 py-5 flex justify-between items-center border-b border-slate-200/60">
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
+                    <i class="fa-solid fa-bars-staggered text-xl"></i>
                 </button>
-                <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
-                    <i class="fa-solid fa-bullhorn text-sm"></i>
+                <div class="flex flex-col">
+                    <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Communications Hub</h2>
+                    <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.2em]">Institutional Broadcaster</p>
                 </div>
-                <h2 class="text-xl font-black text-slate-800 tracking-tight">Bulletin Board</h2>
             </div>
-            <div class="hidden sm:block">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    Admin Broadcaster
-                </span>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex flex-col text-right mr-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Server Status</span>
+                    <span class="text-[10px] font-black text-emerald-500 flex items-center justify-end gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE
+                    </span>
+                </div>
+                <div class="h-10 w-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-lg shadow-slate-200">
+                    <i class="fa-solid fa-tower-broadcast text-xs"></i>
+                </div>
             </div>
         </header>
 
-        <main class="flex-1 p-6 lg:p-10">
+        <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
             
             @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 px-6 py-4 rounded-2xl mb-6 flex items-center gap-3 shadow-sm">
-                    <i class="fa-solid fa-circle-check text-xl"></i>
-                    <p class="font-bold text-sm">{{ session('success') }}</p>
-                </div>
+                <script>
+                    Swal.fire({ icon: 'success', title: 'Broadcast Sent', text: "{{ session('success') }}", showConfirmButton: false, timer: 2500, borderRadius: '24px' });
+                </script>
             @endif
 
-            @if($errors->any())
-                <div class="bg-rose-50 border border-rose-100 text-rose-700 px-6 py-4 rounded-2xl mb-6 shadow-sm">
-                    <div class="flex items-center gap-3 mb-2">
-                        <i class="fa-solid fa-circle-exclamation text-xl"></i>
-                        <p class="font-bold text-sm">Post Error</p>
-                    </div>
-                    <ul class="text-xs font-medium ml-8 list-disc">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 
-                <div class="lg:col-span-4">
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 sticky top-24">
-                        <div class="flex items-center gap-2 mb-6">
-                            <div class="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
-                            <h3 class="font-black text-lg text-slate-800 tracking-tight">Post New Update</h3>
+                <div class="lg:col-span-5 xl:col-span-4">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 border border-slate-200/50 sticky top-28">
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                                <i class="fa-solid fa-pen-nib text-sm"></i>
+                            </div>
+                            <h3 class="font-black text-lg text-slate-800 tracking-tight">Compose Update</h3>
                         </div>
                         
-                        <form action="{{ route('admin.announcements.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                        <form action="{{ route('admin.announcements.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                             @csrf
                             
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Announcement Title</label>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Headline</label>
                                 <input type="text" name="title" required 
-                                       class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm" 
-                                       placeholder="e.g. No Classes Due to Weather">
+                                       class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-slate-700" 
+                                       placeholder="Enter catchy headline...">
                             </div>
 
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Message Body</label>
-                                <textarea name="content" rows="4" required 
-                                          class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm" 
-                                          placeholder="Enter the full details here..."></textarea>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Announcement Details</label>
+                                <textarea name="content" rows="5" required 
+                                          class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-600 leading-relaxed custom-scrollbar" 
+                                          placeholder="Describe the update in detail..."></textarea>
                             </div>
 
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Attach Media (Optional)</label>
-                                <div class="relative group">
-                                    <input type="file" name="image" accept="image/*,video/*" 
-                                           class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition-all cursor-pointer shadow-sm"/>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Media Attachment</label>
+                                <div class="relative group cursor-pointer">
+                                    <div class="flex items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-3xl group-hover:border-indigo-400 group-hover:bg-indigo-50/30 transition-all">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <i class="fa-solid fa-cloud-arrow-up text-slate-300 group-hover:text-indigo-500 transition-colors text-2xl"></i>
+                                            <span class="text-[10px] font-bold text-slate-400 group-hover:text-indigo-600 uppercase tracking-widest">Click to upload media</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="image" accept="image/*,video/*" class="absolute inset-0 opacity-0 cursor-pointer"/>
                                 </div>
-                                <p class="text-[10px] text-slate-400 mt-3 font-medium leading-relaxed italic">
-                                    <i class="fa-solid fa-circle-info mr-1"></i> Images or Videos (MP4) - Maximum 40MB.
-                                </p>
+                                <div class="flex items-center gap-2 px-2">
+                                    <i class="fa-solid fa-circle-info text-[10px] text-indigo-400"></i>
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Supports JPG, PNG, MP4 (Max 40MB)</p>
+                                </div>
                             </div>
 
-                            <button type="submit" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-indigo-600 shadow-xl shadow-slate-200 hover:shadow-indigo-100 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group mt-4">
-                                <span>Broadcast Now</span>
-                                <i class="fa-solid fa-paper-plane text-xs group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                            <button type="submit" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-indigo-600 shadow-xl shadow-slate-200 hover:shadow-indigo-200 transition-all active:scale-[0.98] flex items-center justify-center gap-3 group">
+                                <span class="tracking-tight">Broadcast to Students</span>
+                                <i class="fa-solid fa-paper-plane text-[10px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <div class="lg:col-span-8 space-y-8">
-                    <div class="flex items-center justify-between px-2">
-                        <h3 class="font-black text-xl text-slate-800 tracking-tight">Recent Broadcasts</h3>
-                        <span class="text-xs font-bold text-slate-400 bg-white border border-slate-100 px-4 py-1.5 rounded-full shadow-sm">
-                            Real-time Updates
-                        </span>
+                <div class="lg:col-span-7 xl:col-span-8 space-y-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-black text-2xl text-slate-900 tracking-tight">Recent Activity</h3>
+                            <span class="bg-indigo-50 text-indigo-600 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-100 uppercase tracking-widest">
+                                {{ $announcements->total() }} Posts
+                            </span>
+                        </div>
                     </div>
 
-                    <div class="space-y-6">
-                        @foreach($announcements as $post)
-                            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 relative group overflow-hidden">
-                                
-                                <div class="flex justify-between items-start mb-6">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center text-xl group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                                            <i class="fa-solid fa-user-shield"></i>
+                    <div class="space-y-8">
+                        @forelse($announcements as $post)
+                            <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-500 overflow-hidden group">
+                                <div class="p-8">
+                                    <div class="flex justify-between items-start mb-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                                <i class="fa-solid fa-user-shield text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-extrabold text-xl text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">{{ $post->title }}</h4>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ $post->author_name }}</span>
+                                                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ $post->created_at->diffForHumans() }}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 class="font-black text-xl text-slate-800 leading-none mb-1">{{ $post->title }}</h4>
-                                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                                By Admin {{ $post->author_name }} • {{ $post->created_at->format('M d, Y') }}
-                                            </p>
+                                        
+                                        <div class="flex items-center gap-2">
+                                            <form action="{{ route('admin.announcements.destroy', $post->id) }}" method="POST" class="delete-form">
+                                                @csrf @method('DELETE')
+                                                <button type="button" class="delete-btn w-10 h-10 flex items-center justify-center rounded-xl text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-all">
+                                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
-                                    
-                                    <form action="{{ route('admin.announcements.destroy', $post->id) }}" method="POST">
-                                        @csrf @method('DELETE')
-                                        <button class="w-8 h-8 flex items-center justify-center rounded-full text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-all">
-                                            <i class="fa-solid fa-trash-can text-sm"></i>
-                                        </button>
-                                    </form>
-                                </div>
 
-                                <div class="relative mb-6">
-                                    <p class="text-slate-600 leading-relaxed whitespace-pre-wrap relative z-10 pl-6 border-l-4 border-indigo-100 group-hover:border-indigo-500 transition-all">
-                                        {{ $post->content }}
-                                    </p>
-                                </div>
-
-                                @if($post->image)
-                                    <div class="rounded-3xl overflow-hidden border border-slate-100 bg-slate-50 relative group/media max-h-[450px]">
-                                        @php
-                                            $extension = strtolower(pathinfo($post->image, PATHINFO_EXTENSION));
-                                            $finalPath = \Illuminate\Support\Facades\Storage::disk('s3')->url($post->image);
-                                        @endphp
-
-                                        @if(in_array($extension, ['mp4', 'mov', 'avi', 'wmv']))
-                                            <video controls class="w-full h-full bg-black">
-                                                <source src="{{ $finalPath }}" type="video/{{ $extension === 'mov' ? 'quicktime' : 'mp4' }}">
-                                            </video>
-                                        @else
-                                            <img src="{{ $finalPath }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="Broadcast Media">
-                                        @endif
+                                    <div class="relative pl-6 border-l-4 border-slate-100 group-hover:border-indigo-500 transition-all duration-300 mb-8">
+                                        <p class="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">
+                                            {{ $post->content }}
+                                        </p>
                                     </div>
-                                @endif
+
+                                    @if($post->image)
+                                        <div class="rounded-[2rem] overflow-hidden border border-slate-100 bg-slate-50 relative group/media max-h-[500px] shadow-inner">
+                                            @php
+                                                $extension = strtolower(pathinfo($post->image, PATHINFO_EXTENSION));
+                                                $finalPath = \Illuminate\Support\Facades\Storage::disk('s3')->url($post->image);
+                                            @endphp
+
+                                            @if(in_array($extension, ['mp4', 'mov', 'avi', 'wmv']))
+                                                <video controls class="w-full h-full bg-black">
+                                                    <source src="{{ $finalPath }}" type="video/{{ $extension === 'mov' ? 'quicktime' : 'mp4' }}">
+                                                </video>
+                                            @else
+                                                <img src="{{ $finalPath }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" alt="Media Content">
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
+                                <i class="fa-solid fa-box-open text-5xl text-slate-200 mb-4"></i>
+                                <h3 class="text-slate-400 font-bold uppercase tracking-widest">No broadcasts found</h3>
+                            </div>
+                        @endforelse
                         
-                        <div class="mt-10 flex justify-center">
+                        <div class="py-6">
                             {{ $announcements->links() }}
                         </div>
                     </div>
@@ -165,6 +185,25 @@
             </div>
         </main>
     </div>
+
     <script src="{{ asset('js/sidebar.js') }}"></script>
+    <script>
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                Swal.fire({
+                    title: 'Retract Broadcast?',
+                    text: "This will remove the announcement for all students.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0f172a',
+                    cancelButtonColor: '#94a3b8',
+                    confirmButtonText: 'Yes, Delete',
+                    borderRadius: '24px'
+                }).then((result) => {
+                    if (result.isConfirmed) this.closest('form').submit();
+                });
+            });
+        });
+    </script>
 </body>
 </html>

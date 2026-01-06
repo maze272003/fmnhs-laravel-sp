@@ -28,7 +28,7 @@
             </div>
             <div class="hidden sm:block">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    Academic Year 2024-2025
+                    SY 2025-2026 | Normalized
                 </span>
             </div>
         </header>
@@ -37,7 +37,7 @@
             
             <div class="mb-10">
                 <h1 class="text-3xl font-black text-slate-900 tracking-tight">Class Scheduling</h1>
-                <p class="text-slate-500 font-medium">Assign subjects, teachers, and time slots to specific sections.</p>
+                <p class="text-slate-500 font-medium">Assign subjects and faculty to specific sections in the database.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -54,16 +54,18 @@
                             
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Target Section</label>
-                                <select name="section" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                                <select name="section_id" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                                    <option value="">-- Select Section --</option>
                                     @foreach($sections as $sec)
-                                        <option value="{{ $sec }}">{{ $sec }}</option>
+                                        <option value="{{ $sec->id }}">Grade {{ $sec->grade_level }} - {{ $sec->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Course Subject</label>
-                                <select name="subject_id" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                                <select name="subject_id" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                                    <option value="">-- Select Subject --</option>
                                     @foreach($subjects as $sub)
                                         <option value="{{ $sub->id }}">{{ $sub->code }} — {{ $sub->name }}</option>
                                     @endforeach
@@ -72,7 +74,8 @@
 
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Faculty Member</label>
-                                <select name="teacher_id" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                                <select name="teacher_id" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                                    <option value="">-- Select Teacher --</option>
                                     @foreach($teachers as $t)
                                         <option value="{{ $t->id }}">{{ $t->last_name }}, {{ $t->first_name }}</option>
                                     @endforeach
@@ -82,25 +85,25 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Day(s)</label>
-                                    <select name="day" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm">
+                                    <select name="day" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
                                         <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
                                         <option>Thursday</option><option>Friday</option><option>MWF</option><option>TTH</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Room No.</label>
-                                    <input type="text" name="room" placeholder="e.g. 102" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm">
+                                    <input type="text" name="room" placeholder="e.g. 102" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-sm">
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Time In</label>
-                                    <input type="time" name="start_time" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm">
+                                    <input type="time" name="start_time" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Time Out</label>
-                                    <input type="time" name="end_time" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm">
+                                    <input type="time" name="end_time" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
                                 </div>
                             </div>
 
@@ -133,8 +136,12 @@
                                                     {{ $sched->subject->code }}
                                                 </div>
                                                 <div>
-                                                    <p class="font-black text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">{{ $sched->section }}</p>
-                                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Room {{ $sched->room ?? 'N/A' }}</p>
+                                                    <p class="font-black text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">
+                                                        {{ $sched->section->name }}
+                                                    </p>
+                                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                                        Grade {{ $sched->section->grade_level }} • Room {{ $sched->room ?? 'N/A' }}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>
@@ -183,22 +190,17 @@
 
     <script src="{{ asset('js/sidebar.js') }}"></script>
     <script>
-        // Custom Delete SweetAlert
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 Swal.fire({
                     title: 'Remove Schedule?',
-                    text: "The class assignment will be deleted. This may affect teacher workloads.",
+                    text: "Class records linked to this schedule may be affected.",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#f43f5e',
                     cancelButtonColor: '#94a3b8',
                     confirmButtonText: 'Yes, Delete',
                     borderRadius: '25px',
-                    customClass: {
-                        confirmButton: 'font-bold py-3 px-6 rounded-2xl',
-                        cancelButton: 'font-bold py-3 px-6 rounded-2xl'
-                    }
                 }).then((result) => {
                     if (result.isConfirmed) this.closest('form').submit();
                 });

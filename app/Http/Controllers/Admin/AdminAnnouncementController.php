@@ -3,85 +3,89 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Announcement;
+use App\Models\Student;
+use App\Mail\AnnouncementMail;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // <--- IMPORTANT: Import Storage Facade
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use App\Models\Student; // IMPORT THIS
-use App\Mail\AnnouncementMail; // IMPORT THIS
-use Illuminate\Support\Facades\Mail; // IMPORT THIS
 
 class AdminAnnouncementController extends Controller
 {
-    public function index()
+    /**
+     * Display the Bulletin Board.
+     */
+    public function index(): View
     {
-        $announcements = Announcement::orderBy('created_at', 'desc')->paginate(5);
+        $announcements = Announcement::latest()->paginate(5);
         return view('admin.announcement', compact('announcements'));
     }
 
-   public function store(Request $request)
+    /**
+     * Store and Broadcast a new announcement.
+     */
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'title' => 'required',
-            'content' => 'required',
-            'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480'
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480' // 40MB limit
         ]);
 
         $imagePath = null;
 
+        // Media Handling (S3)
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = Str::slug($request->title) . '-' . time() . '.' . $file->getClientOriginalExtension();
-            // Upload to S3
-            $path = Storage::disk('s3')->putFileAs('announcements', $file, $filename);
             
-            // IMPORTANT: Set visibility to public para ma-access ng students sa email
-            Storage::disk('s3')->setVisibility($path, 'public'); 
-            
-            $imagePath = $path;
+            // Upload to S3 with Public visibility
+            $imagePath = Storage::disk('s3')->putFileAs('announcements', $file, $filename, 'public');
         }
 
-        // 1. Save Announcement
+        // 1. Save to Database
+        // Gagamitin natin ang Auth name para malaman kung sinong Admin ang nag-post
         $announcement = Announcement::create([
             'title' => $request->title,
             'content' => $request->content,
             'image' => $imagePath,
-            'author_name' => 'Admin System',
+            'author_name' => Auth::guard('admin')->user()->name, 
             'role' => 'admin'
         ]);
 
-        // 2. Send Email to ALL Students (Background Queue is recommended for many students)
-        // Kunin lang ang mga students na may valid email
-        $students = Student::whereNotNull('email')->get();
-
-        foreach ($students as $student) {
-            // Gamit ang Mail Facade
-            // Kung marami kang students (e.g. 500+), mas maganda gumamit ng Queue (Mail::to()->queue())
-            // Pero sa ngayon, direct send muna:
-            try {
-                Mail::to($student->email)->send(new AnnouncementMail($announcement));
-            } catch (\Exception $e) {
-                // Log error kung may fail pero wag itigil ang loop
-                \Log::error("Failed sending email to " . $student->email . ": " . $e->getMessage());
+        // 2. Broadcast via Queued Email
+        // Ginagamit natin ang chunking para hindi ma-overload ang mail server
+        Student::whereNotNull('email')->chunk(50, function ($students) use ($announcement) {
+            foreach ($students as $student) {
+                try {
+                    // .queue() ang gagamitin sa halip na .send() para mabilis ang response
+                    Mail::to($student->email)->queue(new AnnouncementMail($announcement));
+                } catch (\Exception $e) {
+                    Log::error("Mail queue failed for {$student->email}: " . $e->getMessage());
+                }
             }
-        }
+        });
 
-        return back()->with('success', 'Announcement posted and emails sent!');
+        return back()->with('success', 'Announcement broadcasted successfully to all students!');
     }
 
-    public function destroy($id)
+    /**
+     * Remove the announcement and its media.
+     */
+    public function destroy(Announcement $announcement): RedirectResponse
     {
-        $announcement = Announcement::findOrFail($id);
-
-        // S3 CLEANUP:
-        // Delete the file from the bucket if it exists to save space/cost
-        if ($announcement->image) {
+        // S3 Cleanup: Burahin ang file sa bucket para makatipid sa storage cost
+        if ($announcement->image && Storage::disk('s3')->exists($announcement->image)) {
             Storage::disk('s3')->delete($announcement->image);
         }
 
         $announcement->delete();
         
-        return back()->with('success', 'Announcement deleted.');
+        return back()->with('success', 'Announcement has been retracted and media deleted.');
     }
 }

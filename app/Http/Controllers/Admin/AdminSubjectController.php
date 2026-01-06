@@ -5,48 +5,68 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class AdminSubjectController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the subjects.
+     */
+    public function index(): View
     {
+        // Paginating by 10 and ordering by code for better organization
         $subjects = Subject::orderBy('code')->paginate(10);
+        
         return view('admin.subject', compact('subjects'));
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created subject in storage.
+     */
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => 'required|unique:subjects,code|max:20', // e.g., MATH-101
+            'code' => 'required|unique:subjects,code|max:20|string|uppercase', // e.g., MATH-101
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
         ]);
 
         Subject::create($validated);
 
-        return redirect()->back()->with('success', 'Subject created successfully!');
+        return redirect()->back()->with('success', 'New subject has been added to the curriculum!');
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update the specified subject in storage.
+     * Ginamit natin ang Route Model Binding para mas malinis (Subject $subject)
+     */
+    public function update(Request $request, Subject $subject): RedirectResponse
     {
-        $subject = Subject::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|max:20|unique:subjects,code,'.$subject->id,
+            // Inignore natin ang ID ng current subject para hindi mag-error ang unique rule
+            'code' => 'required|max:20|string|uppercase|unique:subjects,code,' . $subject->id,
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
         ]);
 
         $subject->update($validated);
 
-        return redirect()->back()->with('success', 'Subject updated successfully!');
+        return redirect()->back()->with('success', 'Subject information has been successfully updated!');
     }
 
-    public function destroy($id)
+    /**
+     * Remove the specified subject from storage.
+     */
+    public function destroy(Subject $subject): RedirectResponse
     {
-        $subject = Subject::findOrFail($id);
-        $subject->delete(); // This will cascade delete grades associated with it!
+        /**
+         * Paalala: Dahil sa cascade delete sa migration, 
+         * ang lahat ng grades, schedules, at assignments 
+         * na nakalink sa subject na ito ay awtomatikong mabubura.
+         */
+        $subject->delete();
 
-        return redirect()->back()->with('success', 'Subject deleted successfully!');
+        return redirect()->back()->with('success', 'Subject and all associated records have been removed.');
     }
 }

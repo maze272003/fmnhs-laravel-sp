@@ -26,12 +26,12 @@
                     <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
                         <i class="fa-solid fa-clipboard-list text-sm"></i>
                     </div>
-                    <h2 class="text-xl font-black text-slate-800 tracking-tight text-center md:text-left">Attendance Monitoring</h2>
+                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Attendance Monitoring</h2>
                 </div>
             </div>
             <div class="hidden sm:block">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    Security Logs
+                    Security Logs | Normalized
                 </span>
             </div>
         </header>
@@ -65,11 +65,13 @@
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Section</label>
-                        <select name="section" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Assigned Section</label>
+                        <select name="section_id" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
                             <option value="">All Sections</option>
                             @foreach($sections as $sec)
-                                <option value="{{ $sec }}" {{ request('section') == $sec ? 'selected' : '' }}>{{ $sec }}</option>
+                                <option value="{{ $sec->id }}" {{ request('section_id') == $sec->id ? 'selected' : '' }}>
+                                    Grade {{ $sec->grade_level }} - {{ $sec->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -110,7 +112,7 @@
                             <tr class="bg-slate-50/50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-50">
                                 <th class="px-8 py-5">Date</th>
                                 <th class="px-6 py-5">Student Information</th>
-                                <th class="px-6 py-5">Class Details</th>
+                                <th class="px-6 py-5">Class & Section</th>
                                 <th class="px-6 py-5">Marked By</th>
                                 <th class="px-8 py-5 text-center">Status</th>
                             </tr>
@@ -129,16 +131,21 @@
                                             <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center font-black text-[10px] group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
                                                 {{ substr($record->student->first_name, 0, 1) }}{{ substr($record->student->last_name, 0, 1) }}
                                             </div>
-                                            <span class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
-                                                {{ $record->student->last_name }}, {{ $record->student->first_name }}
-                                            </span>
+                                            <div>
+                                                <span class="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors block leading-none mb-1">
+                                                    {{ $record->student->last_name }}, {{ $record->student->first_name }}
+                                                </span>
+                                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ $record->student->lrn }}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 mb-1">
                                             <span class="text-[10px] font-black uppercase">{{ $record->subject->code }}</span>
                                         </div>
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">{{ $record->section }}</p>
+                                        <p class="text-[10px] font-bold text-slate-500 uppercase ml-1 tracking-widest leading-none mt-1">
+                                            Grade {{ $record->section->grade_level }} - {{ $record->section->name }}
+                                        </p>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex items-center gap-2">

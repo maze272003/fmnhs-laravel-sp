@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -12,19 +11,17 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        // 1. Basic Stats Cards
         $totalStudents = Student::count();
         $totalTeachers = Teacher::count();
         $totalSubjects = Subject::count();
 
-        // 2. Data for Pie Chart (Students per Grade Level)
-        // Result: [{grade_level: 11, total: 50}, {grade_level: 12, total: 40}]
-        $studentsPerGrade = Student::select('grade_level', DB::raw('count(*) as total'))
-            ->groupBy('grade_level')
-            ->orderBy('grade_level')
+        // Join with sections table because grade_level is moved there
+        $studentsPerGrade = Student::join('sections', 'students.section_id', '=', 'sections.id')
+            ->select('sections.grade_level', DB::raw('count(*) as total'))
+            ->groupBy('sections.grade_level')
+            ->orderBy('sections.grade_level')
             ->get();
 
-        // 3. Data for Bar Chart (Teachers per Department)
         $teachersPerDept = Teacher::select('department', DB::raw('count(*) as total'))
             ->groupBy('department')
             ->get();

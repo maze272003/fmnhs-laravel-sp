@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -7,20 +6,20 @@ use Illuminate\Http\Request;
 use App\Models\Schedule;
 use App\Models\Subject;
 use App\Models\Teacher;
-use App\Models\Student;
+use App\Models\Section;
 
 class AdminScheduleController extends Controller
 {
     public function index()
     {
-        // Fetch data for the form dropdowns
         $subjects = Subject::all();
         $teachers = Teacher::all();
-        // Get unique sections from Student table
-        $sections = Student::select('section')->distinct()->pluck('section');
+        $sections = Section::all(); // Get all normalized sections
 
-        // Get existing schedules to display in table
-        $schedules = Schedule::with(['subject', 'teacher'])->orderBy('day')->orderBy('start_time')->paginate(10);
+        $schedules = Schedule::with(['subject', 'teacher', 'section'])
+            ->orderBy('day')
+            ->orderBy('start_time')
+            ->paginate(10);
 
         return view('admin.schedule', compact('subjects', 'teachers', 'sections', 'schedules'));
     }
@@ -28,24 +27,15 @@ class AdminScheduleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'section' => 'required',
-            'subject_id' => 'required',
-            'teacher_id' => 'required',
+            'section_id' => 'required|exists:sections,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:teachers,id',
             'day' => 'required',
             'start_time' => 'required',
             'end_time' => 'required|after:start_time',
         ]);
 
-        // Optional: Add Logic here to check for Conflict (e.g. Teacher is busy at that time)
-
         Schedule::create($request->all());
-
-        return back()->with('success', 'Class Schedule Assigned! Teacher can now grade this class.');
-    }
-
-    public function destroy($id)
-    {
-        Schedule::findOrFail($id)->delete();
-        return back()->with('success', 'Schedule deleted.');
+        return back()->with('success', 'Class Schedule Assigned!');
     }
 }

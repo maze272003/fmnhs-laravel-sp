@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Teachers | Admin</title>
+    <title>Manage Teachers | Admin Faculty</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -24,15 +24,15 @@
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                    <div class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
                         <i class="fa-solid fa-chalkboard-user text-sm"></i>
                     </div>
-                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Faculty</h2>
+                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Faculty Roster</h2>
                 </div>
             </div>
             <div class="hidden sm:block">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    Admin Control Panel
+                    Academic Year 2025-2026
                 </span>
             </div>
         </header>
@@ -42,10 +42,10 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
                 <div>
                     <h1 class="text-3xl font-black text-slate-900 tracking-tight">Faculty Management</h1>
-                    <p class="text-slate-500 font-medium">Manage teacher accounts, departments, and employee IDs.</p>
+                    <p class="text-slate-500 font-medium">Overview of educators and their advisory assignments.</p>
                 </div>
-                <button class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-user-plus"></i> Add Teacher
+                <button class="w-full sm:w-auto bg-slate-900 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-user-plus text-xs"></i> Add Faculty Member
                 </button>
             </div>
 
@@ -56,8 +56,8 @@
                             <tr class="bg-slate-50/50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-50">
                                 <th class="px-8 py-5">Emp ID</th>
                                 <th class="px-6 py-5">Faculty Member</th>
-                                <th class="px-6 py-5">Email Address</th>
                                 <th class="px-6 py-5">Department</th>
+                                <th class="px-6 py-5">Advisory Assignment</th>
                                 <th class="px-8 py-5 text-center">Actions</th>
                             </tr>
                         </thead>
@@ -78,24 +78,35 @@
                                             <p class="font-bold text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors leading-none mb-1">
                                                 {{ $teacher->last_name }}, {{ $teacher->first_name }}
                                             </p>
-                                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Licensed Educator</p>
+                                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{{ $teacher->email }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 text-sm font-medium text-slate-500 italic">
-                                    {{ $teacher->email }}
-                                </td>
                                 <td class="px-6 py-5">
-                                    <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-widest">
+                                    <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black bg-slate-50 text-slate-500 border border-slate-200 uppercase tracking-widest">
                                         {{ $teacher->department }}
                                     </span>
                                 </td>
+                                <td class="px-6 py-5">
+                                    @if($teacher->advisorySection)
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-black text-indigo-600 tracking-tight">
+                                                Grade {{ $teacher->advisorySection->grade_level }} - {{ $teacher->advisorySection->name }}
+                                            </span>
+                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                {{ $teacher->advisorySection->strand ?? 'General' }}
+                                            </span>
+                                        </div>
+                                    @else
+                                        <span class="text-[10px] font-bold text-slate-300 uppercase italic tracking-widest">No Assignment</span>
+                                    @endif
+                                </td>
                                 <td class="px-8 py-5">
                                     <div class="flex justify-center items-center gap-2">
-                                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                             <i class="fa-solid fa-pen-to-square text-xs"></i>
                                         </button>
-                                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm">
+                                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-sm">
                                             <i class="fa-solid fa-trash-can text-xs"></i>
                                         </button>
                                     </div>
@@ -116,8 +127,8 @@
                     <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
                         <i class="fa-solid fa-chalkboard-user text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-black text-slate-800">No Teachers Found</h3>
-                    <p class="text-slate-400 text-sm mt-1">Start by adding faculty members to your system.</p>
+                    <h3 class="text-xl font-black text-slate-800">No Faculty Registered</h3>
+                    <p class="text-slate-400 text-sm mt-1">Add teachers to begin assigning advisory classes.</p>
                 </div>
             @endif
 

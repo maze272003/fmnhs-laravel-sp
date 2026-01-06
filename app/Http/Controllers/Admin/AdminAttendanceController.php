@@ -1,46 +1,27 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\Teacher;
-use App\Models\Student;
+use App\Models\Section;
 
 class AdminAttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Get Filter Options
         $teachers = Teacher::orderBy('last_name')->get();
-        $sections = Student::select('section')->distinct()->orderBy('section')->pluck('section');
+        $sections = Section::orderBy('grade_level')->get(); // Get actual Section objects
 
-        // 2. Start Query
-        $query = Attendance::with(['student', 'teacher', 'subject']);
+        $query = Attendance::with(['student', 'teacher', 'subject', 'section']);
 
-        // 3. Apply Filters
-        if ($request->filled('date')) {
-            $query->where('date', $request->date);
-        }
+        if ($request->filled('date')) $query->where('date', $request->date);
+        if ($request->filled('teacher_id')) $query->where('teacher_id', $request->teacher_id);
+        if ($request->filled('section_id')) $query->where('section_id', $request->section_id);
+        if ($request->filled('status')) $query->where('status', $request->status);
 
-        if ($request->filled('teacher_id')) {
-            $query->where('teacher_id', $request->teacher_id);
-        }
-
-        if ($request->filled('section')) {
-            $query->where('section', $request->section);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // 4. Get Results (Latest first)
-        $records = $query->orderBy('date', 'desc')
-                         ->orderBy('created_at', 'desc')
-                         ->paginate(20)
-                         ->withQueryString(); // Para hindi mawala ang filters pag nag next page
+        $records = $query->orderBy('date', 'desc')->paginate(20)->withQueryString();
 
         return view('admin.attendancelogs', compact('records', 'teachers', 'sections'));
     }
