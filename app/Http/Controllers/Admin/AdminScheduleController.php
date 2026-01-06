@@ -30,12 +30,21 @@ class AdminScheduleController extends Controller
             'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
-            'day' => 'required',
-            'start_time' => 'required',
-            'end_time' => 'required|after:start_time',
+            'day'        => 'required|string',
+            // Binago mula H:i:s tungo sa H:i
+            'start_time'=> 'required|date_format:H:i', 
+            'end_time'  => 'required|date_format:H:i|after:start_time',
+            'room'      => 'required|string'
         ]);
 
         Schedule::create($request->all());
-        return back()->with('success', 'Class Schedule Assigned!');
+        
+        return back()->with('success', 'Schedule Added Successfully!');
+    }
+    public function destroy($id)
+    {
+        $schedule = Schedule::findOrFail($id);
+        $schedule->delete();
+        return back()->with('success', 'Schedule Deleted!');
     }
 }

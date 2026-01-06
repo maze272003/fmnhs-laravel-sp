@@ -47,16 +47,26 @@
             @endif
 
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-                <div>
+                <div class="w-full lg:w-auto">
                     <h1 class="text-3xl font-black text-slate-900 tracking-tight">Subjects Management</h1>
                     <p class="text-slate-500 font-medium">Define core, applied, and specialized subjects for the institution.</p>
                 </div>
                 
-                <div class="flex items-center gap-4 w-full lg:w-auto">
-                    <div class="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm hidden md:block">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Courses</p>
-                        <p class="text-xl font-black text-indigo-600 leading-none mt-1">{{ $subjects->total() }}</p>
+                <form action="{{ route('admin.subjects.index') }}" method="GET" class="w-full lg:max-w-md relative group">
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                        placeholder="Search by code or title..." 
+                        class="w-full pl-12 pr-10 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm shadow-sm group-hover:border-slate-300">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 group-hover:text-indigo-500 transition-colors"></i>
                     </div>
+                    @if(request('search'))
+                        <a href="{{ route('admin.subjects.index') }}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-rose-500 transition-colors">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </a>
+                    @endif
+                </form>
+
+                <div class="flex items-center gap-4 w-full lg:w-auto">
                     <button onclick="openModal('addModal')" class="flex-1 lg:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-3">
                         <i class="fa-solid fa-plus-circle text-xs"></i> 
                         <span>Add Subject</span>

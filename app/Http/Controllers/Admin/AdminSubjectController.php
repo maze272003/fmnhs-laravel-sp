@@ -13,11 +13,18 @@ class AdminSubjectController extends Controller
     /**
      * Display a listing of the subjects.
      */
-    public function index(): View
+    public function index(Request $request)
     {
-        // Paginating by 10 and ordering by code for better organization
-        $subjects = Subject::orderBy('code')->paginate(10);
-        
+        $search = $request->input('search');
+
+        $subjects = Subject::when($search, function ($query, $search) {
+            return $query->where('code', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%");
+        })
+        ->orderBy('code', 'asc')
+        ->paginate(10)
+        ->withQueryString(); // This ensures the search param stays in pagination links
+
         return view('admin.subject', compact('subjects'));
     }
 

@@ -3,77 +3,79 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Attendance;
+use App\Models\Section;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
-    // 1. List Assigned Classes (Reuse the Select View logic)
-    public function index()
+    public function index(): View
     {
         $teacherId = Auth::guard('teacher')->id();
         
-        // Reuse the "My Classes" logic
         $assignedClasses = Schedule::where('teacher_id', $teacherId)
-            ->with('subject')
+            ->with(['subject', 'section'])
             ->get()
-            ->unique(function ($item) { return $item->subject_id . '-' . $item->section; });
+            ->unique(function ($item) { 
+                return $item->subject_id . '-' . $item->section_id; 
+            });
 
         return view('teacher.attendance', compact('assignedClasses'));
     }
 
-    // 2. Show Attendance Sheet for specific Date & Class
-    public function show(Request $request)
-    {
-        $request->validate([
-            'subject_id' => 'required', 
-            'section' => 'required', 
-            'date' => 'required|date'
-        ]);
+    public function show(Request $request): View
+{
+    $request->validate([
+        'subject_id' => 'required|exists:subjects,id', 
+        'section_id' => 'required|exists:sections,id', 
+        'date'       => 'required|date'
+    ]);
 
-        $subjectId = $request->subject_id;
-        $section = $request->section;
-        $date = $request->date;
+    $subjectId = $request->subject_id;
+    $sectionId = $request->section_id;
+    $date = $request->date;
 
-        // Get Students
-        $students = Student::where('section', $section)->orderBy('last_name')->get();
+    // FIX: I-fetch ang Section Model para makuha ang name at grade_level sa view
+    $section = Section::findOrFail($sectionId);
 
-        // Get Existing Attendance for this date (to pre-fill the form)
-        $attendances = Attendance::where('subject_id', $subjectId)
-            ->where('section', $section)
-            ->where('date', $date)
-            ->get()
-            ->keyBy('student_id'); // Key by student ID for easy lookup
+    // Kunin ang students sa specific section ID
+    $students = Student::where('section_id', $sectionId)->orderBy('last_name')->get();
 
-        return view('teacher.show.attendance', compact('students', 'subjectId', 'section', 'date', 'attendances'));
-    }
+    // Kunin ang records para sa pre-fill
+    $attendances = Attendance::where('subject_id', $subjectId)
+        ->where('section_id', $sectionId)
+        ->where('date', $date)
+        ->get()
+        ->keyBy('student_id');
 
-    // 3. Save Attendance
-    public function store(Request $request)
+    // Idagdag ang 'section' sa compact list
+    return view('teacher.show.attendance', compact('students', 'subjectId', 'section', 'date', 'attendances'));
+}
+
+    public function store(Request $request): RedirectResponse
     {
         $teacherId = Auth::guard('teacher')->id();
-        $date = $request->date;
-        $subjectId = $request->subject_id;
-        $section = $request->section;
 
         foreach ($request->status as $studentId => $status) {
             Attendance::updateOrCreate(
                 [
                     'student_id' => $studentId,
-                    'subject_id' => $subjectId,
-                    'date' => $date,
+                    'subject_id' => $request->subject_id,
+                    'date'       => $request->date,
                 ],
                 [
                     'teacher_id' => $teacherId,
-                    'section' => $section,
-                    'status' => $status
+                    'section_id' => $request->section_id,
+                    'status'     => $status
                 ]
             );
         }
 
-        return back()->with('success', 'Attendance recorded successfully!');
+        return back()->with('success', 'Attendance record updated!');
     }
 }

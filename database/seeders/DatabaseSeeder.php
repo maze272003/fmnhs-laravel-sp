@@ -6,15 +6,19 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run(): void
-    {
-        $this->call([
-            AdminSeeder::class,
-            TeacherSeeder::class, // Create teachers first
-            SectionSeeder::class, // Then create sections and assign teachers as advisors
-            StudentSeeder::class, // Then create students and put them in sections
-            SubjectSeeder::class,
-            ScheduleSeeder::class, // Finally create schedules linking sections, subjects, and teachers
-        ]);
-    }
+    // database/seeders/DatabaseSeeder.php
+
+public function run(): void
+{
+    $this->call([
+        AdminSeeder::class,      // Gagawa tayo nito sa baba
+        TeacherSeeder::class,    // Siguraduhing may file ka nito
+        SubjectSeeder::class,    
+        SectionSeeder::class,    
+        StudentSeeder::class,    
+        ScheduleSeeder::class,   
+        GradeSeeder::class,      
+        AttendanceSeeder::class, 
+    ]);
+}
 }

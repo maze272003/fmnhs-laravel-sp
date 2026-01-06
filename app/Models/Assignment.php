@@ -16,8 +16,19 @@ class Assignment extends Model
        'deadline'
    ];
 
-    public function section() { return $this->belongsTo(Section::class); }
+    public function section()
+{
+    return $this->belongsTo(Section::class, 'section_id');
+}
     public function submissions() { return $this->hasMany(Submission::class); }
-    public function subject() { return $this->belongsTo(Subject::class); }
+    public function subject()
+{
+    return $this->belongsTo(Subject::class, 'subject_id');
+}
     public function teacher() { return $this->belongsTo(Teacher::class); }
+    // App\Models\Assignment.php
+
+
+
+
 }
