@@ -1,20 +1,24 @@
 <?php
-
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Announcement; // Import Announcement Model
+use App\Models\Announcement;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class StudentDashboardController extends Controller
 {
-    public function index()
+    public function index(): View
     {
-        // 1. Fetch latest 5 announcements
+        // Fetch student with section and advisor relationship
+        $student = Auth::guard('student')->user()->load('section.advisor');
+
+        // Fetch latest announcements
         $announcements = Announcement::latest()->take(5)->get();
 
-        // 2. Return the view with data
-        return view('student.dashboard', compact('announcements'));
+        // We can pass the advisor directly or access it via $student in the view
+        $advisor = $student->section->advisor ?? null;
+
+        return view('student.dashboard', compact('announcements', 'advisor'));
     }
 }

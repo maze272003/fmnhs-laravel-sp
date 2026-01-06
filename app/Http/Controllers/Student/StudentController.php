@@ -1,22 +1,21 @@
 <?php
-
 namespace App\Http\Controllers\Student;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Subject;
+use App\Models\Schedule;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Schedule;
+use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 class StudentController extends Controller
 {
-    public function grades()
+    public function grades(): View
     {
         $studentId = Auth::guard('student')->id();
 
-        // Logic: Get all Subjects that have grades for this student.
-        // Also 'eager load' the specific grades for this student to avoid loading everyone else's grades.
         $subjects = Subject::whereHas('grades', function($query) use ($studentId) {
             $query->where('student_id', $studentId);
         })->with(['grades' => function($query) use ($studentId) {
@@ -25,34 +24,34 @@ class StudentController extends Controller
 
         return view('student.grades', compact('subjects'));
     }
-    public function schedule()
+
+    public function schedule(): View
     {
         $student = Auth::guard('student')->user();
         
-        // Logic: Get schedules where the 'section' matches the student's section
-        $schedules = Schedule::where('section', $student->section)
+        // Refactored: Filter schedules by section_id relationship
+        $schedules = Schedule::where('section_id', $student->section_id)
             ->with(['subject', 'teacher'])
             ->orderBy('start_time')
             ->get();
 
         return view('student.schedule', compact('schedules'));
     }
+
     public function downloadGrades()
     {
         $student = Auth::guard('student')->user();
-        $studentId = $student->id;
+        // Ensure section relationship is loaded for PDF info
+        $student->load('section');
 
-        // Fetch the same data as the grades page
-        $subjects = Subject::whereHas('grades', function($query) use ($studentId) {
-            $query->where('student_id', $studentId);
-        })->with(['grades' => function($query) use ($studentId) {
-            $query->where('student_id', $studentId);
+        $subjects = Subject::whereHas('grades', function($query) use ($student) {
+            $query->where('student_id', $student->id);
+        })->with(['grades' => function($query) use ($student) {
+            $query->where('student_id', $student->id);
         }])->get();
 
-        // Load a specific view for PDF (we will create this next)
         $pdf = Pdf::loadView('student.pdf-grades', compact('subjects', 'student'));
 
-        // Download the file
-        return $pdf->download('ReportCard-' . $student->last_name . '.pdf');
+        return $pdf->download("ReportCard-{$student->last_name}.pdf");
     }
 }

@@ -6,146 +6,167 @@
     <title>My Assignments | Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-[#f8fafc] text-slate-800 font-sans antialiased">
 
     @include('components.student.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white shadow-sm sticky top-0 z-30 px-4 md:px-6 py-4 flex justify-between items-center border-b border-slate-100">
+        <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-30 px-4 md:px-6 py-4 flex justify-between items-center border-b border-slate-100">
             <div class="flex items-center gap-2 md:gap-4">
                 <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-50 text-slate-500 mr-1">
-                    <i class="fa-solid fa-bars text-xl"></i>
+                    <i class="fa-solid fa-bars-staggered text-xl"></i>
                 </button>
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-list-check text-sm"></i>
+                    <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-blue-100">
+                        <i class="fa-solid fa-list-check text-[10px]"></i>
                     </div>
-                    <h2 class="text-lg md:text-xl font-black text-slate-800 tracking-tight truncate">My Tasks</h2>
+                    <h2 class="text-lg md:text-xl font-black text-slate-800 tracking-tight truncate">Academic Tasks</h2>
                 </div>
             </div>
 
             <div class="flex items-center gap-3 shrink-0">
-                
-                {{-- HELPER USED: Logic is now inside Student Model (avatar_url) --}}
                 @php $student = Auth::guard('student')->user(); @endphp
 
                 <div class="text-right hidden sm:block">
-                    <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
-                    <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
+                    <p class="text-sm font-black text-slate-800 leading-none mb-1">{{ $student->first_name }} {{ $student->last_name }}</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Grade {{ $student->section->grade_level }} - {{ $student->section->name }}
+                    </p>
                 </div>
 
-                {{-- Since avatar_url always returns a valid link (S3 or UI Avatars), we always show the IMG tag --}}
                 <img src="{{ $student->avatar_url }}" 
                      alt="Profile" 
-                     class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
-
+                     class="w-9 h-9 md:w-11 md:h-11 rounded-2xl object-cover border-2 border-white shadow-md">
             </div>
         </header>
 
-        <main class="flex-1 p-4 md:p-8 lg:p-10 space-y-6">
+        <main class="flex-1 p-4 md:p-8 lg:p-12 max-w-6xl mx-auto w-full space-y-8">
             
             <div class="mb-2">
-                <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Assignment Feed</h1>
-                <p class="text-slate-500 text-sm font-medium">Keep track of your academic responsibilities and deadlines.</p>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Assignment Feed</h1>
+                <p class="text-slate-500 text-sm font-medium">Manage your submissions and monitor upcoming deadlines.</p>
             </div>
 
-            @forelse($assignments as $asn)
-                @php
-                    $mySubmission = $asn->submissions->first(); 
-                    $isLate = now() > $asn->deadline;
-                @endphp
+            @if(session('success'))
+                <script>
+                    Swal.fire({ icon: 'success', title: 'Success!', text: "{{ session('success') }}", showConfirmButton: false, timer: 2000, borderRadius: '24px' });
+                </script>
+            @endif
 
-                <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:border-blue-100 transition-all duration-300 group flex flex-col md:flex-row">
-                    
-                    <div class="flex-1 p-6 md:p-8 relative">
-                        <div class="absolute left-0 top-10 bottom-10 w-1.5 {{ $mySubmission ? 'bg-emerald-500' : ($isLate ? 'bg-rose-500' : 'bg-blue-500') }} rounded-r-full"></div>
+            <div class="space-y-6">
+                @forelse($assignments as $asn)
+                    @php
+                        $mySubmission = $asn->submissions->first(); 
+                        $isLate = now() > $asn->deadline;
+                    @endphp
+
+                    <div class="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-blue-100/40 transition-all duration-500 overflow-hidden group flex flex-col lg:flex-row">
                         
-                        <div class="flex flex-wrap items-center gap-2 mb-4">
-                            <span class="bg-slate-100 text-slate-600 text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-wider border border-slate-200">{{ $asn->subject->code }}</span>
+                        <div class="flex-1 p-8 md:p-10 relative">
+                            <div class="absolute left-0 top-12 bottom-12 w-1.5 {{ $mySubmission ? 'bg-emerald-500' : ($isLate ? 'bg-rose-500' : 'bg-blue-500') }} rounded-r-full shadow-[0_0_15px_rgba(0,0,0,0.1)]"></div>
                             
+                            <div class="flex flex-wrap items-center gap-3 mb-6">
+                                <span class="bg-slate-100 text-slate-600 text-[10px] font-black px-4 py-1.5 rounded-xl uppercase tracking-widest border border-slate-200">{{ $asn->subject->code }}</span>
+                                
+                                @if($mySubmission)
+                                    <span class="bg-emerald-50 text-emerald-600 text-[10px] font-black px-4 py-1.5 rounded-xl uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-check"></i> Handed In
+                                    </span>
+                                @elseif($isLate)
+                                    <span class="bg-rose-50 text-rose-600 text-[10px] font-black px-4 py-1.5 rounded-xl uppercase tracking-widest border border-rose-100 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> Overdue
+                                    </span>
+                                @else
+                                    <span class="bg-blue-50 text-blue-600 text-[10px] font-black px-4 py-1.5 rounded-xl uppercase tracking-widest border border-blue-100 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-thumbtack"></i> Pending
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            <h3 class="text-2xl font-black text-slate-900 mb-4 leading-tight group-hover:text-blue-600 transition-colors">{{ $asn->title }}</h3>
+                            <p class="text-slate-500 text-sm md:text-base mb-8 leading-relaxed font-medium line-clamp-3">{{ $asn->description }}</p>
+                            
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                                @if($asn->file_path)
+                                    <a href="{{ asset('uploads/assignments/'.$asn->file_path) }}" target="_blank" class="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[11px] font-black hover:bg-blue-600 transition-all shadow-xl shadow-slate-200 uppercase tracking-widest group/btn">
+                                        <i class="fa-solid fa-download group-hover:-translate-y-1 transition-transform"></i> Reference Materials
+                                    </a>
+                                @endif
+                                
+                                <div class="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                                    <i class="fa-solid fa-calendar-day text-rose-400"></i>
+                                    <span>Deadline: {{ \Carbon\Carbon::parse($asn->deadline)->format('M d • h:i A') }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="w-full lg:w-[350px] bg-slate-50/50 p-8 md:p-10 border-t lg:border-t-0 lg:border-l border-slate-100 flex flex-col justify-center">
                             @if($mySubmission)
-                                <span class="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-lg uppercase border border-emerald-100"><i class="fa-solid fa-check-circle mr-1"></i>Turned In</span>
-                            @elseif($isLate)
-                                <span class="bg-rose-50 text-rose-600 text-[10px] font-black px-3 py-1 rounded-lg uppercase border border-rose-100"><i class="fa-solid fa-circle-exclamation mr-1"></i>Missing / Late</span>
+                                <div class="text-center space-y-4">
+                                    <div class="w-20 h-20 bg-white shadow-xl shadow-emerald-100/50 text-emerald-500 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-3xl">
+                                        <i class="fa-solid fa-envelope-circle-check"></i>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <h4 class="font-black text-slate-900 text-xl tracking-tight">Work Turned In</h4>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Validated on {{ $mySubmission->created_at->format('M d') }}</p>
+                                    </div>
+                                    <div class="pt-4">
+                                        <a href="{{ asset('uploads/submissions/'.$mySubmission->file_path) }}" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-900 rounded-2xl text-[10px] font-black border border-slate-200 hover:border-blue-600 hover:text-blue-600 transition-all shadow-sm uppercase tracking-widest">
+                                            <i class="fa-solid fa-paperclip"></i> My Attachment
+                                        </a>
+                                    </div>
+                                </div>
                             @else
-                                <span class="bg-blue-50 text-blue-600 text-[10px] font-black px-3 py-1 rounded-lg uppercase border border-blue-100"><i class="fa-solid fa-clock mr-1"></i>Assigned</span>
+                                <div class="space-y-6">
+                                    <div class="text-center lg:text-left">
+                                        <h4 class="font-black text-xs text-slate-400 uppercase tracking-[0.2em]">Upload Submission</h4>
+                                        <p class="text-[10px] font-medium text-slate-400 mt-1">PDF, DOCX, or ZIP supported (Max 10MB)</p>
+                                    </div>
+                                    
+                                    <form action="{{ route('student.assignments.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                                        @csrf
+                                        <input type="hidden" name="assignment_id" value="{{ $asn->id }}">
+                                        
+                                        <div class="relative group">
+                                            <div class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-3xl group-hover:border-blue-400 group-hover:bg-blue-50/50 transition-all cursor-pointer">
+                                                <i class="fa-solid fa-cloud-arrow-up text-slate-300 group-hover:text-blue-500 text-2xl mb-2 transition-colors"></i>
+                                                <span class="text-[9px] font-black text-slate-400 group-hover:text-blue-600 uppercase tracking-widest">Select File</span>
+                                                <input type="file" name="file" required class="absolute inset-0 opacity-0 cursor-pointer"/>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" class="w-full bg-blue-600 text-white text-[11px] font-black py-4 rounded-2xl hover:bg-slate-900 shadow-xl shadow-blue-100 hover:shadow-slate-200 transition-all active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-[0.15em]">
+                                            <span>Submit Work</span>
+                                            <i class="fa-solid fa-paper-plane text-[9px]"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             @endif
-                        </div>
-                        
-                        <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-3 leading-tight group-hover:text-blue-600 transition-colors">{{ $asn->title }}</h3>
-                        <p class="text-slate-500 text-sm md:text-base mb-6 leading-relaxed font-medium line-clamp-3">{{ $asn->description }}</p>
-                        
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            @if($asn->file_path)
-                                <a href="{{ asset('uploads/assignments/'.$asn->file_path) }}" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-black hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-blue-100 w-full sm:w-auto justify-center">
-                                    <i class="fa-solid fa-file-arrow-down"></i> Download Material
-                                </a>
-                            @endif
-                            
-                            <div class="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                <i class="fa-regular fa-calendar-times text-rose-400 text-sm"></i>
-                                <span>Due: {{ \Carbon\Carbon::parse($asn->deadline)->format('M d • h:i A') }}</span>
-                            </div>
                         </div>
                     </div>
 
-                    <div class="w-full md:w-80 bg-slate-50/50 p-6 md:p-8 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col justify-center">
-                        @if($mySubmission)
-                            <div class="text-center">
-                                <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-[1.2rem] flex items-center justify-center mx-auto mb-4 text-xl shadow-inner">
-                                    <i class="fa-solid fa-check-double"></i>
-                                </div>
-                                <h4 class="font-black text-slate-800 text-lg">Work Submitted</h4>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">Well done!</p>
-                                <a href="{{ asset('uploads/submissions/'.$mySubmission->file_path) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-xl text-[10px] font-black border border-slate-200 hover:border-blue-300 transition-all shadow-sm uppercase">
-                                    <i class="fa-solid fa-eye"></i> View Attachment
-                                </a>
+                @empty
+                    <div class="py-24 flex flex-col items-center justify-center bg-white rounded-[3rem] border border-slate-100 shadow-sm">
+                        <div class="relative mb-10">
+                            <div class="w-48 h-48 bg-slate-50 rounded-full flex items-center justify-center relative overflow-hidden border border-slate-100">
+                                <i class="fa-solid fa-mug-hot text-8xl text-slate-100 absolute -bottom-4"></i>
+                                <i class="fa-solid fa-check-double text-6xl text-blue-100 opacity-50 absolute -right-2 top-6 rotate-12"></i>
                             </div>
-                        @else
-                            <h4 class="font-black text-xs mb-4 text-slate-400 uppercase tracking-[0.2em] text-center md:text-left">Your Submission</h4>
-                            <form action="{{ route('student.assignments.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                                @csrf
-                                <input type="hidden" name="assignment_id" value="{{ $asn->id }}">
-                                
-                                <div class="relative group">
-                                    <input type="file" name="file" required class="block w-full text-[10px] text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer transition-all"/>
-                                </div>
-                                
-                                <button type="submit" class="w-full bg-slate-900 text-white text-xs font-black py-4 rounded-2xl hover:bg-emerald-600 shadow-xl shadow-slate-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 uppercase tracking-widest">
-                                    <span>Turn in Work</span>
-                                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
-                                </button>
-                            </form>
-                        @endif
-                    </div>
-                </div>
-
-            @empty
-                <div class="py-20 flex flex-col items-center justify-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
-                    <div class="relative mb-8">
-                        <div class="w-40 h-40 bg-blue-50 rounded-full flex items-center justify-center relative overflow-hidden">
-                            <i class="fa-solid fa-mug-hot text-7xl text-blue-200 absolute -bottom-2"></i>
-                            <i class="fa-solid fa-face-smile-beam text-8xl text-blue-100 opacity-50 absolute -right-4 top-2 rotate-12"></i>
+                            <div class="absolute -top-4 -right-4 w-16 h-16 bg-white rounded-3xl shadow-2xl flex items-center justify-center border border-slate-50">
+                                <i class="fa-solid fa-sparkles text-amber-400 text-2xl"></i>
+                            </div>
                         </div>
-                        <div class="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
-                            <i class="fa-solid fa-sparkles text-amber-400"></i>
-                        </div>
+                        
+                        <h3 class="text-3xl font-black text-slate-900 tracking-tight mb-3">All Caught Up!</h3>
+                        <p class="text-slate-400 font-medium text-center max-w-xs px-6 leading-relaxed">
+                            There are no pending assignments for your section. Take a break and recharge!
+                        </p>
                     </div>
-                    
-                    <h3 class="text-3xl font-black text-slate-800 tracking-tight mb-2 text-center px-4">All Caught Up!</h3>
-                    <p class="text-slate-500 font-medium text-center max-w-xs px-6">
-                        No assignments found in your feed. Relax, or enjoy some free time before the next task arrives!
-                    </p>
-                    
-                    <div class="mt-10 flex gap-4">
-                        <div class="px-6 py-2 bg-slate-50 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
-                            FMNHS Student Portal
-                        </div>
-                    </div>
-                </div>
-            @endforelse
+                @endforelse
+            </div>
 
         </main>
     </div>

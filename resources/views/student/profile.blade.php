@@ -3,139 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>My Profile</title>
+    <title>Account Settings | Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans text-slate-800">
+<body class="bg-[#f8fafc] text-slate-800 antialiased">
 
     @include('components.student.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white shadow-sm sticky top-0 z-30 px-4 md:px-6 py-4 flex justify-between items-center border-b border-gray-200">
-            
-            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600 mr-2">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
-            
-            <h2 class="text-lg md:text-xl font-bold text-blue-600 truncate flex-1">Account Settings</h2>
-            
-            <div class="flex items-center gap-3 shrink-0">
-                
-                {{-- HELPER USED: Logic is now inside Student Model (avatar_url) --}}
-                @php $student = Auth::guard('student')->user(); @endphp
-
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
-                    <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
+        <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-200/60 shadow-sm">
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
+                    <i class="fa-solid fa-bars-staggered text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
+                        <i class="fa-solid fa-user-gear text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h2 class="text-lg font-black text-slate-900 tracking-tight leading-none mb-1">Account Settings</h2>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manage Profile & Security</p>
+                    </div>
                 </div>
+            </div>
 
-                {{-- Since avatar_url always returns a valid link (S3 or UI Avatars), we always show the IMG tag --}}
-                <img src="{{ $student->avatar_url }}" 
-                     alt="Profile" 
-                     class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
-
+            <div class="flex items-center gap-3 shrink-0">
+                @php $student = Auth::guard('student')->user(); @endphp
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-black text-slate-800 leading-none mb-1">{{ $student->first_name }} {{ $student->last_name }}</p>
+                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                        Grade {{ $student->section->grade_level }} - {{ $student->section->name }}
+                    </p>
+                </div>
+                <img src="{{ $student->avatar_url }}" alt="Profile" class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md">
             </div>
         </header>
 
-        <main class="flex-1 p-4 md:p-6">
+        <main class="flex-1 p-6 lg:p-10 max-w-5xl mx-auto w-full">
 
             @if(session('success'))
-                <script>Swal.fire({icon: 'success', title: 'Updated!', text: "{{ session('success') }}", timer: 1500, showConfirmButton: false});</script>
+                <script>Swal.fire({icon: 'success', title: 'Updated!', text: "{{ session('success') }}", showConfirmButton: false, timer: 1500, borderRadius: '24px'});</script>
             @endif
 
-            @if ($errors->any())
-                <div class="bg-red-50 text-red-700 p-4 rounded-lg mb-6 border border-red-200 shadow-sm text-sm">
-                    <ul class="list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <div class="mb-10">
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">My Profile</h1>
+                <p class="text-slate-500 font-medium">Personalize your portal identity and keep your account secure.</p>
+            </div>
 
-            <div class="max-w-4xl mx-auto">
-                <form action="{{ route('student.profile.update') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
+            <form action="{{ route('student.profile.update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center h-fit">
-                            <h3 class="font-bold text-lg mb-4 text-slate-800">Profile Picture</h3>
+                    <div class="lg:col-span-4 space-y-6">
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 text-center relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
                             
-                            <div class="relative w-32 h-32 mx-auto mb-4 group">
-                                {{-- HELPER USED: Clean access to avatar_url --}}
-                                <img src="{{ Auth::guard('student')->user()->avatar_url }}" 
-                                     class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg">
+                            <h3 class="font-black text-xs text-slate-400 uppercase tracking-[0.2em] mb-6">Display Avatar</h3>
+                            
+                            <div class="relative w-36 h-36 mx-auto mb-6">
+                                <img src="{{ $student->avatar_url }}" 
+                                     class="w-full h-full rounded-[2.5rem] object-cover border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-500">
+                                <label class="absolute -bottom-2 -right-2 w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center cursor-pointer hover:bg-indigo-600 transition-colors shadow-lg border-2 border-white">
+                                    <i class="fa-solid fa-camera text-xs"></i>
+                                    <input type="file" name="avatar" class="hidden" onchange="this.form.submit()"/>
+                                </label>
                             </div>
 
-                            <label class="block w-full">
-                                <span class="sr-only">Choose profile photo</span>
-                                <input type="file" name="avatar" class="block w-full text-xs text-slate-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-xs file:font-bold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100
-                                cursor-pointer
-                                "/>
-                            </label>
-                            <p class="text-[10px] text-gray-400 mt-3">JPG, PNG up to 15MB</p>
+                            <div class="space-y-1">
+                                <h4 class="font-black text-xl text-slate-900">{{ $student->first_name }}</h4>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Learner ID: {{ $student->lrn }}</p>
+                            </div>
+
+                            <div class="mt-8 pt-8 border-t border-slate-50 grid grid-cols-2 gap-4">
+                                <div class="text-center">
+                                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">Level</p>
+                                    <p class="text-sm font-black text-indigo-600">Grade {{ $student->section->grade_level }}</p>
+                                </div>
+                                <div class="text-center border-l border-slate-50">
+                                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-tighter">Section</p>
+                                    <p class="text-sm font-black text-indigo-600">{{ $student->section->name }}</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <h3 class="font-bold text-lg mb-6 border-b border-gray-100 pb-4 text-slate-800">Security Settings</h3>
+                        <div class="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+                            <i class="fa-solid fa-user-tie absolute -right-4 -bottom-4 text-7xl opacity-10"></i>
+                            <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-2">Class Advisor</p>
+                            <h4 class="text-lg font-black tracking-tight">
+                                {{ $student->section->advisor ? 'Mr/Ms. ' . $student->section->advisor->last_name : 'No Advisor Assigned' }}
+                            </h4>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-8 space-y-6">
+                        
+                        <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-address-card"></i>
+                                </div>
+                                <h3 class="font-black text-lg text-slate-800 tracking-tight">Official Information</h3>
+                            </div>
                             
-                            <div class="space-y-5">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-bold mb-1.5 text-gray-500 uppercase tracking-wide">First Name</label>
-                                        <input type="text" value="{{ Auth::guard('student')->user()->first_name }}" disabled class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed text-sm">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold mb-1.5 text-gray-500 uppercase tracking-wide">Last Name</label>
-                                        <input type="text" value="{{ Auth::guard('student')->user()->last_name }}" disabled class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Legal Name</label>
+                                    <div class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-500 font-bold text-sm">
+                                        {{ $student->first_name }} {{ $student->last_name }}
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold mb-1.5 text-gray-500 uppercase tracking-wide">Email Address</label>
-                                    <input type="text" value="{{ Auth::guard('student')->user()->email }}" disabled class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed text-sm">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                                    <div class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-500 font-bold text-sm">
+                                        {{ $student->email }}
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mt-6 text-[10px] text-slate-400 font-medium italic">
+                                <i class="fa-solid fa-circle-info mr-1"></i> Official information can only be updated by the Registrar's Office.
+                            </p>
+                        </div>
+
+                        <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100">
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-8 h-8 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <h3 class="font-black text-lg text-slate-800 tracking-tight">Security & Credentials</h3>
+                            </div>
+
+                            @if ($errors->any())
+                                <div class="bg-rose-50 text-rose-700 p-4 rounded-2xl mb-8 border border-rose-100 text-xs font-bold">
+                                    <ul class="list-disc list-inside">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <div class="space-y-6">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                                    <input type="password" name="current_password" 
+                                           class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-slate-700" 
+                                           placeholder="••••••••">
                                 </div>
 
-                                <div class="border-t border-gray-100 my-6"></div>
-
-                                <h4 class="font-bold text-blue-600 mb-4 flex items-center gap-2">
-                                    <i class="fa-solid fa-lock text-sm"></i> Change Password
-                                </h4>
-                                
-                                <div>
-                                    <label class="block text-sm font-bold mb-1.5 text-slate-700">Current Password</label>
-                                    <input type="password" name="current_password" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-bold mb-1.5 text-slate-700">New Password</label>
-                                        <input type="password" name="new_password" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                                        <input type="password" name="new_password" 
+                                               class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-slate-700" 
+                                               placeholder="Minimum 8 characters">
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-bold mb-1.5 text-slate-700">Confirm New Password</label>
-                                        <input type="password" name="new_password_confirmation" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
+                                        <input type="password" name="new_password_confirmation" 
+                                               class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-slate-700" 
+                                               placeholder="Re-type new password">
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="mt-8 flex justify-end">
-                                <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-sm transition active:scale-95 text-sm">
-                                    Save Changes
+                            <div class="mt-10 flex justify-end">
+                                <button type="submit" class="w-full md:w-auto bg-slate-900 text-white px-10 py-4 rounded-2xl hover:bg-indigo-600 font-black shadow-xl shadow-slate-200 transition-all active:scale-95 text-xs uppercase tracking-widest">
+                                    Update Security Settings
                                 </button>
                             </div>
                         </div>
 
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </main>
     </div>
 

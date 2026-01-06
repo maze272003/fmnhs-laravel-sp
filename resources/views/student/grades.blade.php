@@ -2,126 +2,209 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>My Grades</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Academic Performance | Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans text-slate-800">
+<body class="bg-[#f8fafc] text-slate-800 antialiased">
 
     @include('components.student.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white shadow-sm sticky top-0 z-30 px-4 md:px-6 py-4 flex justify-between items-center border-b border-gray-200">
-            
-            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600 mr-2">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
-            
-            <h2 class="text-lg md:text-xl font-bold text-blue-600 truncate flex-1">My Grades</h2>
-            
+        <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-200/60 shadow-sm">
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
+                    <i class="fa-solid fa-bars-staggered text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100">
+                        <i class="fa-solid fa-medal text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h2 class="text-lg font-black text-slate-900 tracking-tight leading-none mb-1">Scholarship</h2>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Grades & Performance</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center gap-3 shrink-0">
-                
-                {{-- HELPER USED: Logic is now inside Student Model (avatar_url) --}}
                 @php $student = Auth::guard('student')->user(); @endphp
 
                 <div class="text-right hidden sm:block">
-                    <p class="text-sm font-bold">{{ $student->first_name }} {{ $student->last_name }}</p>
-                    <p class="text-xs text-gray-500">Grade {{ $student->grade_level }} - {{ $student->section }}</p>
+                    <p class="text-sm font-black text-slate-900 leading-none mb-1">{{ $student->first_name }} {{ $student->last_name }}</p>
+                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                        Grade {{ $student->section->grade_level }} - {{ $student->section->name }}
+                    </p>
                 </div>
 
-                {{-- Since avatar_url always returns a valid link (S3 or UI Avatars), we always show the IMG tag --}}
                 <img src="{{ $student->avatar_url }}" 
                      alt="Profile" 
-                     class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border border-gray-200 shadow-sm">
-
+                     class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md">
             </div>
         </header>
 
-        <main class="flex-1 p-4 md:p-6">
+        <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
             
-            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-10">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-slate-800">Academic Performance</h1>
-                    <p class="text-gray-500 text-sm">School Year 2024-2025</p>
+                    <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Academic Records</h1>
+                    <p class="text-slate-500 font-medium">Detailed breakdown of your quarterly performance for S.Y. 2025-2026.</p>
                 </div>
                 
-                <a href="{{ route('student.grades.pdf') }}" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition active:scale-95 text-sm font-medium">
-                    <i class="fa-solid fa-file-pdf"></i> Download PDF
+                <a href="{{ route('student.grades.pdf') }}" class="flex items-center justify-center gap-3 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rose-100 transition-all active:scale-95 group">
+                    <i class="fa-solid fa-file-pdf text-sm group-hover:scale-110 transition-transform"></i>
+                    Generate Report Card
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                
-                <div class="overflow-x-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                @php
+                    $allAverages = [];
+                    $passedCount = 0;
+                    foreach($subjects as $sub) {
+                        $g = $sub->grades->pluck('grade_value')->filter();
+                        if($g->isNotEmpty()) {
+                            $avg = $g->avg();
+                            $allAverages[] = $avg;
+                            if($avg >= 75) $passedCount++;
+                        }
+                    }
+                    $gwa = count($allAverages) > 0 ? array_sum($allAverages) / count($allAverages) : 0;
+                @endphp
+
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-6">
+                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">General Average</p>
+                        <h3 class="text-3xl font-black text-slate-900">{{ $gwa > 0 ? number_format($gwa, 2) : '--' }}</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-6">
+                    <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Subjects Passed</p>
+                        <h3 class="text-3xl font-black text-slate-900">{{ $passedCount }} / {{ $subjects->count() }}</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-6">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-[1.5rem] flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-ranking-star"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                        <h3 class="text-xl font-black text-indigo-600 uppercase tracking-tight">
+                            {{ $gwa >= 75 ? 'Good Standing' : ($gwa > 0 ? 'Probation' : 'No Data') }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/60 border border-slate-200/50 overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-left border-collapse whitespace-nowrap">
-                        <thead class="bg-blue-50 text-blue-700 uppercase text-xs font-bold border-b border-blue-100">
-                            <tr>
-                                <th class="px-6 py-4 min-w-[200px]">Subject</th>
-                                <th class="px-4 py-4 text-center min-w-[60px]">1st</th>
-                                <th class="px-4 py-4 text-center min-w-[60px]">2nd</th>
-                                <th class="px-4 py-4 text-center min-w-[60px]">3rd</th>
-                                <th class="px-4 py-4 text-center min-w-[60px]">4th</th>
-                                <th class="px-4 py-4 text-center min-w-[80px]">Average</th>
-                                <th class="px-4 py-4 text-center min-w-[100px]">Status</th>
+                        <thead>
+                            <tr class="bg-slate-50/50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-100">
+                                <th class="px-10 py-6 min-w-[280px]">Subject Information</th>
+                                <th class="px-6 py-6 text-center">Q1</th>
+                                <th class="px-6 py-6 text-center">Q2</th>
+                                <th class="px-6 py-6 text-center">Q3</th>
+                                <th class="px-6 py-6 text-center">Q4</th>
+                                <th class="px-8 py-6 text-center">Average</th>
+                                <th class="px-10 py-6 text-center">Result</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($subjects as $subject)
+                        <tbody class="divide-y divide-slate-50">
+                            @forelse($subjects as $subject)
                                 @php
-                                    // Helper logic
                                     $q1 = $subject->grades->where('quarter', 1)->first()?->grade_value;
                                     $q2 = $subject->grades->where('quarter', 2)->first()?->grade_value;
                                     $q3 = $subject->grades->where('quarter', 3)->first()?->grade_value;
                                     $q4 = $subject->grades->where('quarter', 4)->first()?->grade_value;
 
-                                    $grades = collect([$q1, $q2, $q3, $q4])->filter();
-                                    $average = $grades->isNotEmpty() ? $grades->avg() : null;
-                                    
-                                    // Status Logic
-                                    $status = $average >= 75 ? 'PASSED' : ($average ? 'FAILED' : 'PENDING');
-                                    
-                                    // Adjusted colors for light theme
-                                    $statusColor = $average >= 75 
-                                        ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
-                                        : ($average ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-gray-100 text-gray-500 border border-gray-200');
+                                    $gradeList = collect([$q1, $q2, $q3, $q4])->filter();
+                                    $average = $gradeList->isNotEmpty() ? $gradeList->avg() : null;
+                                    $isPassed = $average >= 75;
                                 @endphp
 
-                                <tr class="hover:bg-gray-50 transition">
-                                    <td class="px-6 py-4">
-                                        <div class="font-bold text-slate-700">{{ $subject->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $subject->code }}</div>
+                                <tr class="hover:bg-indigo-50/20 transition-all duration-300 group">
+                                    <td class="px-10 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-11 h-11 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-black group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                                {{ substr($subject->code, 0, 2) }}
+                                            </div>
+                                            <div class="flex flex-col leading-tight">
+                                                <span class="font-black text-slate-800 text-base tracking-tight group-hover:text-blue-600 transition-colors">{{ $subject->name }}</span>
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{{ $subject->code }}</span>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="px-4 py-4 text-center font-medium {{ !$q1 ? 'text-gray-300' : 'text-slate-600' }}">{{ $q1 ?? '--' }}</td>
-                                    <td class="px-4 py-4 text-center font-medium {{ !$q2 ? 'text-gray-300' : 'text-slate-600' }}">{{ $q2 ?? '--' }}</td>
-                                    <td class="px-4 py-4 text-center font-medium {{ !$q3 ? 'text-gray-300' : 'text-slate-600' }}">{{ $q3 ?? '--' }}</td>
-                                    <td class="px-4 py-4 text-center font-medium {{ !$q4 ? 'text-gray-300' : 'text-slate-600' }}">{{ $q4 ?? '--' }}</td>
-                                    <td class="px-4 py-4 text-center font-bold text-blue-600">
-                                        {{ $average ? number_format($average, 2) : '--' }}
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <span class="px-2 py-1 rounded text-[10px] font-bold {{ $statusColor }}">
-                                            {{ $status }}
+                                    <td class="px-6 py-6 text-center text-sm font-bold {{ $q1 ? 'text-slate-600' : 'text-slate-200' }}">{{ $q1 ?? '--' }}</td>
+                                    <td class="px-6 py-6 text-center text-sm font-bold {{ $q2 ? 'text-slate-600' : 'text-slate-200' }}">{{ $q2 ?? '--' }}</td>
+                                    <td class="px-6 py-6 text-center text-sm font-bold {{ $q3 ? 'text-slate-600' : 'text-slate-200' }}">{{ $q3 ?? '--' }}</td>
+                                    <td class="px-6 py-6 text-center text-sm font-bold {{ $q4 ? 'text-slate-600' : 'text-slate-200' }}">{{ $q4 ?? '--' }}</td>
+                                    <td class="px-8 py-6 text-center">
+                                        <span class="text-lg font-black {{ $isPassed ? 'text-blue-600' : 'text-rose-500' }}">
+                                            {{ $average ? number_format($average, 2) : '--' }}
                                         </span>
                                     </td>
+                                    <td class="px-10 py-6 text-center">
+                                        @if($average)
+                                            <span class="inline-flex items-center gap-2 {{ $isPassed ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100' }} px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm">
+                                                <span class="w-1.5 h-1.5 rounded-full {{ $isPassed ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
+                                                {{ $isPassed ? 'Passed' : 'Failed' }}
+                                            </span>
+                                        @else
+                                            <span class="bg-slate-50 text-slate-400 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-100">
+                                                Pending
+                                            </span>
+                                        @endif
+                                    </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-10 py-24 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
+                                                <i class="fa-solid fa-folder-closed text-3xl text-slate-200"></i>
+                                            </div>
+                                            <p class="text-slate-400 font-bold uppercase text-xs tracking-widest">No grades recorded yet</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
+                </div>
 
-                    @if($subjects->isEmpty())
-                        <div class="p-10 text-center text-gray-500">
-                            <i class="fa-regular fa-folder-open text-4xl mb-3 text-gray-300"></i>
-                            <p class="text-sm">No grades found for this account yet.</p>
-                        </div>
-                    @endif
+                <div class="p-8 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Official Academic Record • S.Y. 2025-2026
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-blue-200"></i>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Verified by Registrar</span>
+                    </div>
                 </div>
             </div>
 
         </main>
     </div>
-
+    
     <script src="{{ asset('js/sidebar.js') }}"></script>
 </body>
 </html>
