@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
 {
     Schema::create('teachers', function (Blueprint $table) {
-        $table->id();
-        $table->string('employee_id')->unique(); // ID ng teacher
+        $table->id(); // Ito ay BigInt Unsigned
+        $table->string('employee_id')->unique();
         $table->string('first_name');
         $table->string('last_name');
         $table->string('email')->unique();
-        $table->string('password'); // Required for login
-        $table->string('department'); // e.g. Math, Science, English
+        $table->string('password');
+        $table->string('department');
         $table->timestamps();
     });
 }

@@ -4,38 +4,38 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Student;
-use Illuminate\Support\Facades\Hash; // Importante para sa encryption
+use App\Models\Section;
+use Illuminate\Support\Facades\Hash;
 
 class StudentSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. CREATE SPECIFIC STUDENT (JM)
+        // Get the ID for "Rizal" section
+        $rizalSection = Section::where('name', 'Rizal')->first();
+
+        // 1. CREATE SPECIFIC STUDENTS
         Student::create([
-            'lrn' => '100000000001', // Custom LRN
+            'lrn' => '100000000001',
             'first_name' => 'Developer',
             'last_name' => 'Developers',
             'email' => 'dev@gmail.com',
-            'password' => Hash::make('password'), // Encrypt ang password
-            'grade_level' => 12,    // Example lang
-            'strand' => 'STEM',     // Example lang
-            'section' => 'Rizal',   // Example lang
+            'password' => Hash::make('password'),
+            'section_id' => $rizalSection->id,
         ]);
 
         Student::create([
-            'lrn' => '100000000002', // Custom LRN
+            'lrn' => '100000000002',
             'first_name' => 'Elice',
             'last_name' => 'Erman',
             'email' => 'elicegerman@gmail.com',
-            'password' => Hash::make('password'), // Encrypt ang password
-            'grade_level' => 12,    // Example lang
-            'strand' => 'STEM',     // Example lang
-            'section' => 'Rizal',   // Example lang
+            'password' => Hash::make('password'),
+            'section_id' => $rizalSection->id,
         ]);
-        // 2. CREATE RANDOM STUDENTS (49 others)
-        // Siguraduhin na ang Factory mo ay naglalagay din ng default password
+
+        // 2. CREATE RANDOM STUDENTS
         Student::factory(50)->create([
-            'password' => Hash::make('password'), // Default pass ng random students
+            'password' => Hash::make('password'),
         ]);
     }
 }

@@ -20,28 +20,27 @@ class Student extends Authenticatable
         'last_name',
         'email',
         'password',
-        'grade_level',
-        'strand',
-        'section',
+        'section_id', // Link to the new sections table
+        'avatar'
     ];
 
-    // 3. Siguraduhing naka-hide ang password sa arrays
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
+
+    // Get the section (and grade level/advisor) for this student
+    public function section()
+    {
+        return $this->belongsTo(Section::class);
+    }
+
     public function grades() { return $this->hasMany(Grade::class); }
 
     protected function avatarUrl(): Attribute
     {
         return Attribute::make(
             get: function () {
-                // Check if avatar exists and isn't the legacy default
                 if ($this->avatar && $this->avatar !== 'default.png') {
                     return Storage::disk('s3')->url('avatars/' . $this->avatar);
                 }
-
-                // Fallback to UI Avatars
                 $name = urlencode($this->first_name);
                 return "https://ui-avatars.com/api/?name={$name}&background=2563eb&color=fff";
             }

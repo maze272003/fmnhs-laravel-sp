@@ -13,25 +13,13 @@ class Attendance extends Model
         'student_id', 
         'subject_id', 
         'teacher_id', 
-        'section', 
+        'section_id', // Changed from 'section'
         'date', 
         'status'
     ];
 
-    // Existing relationships
-    public function student() 
-    { 
-        return $this->belongsTo(Student::class); 
-    }
-    
-    public function subject() 
-    { 
-        return $this->belongsTo(Subject::class); 
-    }
-
-    // --- IDAGDAG MO ITO (Ang kulang) ---
-    public function teacher() 
-    { 
-        return $this->belongsTo(Teacher::class); 
-    }
+    public function section() { return $this->belongsTo(Section::class); }
+    public function student() { return $this->belongsTo(Student::class); }
+    public function subject() { return $this->belongsTo(Subject::class); }
+    public function teacher() { return $this->belongsTo(Teacher::class); }
 }

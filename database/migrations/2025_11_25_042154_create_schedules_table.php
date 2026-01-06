@@ -12,24 +12,17 @@ return new class extends Migration
     public function up(): void
 {
     Schema::create('schedules', function (Blueprint $table) {
-        $table->id();
-        // Who is this schedule for? (Linked by Section)
-        $table->string('section'); 
-        
-        // What subject?
-        $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
-        
-        // Who is teaching?
-        $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
-        
-        // When and Where?
-        $table->string('day'); // e.g., "Monday", "MWF"
-        $table->time('start_time');
-        $table->time('end_time');
-        $table->string('room')->nullable(); // e.g., "Rm 101"
-        
-        $table->timestamps();
-    });
+    $table->id();
+    $table->foreignId('section_id')->constrained('sections')->onDelete('cascade');
+    $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
+    $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
+    
+    $table->string('day'); 
+    $table->time('start_time');
+    $table->time('end_time');
+    $table->string('room')->nullable();
+    $table->timestamps();
+});
 }
 
     /**

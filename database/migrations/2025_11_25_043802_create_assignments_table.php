@@ -12,16 +12,17 @@ return new class extends Migration
     public function up(): void
 {
     Schema::create('assignments', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
-        $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
-        $table->string('section'); // Assignments are per section
-        $table->string('title');
-        $table->text('description')->nullable();
-        $table->string('file_path')->nullable(); // Teacher's attachment
-        $table->dateTime('deadline');
-        $table->timestamps();
-    });
+    $table->id();
+    $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
+    $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
+    $table->foreignId('section_id')->constrained('sections')->onDelete('cascade');
+    
+    $table->string('title');
+    $table->text('description')->nullable();
+    $table->string('file_path')->nullable(); 
+    $table->dateTime('deadline');
+    $table->timestamps();
+});
 }
 
     /**
