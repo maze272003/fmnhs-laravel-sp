@@ -14,19 +14,18 @@ class AdminSubjectController extends Controller
      * Display a listing of the subjects.
      */
     public function index(Request $request)
-    {
-        $search = $request->input('search');
+{
+    // I-check kung ang user ay nasa 'archived' view base sa URL parameter (?archived=1)
+    $viewArchived = $request->has('archived');
 
-        $subjects = Subject::when($search, function ($query, $search) {
-            return $query->where('code', 'like', "%{$search}%")
-                        ->orWhere('name', 'like', "%{$search}%");
-        })
-        ->orderBy('code', 'asc')
-        ->paginate(10)
-        ->withQueryString(); // This ensures the search param stays in pagination links
+    // Kunin ang iyong data (halimbawa)
+    $subjects = Subject::when($viewArchived, function ($query) {
+            return $query->onlyTrashed();
+        })->paginate(10);
 
-        return view('admin.subject', compact('subjects'));
-    }
+    // SIGURADUHIN na kasama ang 'viewArchived' dito:
+    return view('admin.subject', compact('subjects', 'viewArchived'));
+}
 
     /**
      * Store a newly created subject in storage.
@@ -65,15 +64,17 @@ class AdminSubjectController extends Controller
     /**
      * Remove the specified subject from storage.
      */
-    public function destroy(Subject $subject): RedirectResponse
+    public function archive(Subject $subject): RedirectResponse
     {
-        /**
-         * Paalala: Dahil sa cascade delete sa migration, 
-         * ang lahat ng grades, schedules, at assignments 
-         * na nakalink sa subject na ito ay awtomatikong mabubura.
-         */
-        $subject->delete();
+        $subject->delete(); // Dahil sa SoftDeletes, ma-aarchive lang ito
+        return redirect()->back()->with('success', 'Subject has been moved to archive.');
+    }
 
-        return redirect()->back()->with('success', 'Subject and all associated records have been removed.');
+    // Function para ibalik ang inarchive
+    public function restore($id): RedirectResponse
+    {
+        $subject = Subject::onlyTrashed()->findOrFail($id);
+        $subject->restore();
+        return redirect()->back()->with('success', 'Subject has been restored successfully.');
     }
 }

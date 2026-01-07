@@ -12,11 +12,12 @@ public function run(): void
 {
     $this->call([
         AdminSeeder::class,      // Gagawa tayo nito sa baba
-        TeacherSeeder::class,    // Siguraduhing may file ka nito
+        SectionSeeder::class,    // Siguraduhing may file ka nito
         SubjectSeeder::class,    
-        SectionSeeder::class,    
+        TeacherSeeder::class,
         StudentSeeder::class,    
-        ScheduleSeeder::class,   
+        ScheduleSeeder::class, 
+        AssignmentSeeder::class,  
         GradeSeeder::class,      
         AttendanceSeeder::class, 
     ]);

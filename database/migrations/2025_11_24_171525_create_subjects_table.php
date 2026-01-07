@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
 {
     Schema::create('subjects', function (Blueprint $table) {
-        $table->id();
-        $table->string('code')->unique(); // e.g., MATH101
-        $table->string('name'); // e.g., Basic Mathematics
-        $table->string('description')->nullable(); 
-        $table->timestamps();
-    });
+    $table->id();
+    $table->string('code')->unique();
+    $table->string('name');
+    $table->string('description')->nullable();
+    $table->softDeletes(); // Idagdag ito para sa Archive function
+    $table->timestamps();
+});
 }
 
     /**

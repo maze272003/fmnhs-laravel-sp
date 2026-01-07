@@ -109,6 +109,11 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/students', [AdminStudentController::class, 'store'])->name('admin.students.store');
     Route::put('/admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
     Route::delete('/admin/students/{id}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
+    Route::post('/admin/subjects/{subject}/archive', [AdminSubjectController::class, 'archive'])->name('admin.subjects.archive');
+    Route::post('/admin/subjects/{id}/restore', [AdminSubjectController::class, 'restore'])->name('admin.subjects.restore');
+    Route::delete('/admin/subjects/{id}/force-delete', [AdminSubjectController::class, 'forceDelete'])->name('admin.subjects.force-delete');
+    Route::post('/admin/teachers/{teacher}/archive', [AdminTeacherController::class, 'archive'])->name('admin.teachers.archive');
+    Route::post('/admin/teachers/{id}/restore', [AdminTeacherController::class, 'restore'])->name('admin.teachers.restore');
 });
 
 require __DIR__.'/db.php';

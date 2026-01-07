@@ -30,28 +30,34 @@ class StudentProfileController extends Controller
      * Update the student's avatar or password.
      */
     public function update(Request $request): RedirectResponse
-    {
-        $student = Auth::guard('student')->user();
+{
+    $student = Auth::guard('student')->user();
 
-        $request->validate([
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:15360', // 15MB limit
-            'current_password' => 'nullable|required_with:new_password',
-            'new_password' => 'nullable|min:8|confirmed',
-        ]);
+    $request->validate([
+        'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:15360',
+        'current_password' => 'nullable|required_with:new_password',
+        'new_password' => 'nullable|min:8|confirmed',
+    ]);
 
-        // 1. Handle Avatar Upload (S3/MinIO)
+    try {
+        // 1. Handle Avatar Upload
         if ($request->hasFile('avatar')) {
-            // Cleanup: Burahin ang lumang avatar sa S3 kung hindi ito default
+            $file = $request->file('avatar');
+            
+            // Generate unique filename
+            $filename = time() . '_' . $student->id . '.' . $file->extension();
+            $path = 'avatars/' . $filename;
+
+            // Upload sa S3 na may 'public' visibility para mabasa ng browser
+            Storage::disk('s3')->put($path, file_get_contents($file), 'public');
+
+            // Cleanup: Burahin ang lumang avatar kung hindi ito default
             if ($student->avatar && $student->avatar !== 'default.png') {
                 $oldPath = 'avatars/' . $student->avatar;
                 if (Storage::disk('s3')->exists($oldPath)) {
                     Storage::disk('s3')->delete($oldPath);
                 }
             }
-
-            // Generate unique filename at i-store
-            $filename = time() . '.' . $request->avatar->extension();
-            $request->avatar->storeAs('avatars', $filename, 's3');
             
             $student->avatar = $filename;
         }
@@ -67,5 +73,11 @@ class StudentProfileController extends Controller
         $student->save();
 
         return back()->with('success', 'Ang iyong profile ay matagumpay na na-update!');
+
+    } catch (\Exception $e) {
+        // Log ang error para sa debugging
+        \Log::error("Avatar Upload Failed: " . $e->getMessage());
+        return back()->withErrors(['avatar' => 'Nagkaroon ng problema sa pag-upload: ' . $e->getMessage()]);
     }
+}
 }

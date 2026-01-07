@@ -133,14 +133,14 @@
                                         <td class="px-8 py-5">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                                    {{ $sched->subject->code }}
+                                                    {{ $sched->subject?->code ?? 'N/A' }}
                                                 </div>
                                                 <div>
                                                     <p class="font-black text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">
-                                                        {{ $sched->section->name }}
+                                                        {{ $sched->section?->name ?? 'No Section' }}
                                                     </p>
                                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                                        Grade {{ $sched->section->grade_level }} • Room {{ $sched->room ?? 'N/A' }}
+                                                        Grade {{ $sched->section?->grade_level ?? '?' }} • Room {{ $sched->room ?? 'N/A' }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -157,10 +157,10 @@
                                         <td class="px-6 py-5">
                                             <div class="flex items-center gap-2">
                                                 <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                                    {{ substr($sched->teacher->first_name, 0, 1) }}
+                                                    {{ $sched->teacher ? substr($sched->teacher->first_name, 0, 1) : '?' }}
                                                 </div>
                                                 <span class="text-sm font-bold text-slate-700">
-                                                    {{ $sched->teacher->last_name }}, {{ $sched->teacher->first_name }}
+                                                    {{ $sched->teacher ? $sched->teacher->last_name . ', ' . $sched->teacher->first_name : 'No Instructor Assigned' }}
                                                 </span>
                                             </div>
                                         </td>

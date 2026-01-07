@@ -2,113 +2,162 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Teachers | Admin Faculty</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Faculty Management | {{ ($viewArchived ?? false) ? 'Archive' : 'Registry' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
         .custom-scrollbar::-webkit-scrollbar { height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 antialiased">
+<body class="bg-[#f8fafc] text-slate-800 antialiased">
 
     @include('components.admin.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-100">
+        <header class="glass-header sticky top-0 z-40 px-8 py-5 flex justify-between items-center border-b border-slate-200/60 shadow-sm">
             <div class="flex items-center gap-4">
-                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-50 text-slate-500">
-                    <i class="fa-solid fa-bars text-xl"></i>
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
+                    <i class="fa-solid fa-bars-staggered text-xl"></i>
                 </button>
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-chalkboard-user text-sm"></i>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 {{ ($viewArchived ?? false) ? 'bg-amber-600' : 'bg-emerald-600' }} text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-100">
+                        <i class="fa-solid {{ ($viewArchived ?? false) ? 'fa-box-archive' : 'fa-chalkboard-user' }} text-sm"></i>
                     </div>
-                    <h2 class="text-xl font-black text-slate-800 tracking-tight">Faculty Roster</h2>
+                    <div class="flex flex-col">
+                        <h2 class="text-lg font-black text-slate-900 tracking-tight leading-none mb-1">Faculty Roster</h2>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ ($viewArchived ?? false) ? 'Archived Records' : 'Active Educators' }}</p>
+                    </div>
                 </div>
             </div>
             <div class="hidden sm:block">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    Academic Year 2025-2026
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                    SY 2025-2026
                 </span>
             </div>
         </header>
 
-        <main class="flex-1 p-6 lg:p-10">
+        <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
             
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
-                <div>
+            @if(session('success'))
+                <script>Swal.fire({icon: 'success', title: 'Action Successful', text: "{{ session('success') }}", timer: 2000, showConfirmButton: false, borderRadius: '24px'});</script>
+            @endif
+
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
+                <div class="w-full lg:w-auto">
                     <h1 class="text-3xl font-black text-slate-900 tracking-tight">Faculty Management</h1>
                     <p class="text-slate-500 font-medium">Overview of educators and their advisory assignments.</p>
                 </div>
-                <button class="w-full sm:w-auto bg-slate-900 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-user-plus text-xs"></i> Add Faculty Member
-                </button>
+                
+                <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                    <form action="{{ route('admin.teachers.index') }}" method="GET" class="flex-1 lg:min-w-[320px] relative group">
+                        @if($viewArchived ?? false) <input type="hidden" name="archived" value="1"> @endif
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                            placeholder="Search ID or name..." 
+                            class="w-full pl-12 pr-10 py-4 bg-white border border-slate-200 rounded-[1.5rem] focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-hover:text-emerald-500 transition-colors">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        @if(request('search'))
+                            <a href="{{ route('admin.teachers.index', ($viewArchived ?? false) ? ['archived' => 1] : []) }}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-rose-500">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </a>
+                        @endif
+                    </form>
+
+                    <div class="flex items-center gap-3">
+                        @if($viewArchived ?? false)
+                            <a href="{{ route('admin.teachers.index') }}" class="bg-slate-900 text-white px-6 py-4 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-slate-200 transition-all active:scale-95">
+                                <i class="fa-solid fa-arrow-left"></i> Active List
+                            </a>
+                        @else
+                            <a href="{{ route('admin.teachers.index', ['archived' => 1]) }}" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-4 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-100 transition-all active:scale-95">
+                                <i class="fa-solid fa-box-archive"></i> Archive
+                            </a>
+                            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-[1.5rem] font-black shadow-xl shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-3">
+                                <i class="fa-solid fa-user-plus text-xs"></i> Add Faculty
+                            </button>
+                        @endif
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+            <div class="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-200/50 overflow-hidden">
                 <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
                         <thead>
-                            <tr class="bg-slate-50/50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-50">
-                                <th class="px-8 py-5">Emp ID</th>
-                                <th class="px-6 py-5">Faculty Member</th>
-                                <th class="px-6 py-5">Department</th>
-                                <th class="px-6 py-5">Advisory Assignment</th>
-                                <th class="px-8 py-5 text-center">Actions</th>
+                            <tr class="bg-slate-50/50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-100">
+                                <th class="px-10 py-6">Emp ID</th>
+                                <th class="px-8 py-6">Faculty Member</th>
+                                <th class="px-8 py-6">Department</th>
+                                <th class="px-8 py-6">Advisory Assignment</th>
+                                <th class="px-10 py-6 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @foreach($teachers as $teacher)
-                            <tr class="hover:bg-indigo-50/30 transition-colors group">
-                                <td class="px-8 py-5">
-                                    <span class="px-3 py-1 bg-slate-100 text-slate-600 font-mono text-[11px] font-black rounded-lg border border-slate-200">
+                            <tr class="hover:bg-emerald-50/20 transition-all duration-300 group">
+                                <td class="px-10 py-6">
+                                    <span class="px-4 py-1.5 bg-slate-50 text-slate-600 font-mono text-[11px] font-black rounded-xl border border-slate-100">
                                         {{ $teacher->employee_id }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
                                             {{ substr($teacher->first_name, 0, 1) }}{{ substr($teacher->last_name, 0, 1) }}
                                         </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors leading-none mb-1">
+                                        <div class="flex flex-col leading-tight">
+                                            <p class="font-black text-slate-900 group-hover:text-emerald-700 transition-colors text-base">
                                                 {{ $teacher->last_name }}, {{ $teacher->first_name }}
                                             </p>
-                                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{{ $teacher->email }}</p>
+                                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{{ $teacher->email }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5">
-                                    <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black bg-slate-50 text-slate-500 border border-slate-200 uppercase tracking-widest">
+                                <td class="px-8 py-6">
+                                    <span class="inline-flex px-4 py-2 rounded-xl text-[10px] font-black bg-white text-slate-500 border border-slate-100 uppercase tracking-widest shadow-sm">
                                         {{ $teacher->department }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-5">
+                                <td class="px-8 py-6">
                                     @if($teacher->advisorySection)
-                                        <div class="flex flex-col">
-                                            <span class="text-xs font-black text-indigo-600 tracking-tight">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                                            <span class="text-sm font-black text-indigo-600 tracking-tight uppercase">
                                                 Grade {{ $teacher->advisorySection->grade_level }} - {{ $teacher->advisorySection->name }}
-                                            </span>
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                                                {{ $teacher->advisorySection->strand ?? 'General' }}
                                             </span>
                                         </div>
                                     @else
-                                        <span class="text-[10px] font-bold text-slate-300 uppercase italic tracking-widest">No Assignment</span>
+                                        <span class="text-[10px] font-bold text-slate-300 uppercase italic tracking-widest">Unassigned</span>
                                     @endif
                                 </td>
-                                <td class="px-8 py-5">
-                                    <div class="flex justify-center items-center gap-2">
-                                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                        </button>
-                                        <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-sm">
-                                            <i class="fa-solid fa-trash-can text-xs"></i>
-                                        </button>
+                                <td class="px-10 py-6">
+                                    <div class="flex justify-center items-center gap-3">
+                                        @if($teacher->trashed())
+                                            <form action="{{ route('admin.teachers.restore', $teacher->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Restore Faculty">
+                                                    <i class="fa-solid fa-rotate-left"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button onclick="editTeacher({{ $teacher }})" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <form action="{{ route('admin.teachers.archive', $teacher->id) }}" method="POST">
+                                                @csrf
+                                                <button type="button" class="archive-btn w-11 h-11 flex items-center justify-center rounded-2xl bg-amber-50 text-amber-500 hover:bg-amber-600 hover:text-white transition-all shadow-sm">
+                                                    <i class="fa-solid fa-box-archive"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -116,25 +165,93 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="p-6 bg-slate-50/30 border-t border-slate-50">
+                <div class="p-8 bg-slate-50/40 border-t border-slate-100">
                     {{ $teachers->links() }}
                 </div>
             </div>
-
-            @if($teachers->isEmpty())
-                <div class="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200">
-                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
-                        <i class="fa-solid fa-chalkboard-user text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-black text-slate-800">No Faculty Registered</h3>
-                    <p class="text-slate-400 text-sm mt-1">Add teachers to begin assigning advisory classes.</p>
-                </div>
-            @endif
-
         </main>
     </div>
 
+    <div id="editModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl border border-white">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight leading-none">Edit Faculty</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Update professional profile</p>
+                </div>
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-50 text-slate-300 hover:text-rose-500 transition-all"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="editForm" method="POST" class="space-y-6">
+                @csrf @method('PUT')
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
+                        <input type="text" id="edit_first_name" name="first_name" required 
+                            class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
+                        <input type="text" id="edit_last_name" name="last_name" required 
+                            class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                    <input type="email" id="edit_email" name="email" required 
+                        class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
+                    <select id="edit_department" name="department" required 
+                        class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none appearance-none">
+                        <option>STEM</option><option>HUMSS</option><option>ABM</option><option>TVL</option><option>General Academic</option>
+                    </select>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-slate-900 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-slate-200 hover:bg-emerald-600 transition-all active:scale-95 uppercase text-xs tracking-widest">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="{{ asset('js/sidebar.js') }}"></script>
+    <script>
+        function editTeacher(teacher) {
+            document.getElementById('edit_first_name').value = teacher.first_name;
+            document.getElementById('edit_last_name').value = teacher.last_name;
+            document.getElementById('edit_email').value = teacher.email;
+            document.getElementById('edit_department').value = teacher.department;
+            document.getElementById('editForm').action = `/admin/teachers/${teacher.id}`;
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+        }
+
+        document.querySelectorAll('.archive-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                Swal.fire({
+                    title: 'Archive Faculty?', 
+                    text: "Access to the portal will be suspended, but all historic records will be preserved.", 
+                    icon: 'warning', 
+                    showCancelButton: true, 
+                    confirmButtonColor: '#f59e0b', 
+                    cancelButtonColor: '#94a3b8',
+                    confirmButtonText: 'Yes, Archive it',
+                    borderRadius: '25px',
+                }).then((r) => { if(r.isConfirmed) this.closest('form').submit(); });
+            });
+        });
+
+        // Close modal on escape key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
 </body>
 </html>

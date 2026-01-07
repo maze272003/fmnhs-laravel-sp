@@ -1,21 +1,20 @@
 <?php
-namespace App\Http\Controllers\Student;
+// app/Http/Controllers/Student/StudentAssignmentController.php
+
+namespace App\Http\Controllers\Student; // DAPAT STUDENT
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Assignment;
 use App\Models\Submission;
+use App\Models\Assignment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
-class StudentAssignmentController extends Controller
+class StudentAssignmentController extends Controller // DAPAT STUDENTASSIGNMENTCONTROLLER
 {
-    public function index(): View
+    public function index()
     {
         $student = Auth::guard('student')->user();
 
-        // Refactored: Filter by section_id instead of section string
         $assignments = Assignment::where('section_id', $student->section_id)
             ->with(['subject', 'submissions' => function($q) use ($student) {
                 $q->where('student_id', $student->id);
@@ -26,26 +25,25 @@ class StudentAssignmentController extends Controller
         return view('student.assignment', compact('assignments'));
     }
 
-    public function submit(Request $request): RedirectResponse
+    public function submit(Request $request)
     {
         $request->validate([
             'assignment_id' => 'required|exists:assignments,id',
-            'file' => 'required|file|max:10240' // 10MB
+            'attachment'    => 'required|file|max:20480', 
         ]);
 
         $student = Auth::guard('student')->user();
-        $file = $request->file('file');
         
-        $filename = time() . '_' . $student->id . '_' . $file->getClientOriginalName();
-        $file->move(public_path('uploads/submissions'), $filename);
+        if ($request->hasFile('attachment')) {
+            $filename = time() . '_stud' . $student->id . '_' . $request->file('attachment')->getClientOriginalName();
+            $request->file('attachment')->move(public_path('uploads/submissions'), $filename);
 
-        Submission::create([
-            'assignment_id' => $request->assignment_id,
-            'student_id'    => $student->id,
-            'file_path'     => $filename,
-            'remarks'       => 'Turned in'
-        ]);
+            Submission::updateOrCreate(
+                ['assignment_id' => $request->assignment_id, 'student_id' => $student->id],
+                ['file_path' => $filename, 'submitted_at' => now()]
+            );
+        }
 
-        return back()->with('success', 'Work submitted successfully!');
+        return back()->with('success', 'Output submitted successfully!');
     }
 }
