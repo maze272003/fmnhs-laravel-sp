@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Teacher;
+
 
 class TeacherController extends Controller
 {
@@ -78,19 +80,23 @@ class TeacherController extends Controller
      */
     public function myStudents(Request $request): View
     {
-        $sections = Section::orderBy('grade_level')->get();
+        // Eager load 'teacher' (o kung ano man ang tawag sa relationship sa Section model)
+        $sections = Section::with('teacher')->orderBy('grade_level')->get();
+        
         $selectedSectionId = $request->section_id;
         $selectedSection = null;
         $students = collect();
+        $currentTeacherId = Auth::guard('teacher')->id();
 
         if ($selectedSectionId) {
-            $selectedSection = Section::find($selectedSectionId);
+            // Load section kasama ang advisor nito
+            $selectedSection = Section::with('teacher')->find($selectedSectionId);
             $students = Student::where('section_id', $selectedSectionId)
                         ->orderBy('last_name')
                         ->get();
         }
 
-        return view('teacher.student', compact('sections', 'students', 'selectedSection'));
+        return view('teacher.student', compact('sections', 'students', 'selectedSection', 'currentTeacherId'));
     }
 
     public function gradingSheet(): View

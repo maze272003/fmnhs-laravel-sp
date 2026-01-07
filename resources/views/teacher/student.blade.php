@@ -53,7 +53,8 @@
                                 <option value="" disabled {{ !$selectedSection ? 'selected' : '' }}>-- Select a Class --</option>
                                 @foreach($sections as $sec)
                                     <option value="{{ $sec->id }}" {{ $selectedSection && $selectedSection->id == $sec->id ? 'selected' : '' }}>
-                                        Grade {{ $sec->grade_level }} - {{ $sec->name }}
+                                        Grade {{ $sec->grade_level }} - {{ $sec->name }} 
+                                        {{ $sec->teacher_id == $currentTeacherId ? '(Your Advisory Class)' : '' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -77,6 +78,14 @@
                     <h3 class="font-black text-2xl text-slate-900 tracking-tight">
                         @if($selectedSection)
                             Class List: <span class="text-emerald-600">{{ $selectedSection->name }}</span>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Advisory Teacher:</span>
+                                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black border border-blue-100">
+                                    <i class="fa-solid fa-chalkboard-user mr-1"></i>
+                                    {{ $selectedSection->teacher ? $selectedSection->teacher->name : 'No Adviser Assigned' }}
+                                    {{ $selectedSection->teacher_id == $currentTeacherId ? '(You)' : '' }}
+                                </span>
+                            </div>
                         @else
                             <span class="text-slate-300 italic font-bold">Waiting for selection...</span>
                         @endif
