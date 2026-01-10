@@ -19,13 +19,19 @@
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
         <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b border-slate-200/60 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100">
+            <div class="flex items-center gap-3 sm:gap-4">
+                
+                <!-- MISSING BUTTON ADDED HERE -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+
+                <div class="w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 shrink-0">
                     <i class="fa-solid fa-layer-group text-sm"></i>
                 </div>
                 <div class="flex flex-col">
                     <h2 class="text-lg font-black text-slate-900 tracking-tight leading-none mb-1">Subject Roadmap</h2>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Organized by Curriculum</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Organized by Curriculum</p>
                 </div>
             </div>
 
@@ -35,7 +41,16 @@
                     <p class="text-sm font-black text-slate-800 leading-none mb-1">{{ $student->first_name }} {{ $student->last_name }}</p>
                     <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Grade {{ $student->section->grade_level }}</p>
                 </div>
-                <img src="{{ $student->avatar_url }}" class="w-11 h-11 rounded-2xl object-cover border-2 border-white shadow-md">
+                
+                <!-- Avatar Logic (Fixed for Local/Hostinger) -->
+                @php
+                    $avatar = $student->avatar ? (
+                        file_exists(public_path('uploads/avatars/' . $student->avatar)) 
+                            ? asset('uploads/avatars/' . $student->avatar) 
+                            : asset('storage/avatars/' . $student->avatar)
+                    ) : "https://ui-avatars.com/api/?name=".urlencode($student->first_name)."&background=4f46e5&color=fff";
+                @endphp
+                <img src="{{ $avatar }}" class="w-11 h-11 rounded-2xl object-cover border-2 border-white shadow-md">
             </div>
         </header>
 
@@ -90,11 +105,23 @@
 
                                     <div class="flex items-center gap-4 mt-auto">
                                         @if($asn->file_path)
-                                            <a href="{{ asset('uploads/assignments/'.$asn->file_path) }}" target="_blank" class="text-slate-400 hover:text-indigo-600 transition-colors">
-                                                <i class="fa-solid fa-paperclip text-sm"></i>
+                                            @php
+                                                // Hybrid Logic for File Attachment
+                                                $attachFile = basename($asn->file_path);
+                                                $attachSrc = file_exists(public_path('uploads/assignments/' . $attachFile)) 
+                                                    ? asset('uploads/assignments/' . $attachFile) 
+                                                    : asset('storage/assignments/' . $asn->file_path); // Fallback usually not needed if strict
+                                                
+                                                // Check for Hostinger path just in case
+                                                if(file_exists(public_path('uploads/assignments/' . $asn->file_path))) {
+                                                     $attachSrc = asset('uploads/assignments/' . $asn->file_path);
+                                                }
+                                            @endphp
+                                            <a href="{{ $attachSrc }}" target="_blank" class="text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1">
+                                                <i class="fa-solid fa-paperclip text-sm"></i> <span class="text-[10px] font-bold uppercase">View</span>
                                             </a>
                                         @endif
-                                        <span class="text-[10px] font-bold text-slate-400">
+                                        <span class="text-[10px] font-bold text-slate-400 ml-auto">
                                             <i class="fa-regular fa-clock mr-1 text-rose-400"></i> {{ \Carbon\Carbon::parse($asn->deadline)->format('M d, h:i A') }}
                                         </span>
                                     </div>
@@ -112,13 +139,13 @@
                                         <form action="{{ route('student.assignments.submit') }}" method="POST" enctype="multipart/form-data" class="w-full space-y-3">
                                             @csrf
                                             <input type="hidden" name="assignment_id" value="{{ $asn->id }}">
-                                            <label class="block">
-                                                <div class="w-full h-12 bg-white border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-indigo-400 transition-all">
-                                                    <i class="fa-solid fa-cloud-arrow-up text-slate-300 text-sm"></i>
-                                                    <input type="file" name="attachment" required class="hidden" onchange="this.form.submit()">
+                                            <label class="block group">
+                                                <div class="w-full h-12 bg-white border-2 border-dashed border-slate-200 group-hover:border-indigo-400 rounded-xl flex items-center justify-center cursor-pointer transition-all">
+                                                    <i class="fa-solid fa-cloud-arrow-up text-slate-300 group-hover:text-indigo-500 text-lg transition-colors"></i>
+                                                    <input type="file" name="file" required class="hidden" onchange="this.form.submit()">
                                                 </div>
                                             </label>
-                                            <p class="text-[8px] text-center font-bold text-slate-400 uppercase tracking-widest">Click icon to upload</p>
+                                            <p class="text-[8px] text-center font-bold text-slate-400 uppercase tracking-widest">Click to upload</p>
                                         </form>
                                     @endif
                                 </div>
@@ -133,7 +160,7 @@
                         <i class="fa-solid fa-face-smile-beam text-5xl text-slate-200"></i>
                     </div>
                     <h3 class="text-2xl font-black text-slate-900">Walang Pending!</h3>
-                    <p class="text-slate-400 font-medium">Lahat ng subjects mo ay updated. Good job, MGM!</p>
+                    <p class="text-slate-400 font-medium">Lahat ng subjects mo ay updated. Good job, {{ $student->first_name }}!</p>
                 </div>
             @endforelse
 

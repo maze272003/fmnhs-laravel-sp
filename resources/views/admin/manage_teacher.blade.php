@@ -49,6 +49,16 @@
                 <script>Swal.fire({icon: 'success', title: 'Action Successful', text: "{{ session('success') }}", timer: 2000, showConfirmButton: false, borderRadius: '24px'});</script>
             @endif
 
+            @if ($errors->any())
+                <div class="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 border border-rose-100 text-sm font-bold">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
                 <div class="w-full lg:w-auto">
                     <h1 class="text-3xl font-black text-slate-900 tracking-tight">Faculty Management</h1>
@@ -80,7 +90,8 @@
                             <a href="{{ route('admin.teachers.index', ['archived' => 1]) }}" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-4 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-100 transition-all active:scale-95">
                                 <i class="fa-solid fa-box-archive"></i> Archive
                             </a>
-                            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-[1.5rem] font-black shadow-xl shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-3">
+                            <!-- FIXED: Added onclick event -->
+                            <button onclick="openModal('addModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-[1.5rem] font-black shadow-xl shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-3">
                                 <i class="fa-solid fa-user-plus text-xs"></i> Add Faculty
                             </button>
                         @endif
@@ -172,6 +183,67 @@
         </main>
     </div>
 
+    <!-- NEW ADD MODAL -->
+    <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl border border-white">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight leading-none">New Faculty</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Onboard new educator</p>
+                </div>
+                <button onclick="closeModal('addModal')" class="w-10 h-10 rounded-full bg-slate-50 text-slate-300 hover:text-rose-500 transition-all"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form action="{{ route('admin.teachers.store') }}" method="POST" class="space-y-4">
+                @csrf
+                
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Employee ID</label>
+                    <input type="text" name="employee_id" required placeholder="T-2025-XXXX"
+                        class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
+                        <input type="text" name="first_name" required 
+                            class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
+                        <input type="text" name="last_name" required 
+                            class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                    <input type="email" name="email" required 
+                        class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
+                    <select name="department" required 
+                        class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none appearance-none">
+                        <option value="" disabled selected>Select Department</option>
+                        <option>Mathematics</option>
+                        <option>Science</option>
+                        <option>English</option>
+                        <option>Filipino</option>
+                        <option>Araling Panlipunan</option>
+                        <option>TLE (Livelihood Education)</option>
+                        <option>MAPEH</option>
+                        <option>Values Education</option>
+                    </select>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-emerald-600 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 uppercase text-xs tracking-widest">
+                        Add to Registry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
     <div id="editModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl border border-white">
             <div class="flex justify-between items-center mb-8">
@@ -179,7 +251,7 @@
                     <h2 class="text-2xl font-black text-slate-900 tracking-tight leading-none">Edit Faculty</h2>
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Update professional profile</p>
                 </div>
-                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-50 text-slate-300 hover:text-rose-500 transition-all"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeModal('editModal')" class="w-10 h-10 rounded-full bg-slate-50 text-slate-300 hover:text-rose-500 transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="editForm" method="POST" class="space-y-6">
                 @csrf @method('PUT')
@@ -204,7 +276,14 @@
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
                     <select id="edit_department" name="department" required 
                         class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none appearance-none">
-                        <option>STEM</option><option>HUMSS</option><option>ABM</option><option>TVL</option><option>General Academic</option>
+                        <option>Mathematics</option>
+                        <option>Science</option>
+                        <option>English</option>
+                        <option>Filipino</option>
+                        <option>Araling Panlipunan</option>
+                        <option>TLE (Livelihood Education)</option>
+                        <option>MAPEH</option>
+                        <option>Values Education</option>
                     </select>
                 </div>
                 <div class="pt-4">
@@ -218,19 +297,25 @@
 
     <script src="{{ asset('js/sidebar.js') }}"></script>
     <script>
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
         function editTeacher(teacher) {
             document.getElementById('edit_first_name').value = teacher.first_name;
             document.getElementById('edit_last_name').value = teacher.last_name;
             document.getElementById('edit_email').value = teacher.email;
             document.getElementById('edit_department').value = teacher.department;
             document.getElementById('editForm').action = `/admin/teachers/${teacher.id}`;
-            document.getElementById('editModal').classList.remove('hidden');
-            document.getElementById('editModal').classList.add('flex');
-        }
-
-        function closeModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.getElementById('editModal').classList.remove('flex');
+            openModal('editModal');
         }
 
         document.querySelectorAll('.archive-btn').forEach(btn => {
@@ -248,9 +333,12 @@
             });
         });
 
-        // Close modal on escape key
+        // Close modals on escape key
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') {
+                closeModal('addModal');
+                closeModal('editModal');
+            }
         });
     </script>
 </body>

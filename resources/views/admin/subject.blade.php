@@ -38,6 +38,7 @@
                     </div>
                 </div>
             </div>
+            @include('components.admin.header_details')
         </header>
 
         <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">

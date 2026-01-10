@@ -114,6 +114,7 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::delete('/admin/subjects/{id}/force-delete', [AdminSubjectController::class, 'forceDelete'])->name('admin.subjects.force-delete');
     Route::post('/admin/teachers/{teacher}/archive', [AdminTeacherController::class, 'archive'])->name('admin.teachers.archive');
     Route::post('/admin/teachers/{id}/restore', [AdminTeacherController::class, 'restore'])->name('admin.teachers.restore');
+    Route::post('/admin/teachers', [AdminTeacherController::class, 'store'])->name('admin.teachers.store');
 });
 
 require __DIR__.'/db.php';

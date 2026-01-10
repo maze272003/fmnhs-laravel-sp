@@ -23,11 +23,7 @@
                 </div>
                 <h2 class="text-xl font-black text-slate-800 tracking-tight">Bulletin Board</h2>
             </div>
-            <div class="flex items-center gap-2">
-                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    Faculty Broadcaster
-                </span>
-            </div>
+            @include('components.teacher.header_details')
         </header>
 
         <main class="flex-1 p-6 lg:p-10">

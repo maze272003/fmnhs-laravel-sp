@@ -93,7 +93,7 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Absences</p>
                 </div>
 
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center text-center group hover:shadow-xl hover:border-blue-100 transition-all duration-500 relative overflow-hidden">
+                {{-- <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-center text-center group hover:shadow-xl hover:border-blue-100 transition-all duration-500 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <i class="fa-solid fa-file-signature text-6xl text-blue-600"></i>
                     </div>
@@ -102,7 +102,7 @@
                     </div>
                     <span class="text-4xl font-black text-slate-900 leading-none mb-2">{{ $summary['excused'] ?? 0 }}</span>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Excused</p>
-                </div>
+                </div> --}}
             </div>
 
             <div class="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/60 border border-slate-200/50 overflow-hidden">

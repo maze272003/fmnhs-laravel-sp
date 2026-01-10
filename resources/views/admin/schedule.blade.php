@@ -26,11 +26,12 @@
                     <h2 class="text-xl font-black text-slate-800 tracking-tight">Scheduling</h2>
                 </div>
             </div>
-            <div class="hidden sm:block">
+            @include('components.admin.header_details')
+            {{-- <div class="hidden sm:block">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
                     SY 2025-2026 | Normalized
                 </span>
-            </div>
+            </div> --}}
         </header>
 
         <main class="flex-1 p-6 lg:p-10">

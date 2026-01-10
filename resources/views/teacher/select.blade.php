@@ -33,6 +33,7 @@
                     </div>
                 </div>
             </div>
+            @include('components.teacher.header_details')
         </header>
 
         <main class="flex-1 p-6 flex items-center justify-center max-w-7xl mx-auto w-full">

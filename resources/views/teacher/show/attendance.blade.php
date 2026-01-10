@@ -84,7 +84,7 @@
                                     <th class="px-6 py-6 text-center bg-emerald-50/30 text-emerald-600 border-x border-slate-100/50">Present</th>
                                     <th class="px-6 py-6 text-center bg-amber-50/30 text-amber-600 border-x border-slate-100/50">Late</th>
                                     <th class="px-6 py-6 text-center bg-rose-50/30 text-rose-600 border-x border-slate-100/50">Absent</th>
-                                    <th class="px-6 py-6 text-center bg-blue-50/30 text-blue-600 border-x border-slate-100/50">Excused</th>
+                                    {{-- <th class="px-6 py-6 text-center bg-blue-50/30 text-blue-600 border-x border-slate-100/50">Excused</th> --}}
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
@@ -128,12 +128,12 @@
                                             </label>
                                         </td>
 
-                                        <td class="px-4 py-5 text-center border-x border-slate-50/50">
+                                        {{-- <td class="px-4 py-5 text-center border-x border-slate-50/50">
                                             <label class="flex items-center justify-center w-full h-10 cursor-pointer">
                                                 <input type="radio" name="status[{{ $student->id }}]" value="excused" {{ $status == 'excused' ? 'checked' : '' }} 
                                                     class="w-5 h-5 text-blue-600 border-slate-200 focus:ring-blue-500/20">
                                             </label>
-                                        </td>
+                                        </td> --}}
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -176,10 +176,10 @@
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500 group-hover:animate-pulse"></span>
                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Absent</span>
                 </div>
-                <div class="flex items-center gap-3 px-5 py-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm group hover:border-blue-200 transition-all">
+                {{-- <div class="flex items-center gap-3 px-5 py-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm group hover:border-blue-200 transition-all">
                     <span class="w-2.5 h-2.5 rounded-full bg-blue-500 group-hover:animate-pulse"></span>
                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Excused</span>
-                </div>
+                </div> --}}
             </div>
 
         </main>

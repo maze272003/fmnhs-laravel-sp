@@ -31,8 +31,9 @@
                     <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.2em]">Institutional Broadcaster</p>
                 </div>
             </div>
+            @include('components.admin.header_details')
             
-            <div class="flex items-center gap-4">
+            {{-- <div class="flex items-center gap-4">
                 <div class="hidden md:flex flex-col text-right mr-2">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Server Status</span>
                     <span class="text-[10px] font-black text-emerald-500 flex items-center justify-end gap-1">
@@ -42,7 +43,7 @@
                 <div class="h-10 w-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-lg shadow-slate-200">
                     <i class="fa-solid fa-tower-broadcast text-xs"></i>
                 </div>
-            </div>
+            </div> --}}
         </header>
 
         <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
