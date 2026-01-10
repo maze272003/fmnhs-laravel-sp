@@ -32,6 +32,14 @@ class StudentSeeder extends Seeder
             'password' => Hash::make('password'),
             'section_id' => $rizalSection->id,
         ]);
+        // Student::create([
+        //     'lrn' => '100000000004',
+        //     'first_name' => 'Stefhanie',
+        //     'last_name' => 'Sangbaan',
+        //     'email' => 'sangbaanstefhaniemary@gmail.com',
+        //     'password' => Hash::make('password'),
+        //     'section_id' => $rizalSection->id,
+        // ]);
 
         // 2. CREATE RANDOM STUDENTS
         Student::factory(50)->create([

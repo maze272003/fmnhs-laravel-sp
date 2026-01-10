@@ -15,5 +15,12 @@ class AdminSeeder extends Seeder
             'email' => 'admin@school.com',
             'password' => Hash::make('password'),
         ]);
+        // sangbaanstefhaniemary@gmail.com
+        Admin::updateOrCreate(
+            ['email' => 'sangbaanstefhaniemary@gmail.com'],
+            [
+                'name' => 'Administrator',
+                'password' => Hash::make('password'),
+            ]);
     }
 }

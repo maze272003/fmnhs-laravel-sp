@@ -13,7 +13,7 @@ class TeacherSeeder extends Seeder
     {
         // 1. CREATE SPECIFIC TEACHER (Juan Dela Cruz)
         $teacher = Teacher::updateOrCreate(
-            ['email' => 'teacher@gmail.com'],
+            ['email' => 'rasosjoanna@gmail.com'],
             [
                 'employee_id' => 'T-2025-001',
                 'first_name'  => 'Juan',
