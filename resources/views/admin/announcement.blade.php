@@ -54,6 +54,12 @@
                 </script>
             @endif
 
+            @if(session('error'))
+                <script>
+                    Swal.fire({ icon: 'error', title: 'Access Denied', text: "{{ session('error') }}", showConfirmButton: true, confirmButtonColor: '#0f172a', borderRadius: '24px' });
+                </script>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 
                 <div class="lg:col-span-5 xl:col-span-4">

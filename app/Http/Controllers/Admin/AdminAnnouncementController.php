@@ -79,13 +79,19 @@ class AdminAnnouncementController extends Controller
      */
     public function destroy(Announcement $announcement): RedirectResponse
     {
+        // Admin authorization check: Only the admin who created the announcement can delete it
+        $currentAdmin = Auth::guard('admin')->user();
+        if ($announcement->author_name !== $currentAdmin->name) {
+            return back()->with('error', 'You are not authorized to delete this announcement.');
+        }
+
         // S3 Cleanup: Burahin ang file sa bucket para makatipid sa storage cost
         if ($announcement->image && Storage::disk('s3')->exists($announcement->image)) {
             Storage::disk('s3')->delete($announcement->image);
         }
 
         $announcement->delete();
-        
+
         return back()->with('success', 'Announcement has been retracted and media deleted.');
     }
 }
