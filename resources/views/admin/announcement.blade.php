@@ -143,7 +143,7 @@
                                         </div>
                                         
                                         <div class="flex items-center gap-2">
-                                            <form action="{{ route('admin.announcements.destroy', $post->id) }}" method="POST" class="delete-form">
+                                            <form action="{{ route('admin.announcements.destroy', $post) }}" method="POST" class="delete-form">
                                                 @csrf @method('DELETE')
                                                 <button type="button" class="delete-btn w-10 h-10 flex items-center justify-center rounded-xl text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-all">
                                                     <i class="fa-solid fa-trash-can text-sm"></i>
