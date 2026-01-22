@@ -82,13 +82,17 @@ class AdminAnnouncementController extends Controller
         /** @var Admin $admin */
         $admin = Auth::guard('admin')->user();
 
-        if (
-            !$admin ||
-            !in_array($admin->email, config('app.super_admin_emails'), true)
-        ) {
+        // ✅ Hardcoded allowed admin emails
+        $allowedEmails = [
+            'admin@school.com',
+            'sangbaanstephaniemary@gmail.com',
+        ];
+
+        if (!$admin || !in_array($admin->email, $allowedEmails, true)) {
             return back()->with('error', 'You are not authorized to delete this announcement.');
         }
 
+        // 🗑️ Delete image from S3 if exists
         if ($announcement->image && Storage::disk('s3')->exists($announcement->image)) {
             Storage::disk('s3')->delete($announcement->image);
         }
