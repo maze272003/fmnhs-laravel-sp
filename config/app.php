@@ -123,4 +123,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'super_admin_emails' => array_map(
+    'trim',
+    explode(',', env('SUPER_ADMIN_EMAILS', ''))
+    ),
+
+
 ];
