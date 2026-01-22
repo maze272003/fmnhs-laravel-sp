@@ -29,4 +29,3 @@ class StudentDashboardController extends Controller
         ]);
     }
 }
-}
