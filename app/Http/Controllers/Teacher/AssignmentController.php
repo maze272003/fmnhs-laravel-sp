@@ -1,11 +1,10 @@
 <?php
-
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Assignment;
-use App\Models\Schedule;
-use App\Models\Section;
+use App\Contracts\Services\AssignmentServiceInterface;
+use App\Contracts\Repositories\AssignmentRepositoryInterface;
+use App\Contracts\Repositories\ScheduleRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -13,40 +12,35 @@ use Illuminate\Support\Facades\Auth;
 
 class AssignmentController extends Controller
 {
+    public function __construct(
+        private AssignmentServiceInterface $assignmentService,
+        private AssignmentRepositoryInterface $assignmentRepository,
+        private ScheduleRepositoryInterface $scheduleRepository
+    ) {}
+
     public function index(): View
     {
         $teacherId = Auth::guard('teacher')->id();
         
-        // 1. Kunin ang unique classes (Subject + Section) mula sa Schedule
-        $classes = Schedule::where('teacher_id', $teacherId)
-            ->with(['subject', 'section'])
-            ->get()
-            ->unique(function ($item) { 
-                return $item->subject_id . '-' . $item->section_id; 
-            });
-
-        // 2. Kunin ang assignments na ginawa ng teacher na ito
-        $assignments = Assignment::where('teacher_id', $teacherId)
-            ->with(['subject', 'section'])
-            ->latest()
-            ->get();
+        $classes = $this->scheduleRepository->getUniqueClasses($teacherId);
+        
+        $assignments = $this->assignmentRepository->getByTeacher($teacherId)->load('subject', 'section');
 
         return view('teacher.assignment', compact('classes', 'assignments'));
     }
 
-    public function show($id)
-{
-    // Gamitin ang load() para makuha ang relationships
-    $assignment = Assignment::with(['subject', 'section', 'submissions.student'])
-        ->findOrFail($id);
+    public function show($id): View
+    {
+        $assignment = $this->assignmentRepository->findOrFail($id);
+        $assignment->load('subject', 'section', 'submissions.student');
 
-    return view('teacher.show.show', compact('assignment'));
-}
+        return view('teacher.show.show', compact('assignment'));
+    }
 
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'class_info' => 'required', // Format: "subject_id|section_id"
+            'class_info' => 'required',
             'title' => 'required|string|max:255',
             'deadline' => 'required|date|after:now',
             'attachment' => 'nullable|file|max:10240'
@@ -60,15 +54,19 @@ class AssignmentController extends Controller
             $request->file('attachment')->move(public_path('uploads/assignments'), $filename);
         }
 
-        Assignment::create([
-            'teacher_id'  => Auth::guard('teacher')->id(),
-            'subject_id'  => $subjectId,
-            'section_id'  => $sectionId, // Normalized ID
-            'title'       => $request->title,
+        $assignmentData = [
+            'subject_id' => $subjectId,
+            'section_id' => $sectionId,
+            'title' => $request->title,
             'description' => $request->description,
-            'deadline'    => $request->deadline,
-            'file_path'   => $filename
-        ]);
+            'deadline' => $request->deadline,
+        ];
+
+        if ($filename) {
+            $assignmentData['file_path'] = $filename;
+        }
+
+        $this->assignmentService->createAssignment($assignmentData, Auth::guard('teacher')->id());
 
         return back()->with('success', 'New task assigned successfully!');
     }

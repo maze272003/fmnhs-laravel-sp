@@ -2,23 +2,31 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\Announcement;
+use App\Contracts\Services\DashboardServiceInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class StudentDashboardController extends Controller
 {
+    public function __construct(
+        private DashboardServiceInterface $dashboardService
+    ) {}
+
     public function index(): View
     {
-        // Fetch student with section and advisor relationship
-        $student = Auth::guard('student')->user()->load('section.advisor');
+        $studentId = Auth::guard('student')->id();
+        $data = $this->dashboardService->getStudentDashboard($studentId);
+        $advisor = $data['student']['section']['advisor'] ?? null;
 
-        // Fetch latest announcements
-        $announcements = Announcement::latest()->take(5)->get();
-
-        // We can pass the advisor directly or access it via $student in the view
-        $advisor = $student->section->advisor ?? null;
-
-        return view('student.dashboard', compact('announcements', 'advisor'));
+        return view('student.dashboard', [
+            'student' => $data['student'],
+            'advisor' => $advisor,
+            'announcements' => $data['recent_announcements'],
+            'statistics' => $data['statistics'],
+            'pendingAssignments' => $data['pending_assignments'],
+            'recentGrades' => $data['recent_grades'],
+            'recentAttendance' => $data['recent_attendance'],
+        ]);
     }
+}
 }

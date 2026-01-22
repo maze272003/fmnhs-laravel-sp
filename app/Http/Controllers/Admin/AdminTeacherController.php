@@ -1,37 +1,37 @@
 <?php
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Teacher;
 use App\Http\Controllers\Controller;
+use App\Contracts\Repositories\TeacherRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class AdminTeacherController extends Controller
 {
+    public function __construct(
+        private TeacherRepositoryInterface $teacherRepository
+    ) {}
+
     public function index(Request $request)
     {
         $search = $request->input('search');
         $viewArchived = $request->has('archived');
 
-        $teachers = Teacher::with('advisorySection')
-            ->when($viewArchived, function ($query) {
-                return $query->onlyTrashed();
-            })
-            ->when($search, function ($query, $search) {
-                return $query->where(function($q) use ($search) {
-                    $q->where('employee_id', 'like', "%{$search}%")
-                      ->orWhere('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy('last_name')
-            ->paginate(10)
-            ->withQueryString();
+        if ($viewArchived) {
+            $teachers = $search
+                ? $this->teacherRepository->searchArchivedPaginate($search, 10)
+                : $this->teacherRepository->getArchivedPaginate(10);
+        } else {
+            $teachers = $search
+                ? $this->teacherRepository->searchPaginate($search, 10)
+                : $this->teacherRepository->with('advisorySection')->orderBy('last_name')->paginate(10);
+        }
+
+        $teachers->withQueryString();
 
         return view('admin.manage_teacher', compact('teachers', 'viewArchived'));
     }
 
-    // --- ADDED THIS METHOD ---
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,16 +42,17 @@ class AdminTeacherController extends Controller
             'department' => 'required|string',
         ]);
 
-        // Create teacher with default password
-        $validated['password'] = Hash::make('password'); // Default password is 'password'
+        $validated['password'] = Hash::make('password');
 
-        Teacher::create($validated);
+        $this->teacherRepository->create($validated);
 
         return back()->with('success', 'New faculty member added successfully!');
     }
 
-    public function update(Request $request, Teacher $teacher)
+    public function update(Request $request, $id)
     {
+        $teacher = $this->teacherRepository->findOrFail($id);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -59,21 +60,19 @@ class AdminTeacherController extends Controller
             'department' => 'required|string',
         ]);
 
-        $teacher->update($validated);
+        $this->teacherRepository->update($id, $validated);
         return back()->with('success', 'Faculty profile updated successfully!');
     }
 
-    public function archive(Teacher $teacher)
+    public function archive($id)
     {
-        $teacher->delete(); // Soft delete
+        $this->teacherRepository->delete($id);
         return back()->with('success', 'Faculty member moved to archive.');
     }
 
     public function restore($id)
     {
-        $teacher = Teacher::onlyTrashed()->findOrFail($id);
-        $teacher->restore(); 
+        $this->teacherRepository->restore($id);
         return back()->with('success', 'Faculty access restored successfully!');
     }
 }
-

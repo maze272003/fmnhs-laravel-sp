@@ -1,65 +1,57 @@
 <?php
-
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Subject;
-use App\Models\Student;
-use App\Models\Grade;
-use App\Models\Schedule;
-use App\Models\Announcement;
-use App\Models\Section;
+use App\Contracts\Services\DashboardServiceInterface;
+use App\Contracts\Services\GradeServiceInterface;
+use App\Contracts\Repositories\StudentRepositoryInterface;
+use App\Contracts\Repositories\SubjectRepositoryInterface;
+use App\Contracts\Repositories\GradeRepositoryInterface;
+use App\Contracts\Repositories\ScheduleRepositoryInterface;
+use App\Contracts\Repositories\SectionRepositoryInterface;
+use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Teacher;
-
 
 class TeacherController extends Controller
 {
-    /**
-     * Dashboard view with dynamic counters
-     */
+    public function __construct(
+        private DashboardServiceInterface $dashboardService,
+        private GradeServiceInterface $gradeService,
+        private StudentRepositoryInterface $studentRepository,
+        private SubjectRepositoryInterface $subjectRepository,
+        private GradeRepositoryInterface $gradeRepository,
+        private ScheduleRepositoryInterface $scheduleRepository,
+        private SectionRepositoryInterface $sectionRepository,
+        private AnnouncementRepositoryInterface $announcementRepository
+    ) {}
+
     public function dashboard(): View
     {
-        $teacher = Auth::guard('teacher')->user();
-        
-        // Count unique sections handled via Schedule
-        $totalClasses = Schedule::where('teacher_id', $teacher->id)
-            ->get()
-            ->unique(function($q) { return $q->subject_id . '-' . $q->section_id; })
-            ->count();
-        
-        // Count unique students across all handled sections
-        $sectionIds = Schedule::where('teacher_id', $teacher->id)->pluck('section_id')->unique();
-        $totalStudents = Student::whereIn('section_id', $sectionIds)->count();
-        
-        // Fetch Advisory Class using the relationship
-        $advisory = Section::where('teacher_id', $teacher->id)->first();
-        
-        $recentAnnouncements = Announcement::latest()->take(3)->get();
+        $teacherId = Auth::guard('teacher')->id();
+        $data = $this->dashboardService->getTeacherDashboard($teacherId);
 
         return view('teacher.dashboard', [
-            'totalClasses' => $totalClasses,
-            'totalStudents' => $totalStudents,
-            'advisoryClass' => $advisory ? "Grade {$advisory->grade_level} - {$advisory->name}" : 'None',
-            'recentAnnouncements' => $recentAnnouncements,
-            'teacher' => $teacher,
+            'totalClasses' => $data['statistics']['active_assignments'],
+            'totalStudents' => $data['statistics']['total_students'],
+            'advisoryClass' => $data['advisory_class'] 
+                ? "Grade {$data['advisory_class']['grade_level']} - {$data['advisory_class']['name']}" 
+                : 'None',
+            'recentAnnouncements' => $data['recent_announcements'],
+            'teacher' => $data['teacher'],
         ]);
     }
 
-    /**
-     * FIX: Added missing myClasses method for /teacher/my-classes
-     */
     public function myClasses(): View
     {
         $teacherId = Auth::guard('teacher')->id();
 
-        // Fetch all classes where teacher has encoded grades
-        $classes = Grade::where('teacher_id', $teacherId)
+        $classes = $this->gradeRepository
+            ->where('teacher_id', $teacherId)
             ->with(['subject', 'student.section']) 
-            ->get()
+            ->all()
             ->groupBy(function($data) {
                 return $data->subject_id . '-' . $data->student->section_id;
             })
@@ -75,13 +67,9 @@ class TeacherController extends Controller
         return view('teacher.classes', compact('classes'));
     }
 
-    /**
-     * FIX: Added missing myStudents method for /teacher/students
-     */
     public function myStudents(Request $request): View
     {
-        // Eager load 'teacher' (o kung ano man ang tawag sa relationship sa Section model)
-        $sections = Section::with('teacher')->orderBy('grade_level')->get();
+        $sections = $this->sectionRepository->with('teacher')->all();
         
         $selectedSectionId = $request->section_id;
         $selectedSection = null;
@@ -89,11 +77,8 @@ class TeacherController extends Controller
         $currentTeacherId = Auth::guard('teacher')->id();
 
         if ($selectedSectionId) {
-            // Load section kasama ang advisor nito
-            $selectedSection = Section::with('teacher')->find($selectedSectionId);
-            $students = Student::where('section_id', $selectedSectionId)
-                        ->orderBy('last_name')
-                        ->get();
+            $selectedSection = $this->sectionRepository->with('teacher')->find($selectedSectionId);
+            $students = $this->studentRepository->where('section_id', $selectedSectionId)->all();
         }
 
         return view('teacher.student', compact('sections', 'students', 'selectedSection', 'currentTeacherId'));
@@ -103,9 +88,10 @@ class TeacherController extends Controller
     {
         $teacherId = Auth::guard('teacher')->id();
 
-        $assignedClasses = Schedule::where('teacher_id', $teacherId)
+        $assignedClasses = $this->scheduleRepository
+            ->where('teacher_id', $teacherId)
             ->with(['subject', 'section'])
-            ->get()
+            ->all()
             ->unique(function ($item) {
                 return $item->subject_id . '-' . $item->section_id;
             });
@@ -120,15 +106,16 @@ class TeacherController extends Controller
             'section_id' => 'required'
         ]);
 
-        $subject = Subject::findOrFail($request->subject_id);
-        $section = Section::findOrFail($request->section_id);
+        $subject = $this->subjectRepository->findOrFail($request->subject_id);
+        $section = $this->sectionRepository->findOrFail($request->section_id);
 
-        $students = Student::where('section_id', $section->id)
-                    ->with(['grades' => function($q) use ($subject) {
-                        $q->where('subject_id', $subject->id);
-                    }])
-                    ->orderBy('last_name')
-                    ->get();
+        $students = $this->studentRepository
+            ->where('section_id', $section->id)
+            ->with(['grades' => function($q) use ($subject) {
+                $q->where('subject_id', $subject->id);
+            }])
+            ->orderBy('last_name')
+            ->all();
 
         return view('teacher.grade', compact('students', 'subject', 'section'));
     }
@@ -142,23 +129,7 @@ class TeacherController extends Controller
 
         $teacherId = Auth::guard('teacher')->id();
 
-        foreach ($request->grades as $studentId => $quarters) {
-            foreach ($quarters as $quarter => $value) {
-                if ($value === null || $value === '') continue;
-
-                Grade::updateOrCreate(
-                    [
-                        'student_id' => $studentId,
-                        'subject_id' => $request->subject_id,
-                        'quarter'    => $quarter,
-                    ],
-                    [
-                        'teacher_id'  => $teacherId,
-                        'grade_value' => $value,
-                    ]
-                );
-            }
-        }
+        $this->gradeService->recordGrades($teacherId, $request->subject_id, $request->grades);
 
         return redirect()->back()->with('success', 'Grades archived successfully!');
     }

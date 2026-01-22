@@ -1,16 +1,19 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Teacher;
+use App\Contracts\Services\AuthServiceInterface;
 
 class TeacherAuthController extends Controller
 {
+    public function __construct(
+        private AuthServiceInterface $authService
+    ) {}
+
     public function showLoginForm()
     {
-        return view('auth.teacher'); // Gagawa tayo ng view na ito
+        return view('auth.teacher');
     }
 
     public function login(Request $request)
@@ -20,22 +23,22 @@ class TeacherAuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // USE 'teacher' GUARD
-        if (Auth::guard('teacher')->attempt($credentials)) {
+        try {
+            $this->authService->login($request->email, $request->password, 'teacher');
             $request->session()->regenerate();
             return redirect()->route('teacher.dashboard');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'email' => 'Invalid teacher credentials.',
+            ])->onlyInput('email');
         }
-
-        return back()->withErrors([
-            'email' => 'Invalid teacher credentials.',
-        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
     {
-        Auth::guard('teacher')->logout();
+        $this->authService->logout('teacher');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('teacher/login'); // O kaya sa teacher login page
+        return redirect('teacher/login');
     }
 }

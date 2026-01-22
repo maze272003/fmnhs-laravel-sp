@@ -15,5 +15,7 @@ interface StudentRepositoryInterface extends BaseRepositoryInterface
 
     public function search(string $query): Collection;
 
+    public function searchPaginate(string $query, int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator;
+
     public function getGradeReport(int $studentId): Student;
 }

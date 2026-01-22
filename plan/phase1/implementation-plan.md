@@ -160,11 +160,16 @@ This document outlines the step-by-step implementation plan for refactoring the 
 ---
 
 ### Phase 6: Controller Refactoring
-**Status:** Pending
+**Status:** In Progress (1/20 controllers complete)
 
 **Objective:** Refactor controllers to use service layer
 
-**Tasks:**
+**Detailed Plan:** See `controller-refactoring-plan.md` for comprehensive details
+
+**Completed Controllers:**
+- ✅ Teacher/AttendanceController (Session 5)
+
+**Remaining Controllers (19):**
 1. Admin controllers (7 controllers)
    - AdminDashboardController
    - AdminStudentController
@@ -174,22 +179,30 @@ This document outlines the step-by-step implementation plan for refactoring the 
    - AdminAttendanceController
    - AdminAnnouncementController
 
-2. Teacher controllers (7 controllers)
+2. Teacher controllers (6 controllers)
    - TeacherController
    - TeacherDashboardController
    - GradeController
-   - AttendanceController
    - AssignmentController
    - TeacherAnnouncementController
    - TeacherAuthController
 
-3. Student controllers (6 controllers)
+3. Student controllers (5 controllers)
    - StudentController
    - StudentDashboardController
    - StudentProfileController
    - StudentAssignmentController
    - StudentAttendanceController
+
+4. Auth controllers (1 controller)
    - AuthController
+
+**Implementation Phases:**
+- Phase 6.1: Critical Controllers (5) - Day 1
+- Phase 6.2: High-Priority Controllers (5) - Day 2
+- Phase 6.3: Medium-Priority Controllers (5) - Day 3
+- Phase 6.4: Remaining Controllers (4) - Day 4
+- Phase 6.5: Form Requests & Testing (14 form requests) - Day 5
 
 For each controller:
 - Inject dependencies via constructor
@@ -198,7 +211,7 @@ For each controller:
 - Delegate to services
 - Keep only HTTP handling
 
-**Estimated Files Modified:** 20 files
+**Estimated Files Modified:** 20 controllers + 14 form requests
 **Estimated Lines Changed:** 1500 lines
 **Priority:** High
 

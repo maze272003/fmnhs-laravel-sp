@@ -1,57 +1,63 @@
-Project Documentation Review and Enhancement Task
+Project Documentation, Code Review & Full-Stack Enhancement Task
 
-Objective: Conduct a comprehensive review of our project documentation and codebase to identify gaps, inaccuracies, and improvement opportunities. Update documentation to accurately reflect current implementation and future requirements.
+OBJECTIVE
+Conduct a comprehensive review and enhancement of the project’s documentation, backend, and frontend codebase to ensure alignment between documentation and actual implementation. This task includes mandatory backend and frontend development changes when gaps are identified.
 
-Instructions:
+PHASE 0 – PRECONDITION
+Complete and validate all tasks in plan/phase1. Any skipped task must include justification.
 
-First, execute all tasks specified in @plan/phase1 (if applicable).
+PHASE 1 – DOCUMENT PRIORITIZATION
+Tier 1 (Critical):
+- README.md
+- requirements.md
+- techstack.md
+- codebase / architecture docs
+- instructions.md
+- implementation-plan.md
 
-Documentation Analysis Phase:
+Tier 2 (Execution & Tracking):
+- progress.md
+- checklist.md
+- CHANGELOG.md
+- completion-report.md
+- task-completion-report.md
+- implementation-summary.md
 
-Read all .md files throughout the project repository
+Tier 3 (Review & Quality):
+- documentation analysis and review reports
+- prioritized documentation gaps
 
-For each document, analyze and note:
+Tier 4 (Planning & Future):
+- proposal.md
+- phase2-tasks.md
+- service interfaces plan
+- controller refactoring plan
 
-✅ Current coverage - What is well-documented?
+PHASE 2 – DOCUMENTATION ANALYSIS
+For each document:
+- Current Coverage
+- Gaps & Missing Info
+- Outdated Content
+- Improvement Opportunities
+- Implementation Requirements (Backend / Frontend / Full-stack)
 
-⚠️ Gaps & missing information - What should be documented but isn't?
+PHASE 3 – CODEBASE ANALYSIS
+Backend:
+- APIs, services, validation, database models
 
-🔄 Outdated content - What references old/non-existent functionality?
+Frontend:
+- UI components, API integration, UX flows
 
-📈 Improvement opportunities - Where could clarity, structure, or examples be added?
+PHASE 4 – DEVELOPMENT CHANGES
+Backend and frontend changes must be implemented when documentation gaps are found.
 
-🎯 Implementation requirements - What documentation needs to be written for planned features?
+PHASE 5 – DOCUMENTATION UPDATES
+Update existing docs, create missing docs, ensure consistent formatting, and include TODO markers.
 
-Codebase Analysis Phase:
+DELIVERABLES
+- Updated documentation
+- Backend and frontend code changes
+- Summary report
+- Prioritized gap list
+- Engineering recommendations
 
-Review the actual code implementation
-
-Compare code with existing documentation to identify discrepancies
-
-Note undocumented features, parameters, or behaviors
-
-Identify complex code sections that need additional documentation
-
-Documentation Update Phase:
-
-Create/update documentation based on your analysis:
-
-Update existing .md files with corrections and additions
-
-Create new documents for missing coverage areas
-
-Ensure consistent formatting and structure across all docs
-
-Add code examples where helpful
-
-Include TODO markers for future implementation notes
-
-Deliverables:
-
-Updated .md files
-
-A summary report of changes made
-
-A prioritized list of remaining documentation gaps
-
-Recommendations for code changes if documentation reveals implementation issues

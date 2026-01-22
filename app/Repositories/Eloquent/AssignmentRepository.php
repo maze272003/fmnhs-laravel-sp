@@ -66,4 +66,14 @@ class AssignmentRepository extends BaseRepository implements AssignmentRepositor
             ->with('subject')
             ->get();
     }
+
+    public function getBySectionWithSubmissions(int $sectionId, int $studentId): Collection
+    {
+        return $this->model->where('section_id', $sectionId)
+            ->with(['subject', 'submissions' => function($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            }])
+            ->orderBy('deadline', 'asc')
+            ->get();
+    }
 }

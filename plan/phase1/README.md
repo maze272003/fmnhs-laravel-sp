@@ -90,6 +90,24 @@ This directory contains all documentation for Phase 1 of the FMNHS Laravel Schoo
 
 ---
 
+### 6. controller-refactoring-plan.md
+**Purpose:** Comprehensive plan for refactoring all controllers
+
+**Contents:**
+- Current status (1/20 controllers refactored)
+- Detailed analysis of 19 remaining controllers
+- Refactoring approach and patterns
+- Dependencies for each controller
+- Form requests to create
+- Implementation order (5 phases)
+- Testing strategy
+- Timeline estimate (5 days)
+- Success criteria
+
+**Usage:** Primary guide for controller refactoring phase (Phase 6)
+
+---
+
 ## Phase 1 Status
 
 ### ✅ Completed Tasks

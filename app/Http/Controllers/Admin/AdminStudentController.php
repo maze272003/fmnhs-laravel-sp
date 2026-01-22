@@ -1,33 +1,30 @@
 <?php
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Student;
-use App\Models\Section;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Contracts\Repositories\StudentRepositoryInterface;
+use App\Contracts\Repositories\SectionRepositoryInterface;
+use App\Contracts\Services\NotificationServiceInterface;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\StudentAccountCreated;
 
 class AdminStudentController extends Controller
 {
+    public function __construct(
+        private StudentRepositoryInterface $studentRepository,
+        private SectionRepositoryInterface $sectionRepository,
+        private NotificationServiceInterface $notificationService
+    ) {}
+
     public function index(Request $request)
     {
-        // Load the section relationship to display Section Name and Grade
-        $query = Student::with('section');
-
         if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%{$search}%")
-                  ->orWhere('last_name', 'LIKE', "%{$search}%")
-                  ->orWhere('lrn', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%");
-            });
+            $students = $this->studentRepository->searchPaginate($request->input('search'), 10);
+        } else {
+            $students = $this->studentRepository->with('section')->orderBy('last_name')->paginate(10);
         }
 
-        $students = $query->orderBy('last_name')->paginate(10);
-        $sections = Section::all(); // Pass this for the "Add/Edit" dropdowns
+        $sections = $this->sectionRepository->all();
 
         return view('admin.manage_student', compact('students', 'sections'));
     }
@@ -39,16 +36,15 @@ class AdminStudentController extends Controller
             'last_name' => 'required|string|max:255',
             'lrn' => 'required|numeric|unique:students,lrn|digits_between:10,12',
             'email' => 'required|email|unique:students,email',
-            'section_id' => 'required|exists:sections,id', // Validated against sections table
+            'section_id' => 'required|exists:sections,id',
         ]);
 
-        $rawPassword = $request->lrn;
-        $validated['password'] = Hash::make($rawPassword); 
+        $validated['password'] = Hash::make($request->lrn);
 
-        $student = Student::create($validated);
+        $student = $this->studentRepository->create($validated);
 
         try {
-            Mail::to($student->email)->send(new StudentAccountCreated($student, $rawPassword));
+            $this->notificationService->sendWelcomeEmail($student->id, 'student');
         } catch (\Exception $e) {
             \Log::error('Mail failed: ' . $e->getMessage());
         }
@@ -58,11 +54,12 @@ class AdminStudentController extends Controller
 
     public function update(Request $request, $id)
     {
-        $student = Student::findOrFail($id);
+        $student = $this->studentRepository->findOrFail($id);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email,'.$student->id, 
+            'email' => 'required|email|unique:students,email,' . $student->id,
             'section_id' => 'required|exists:sections,id',
             'new_password' => 'nullable|min:6'
         ]);
@@ -71,13 +68,13 @@ class AdminStudentController extends Controller
             $validated['password'] = Hash::make($request->new_password);
         }
 
-        $student->update($validated);
+        $this->studentRepository->update($id, $validated);
         return redirect()->back()->with('success', 'Student record updated!');
     }
 
     public function destroy($id)
     {
-        Student::findOrFail($id)->delete();
+        $this->studentRepository->delete($id);
         return redirect()->back()->with('success', 'Student deleted.');
     }
 }

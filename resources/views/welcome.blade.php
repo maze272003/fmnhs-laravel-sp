@@ -168,7 +168,7 @@
         <div class="text-sm text-gray-500 flex items-center gap-2">
             <span class="font-medium text-slate-900">Powered by</span> 
             <a href="#" class="font-bold text-green-600 hover:text-green-700 transition-colors">
-                Coolify X JonatasDev
+                Dokploy X JMDev👩‍💻
             </a>
         </div>
         

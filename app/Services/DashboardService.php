@@ -160,25 +160,23 @@ class DashboardService extends BaseService implements DashboardServiceInterface
         try {
             $totalStudents = $this->studentRepository->all()->count();
             $totalTeachers = $this->teacherRepository->all()->count();
-            $totalGrades = $this->gradeRepository->all()->count();
-            $totalAssignments = $this->assignmentRepository->all()->count();
-
+            $totalSubjects = $this->teacherRepository->all()->count();
+            
             $recentStudents = $this->studentRepository
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->all();
-
+            
             $recentAnnouncements = $this->announcementRepository
                 ->orderBy('created_at', 'desc')
                 ->limit(3)
                 ->all();
-
+            
             return [
                 'statistics' => [
                     'total_students' => $totalStudents,
                     'total_teachers' => $totalTeachers,
-                    'total_grades' => $totalGrades,
-                    'total_assignments' => $totalAssignments,
+                    'total_subjects' => $totalSubjects,
                 ],
                 'recent_students' => $recentStudents->toArray(),
                 'recent_announcements' => $recentAnnouncements->toArray(),

@@ -14,4 +14,8 @@ interface SubjectRepositoryInterface extends BaseRepositoryInterface
     public function getWithGrades(): Collection;
 
     public function getActive(): Collection;
+
+    public function getArchivedPaginate(int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator;
+
+    public function restore(int $id): bool;
 }

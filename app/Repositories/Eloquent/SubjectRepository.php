@@ -38,4 +38,14 @@ class SubjectRepository extends BaseRepository implements SubjectRepositoryInter
             ->orderBy('name')
             ->get();
     }
+
+    public function getArchivedPaginate(int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        return $this->model->onlyTrashed()->orderBy('name')->paginate($perPage);
+    }
+
+    public function restore(int $id): bool
+    {
+        return $this->model->onlyTrashed()->findOrFail($id)->restore();
+    }
 }

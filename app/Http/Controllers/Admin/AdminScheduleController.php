@@ -3,20 +3,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Schedule;
-use App\Models\Subject;
-use App\Models\Teacher;
-use App\Models\Section;
+use App\Contracts\Repositories\ScheduleRepositoryInterface;
+use App\Contracts\Repositories\SubjectRepositoryInterface;
+use App\Contracts\Repositories\TeacherRepositoryInterface;
+use App\Contracts\Repositories\SectionRepositoryInterface;
 
 class AdminScheduleController extends Controller
 {
+    public function __construct(
+        private ScheduleRepositoryInterface $scheduleRepository,
+        private SubjectRepositoryInterface $subjectRepository,
+        private TeacherRepositoryInterface $teacherRepository,
+        private SectionRepositoryInterface $sectionRepository
+    ) {}
+
     public function index()
     {
-        $subjects = Subject::all();
-        $teachers = Teacher::all();
-        $sections = Section::all(); // Get all normalized sections
+        $subjects = $this->subjectRepository->all();
+        $teachers = $this->teacherRepository->all();
+        $sections = $this->sectionRepository->all();
 
-        $schedules = Schedule::with(['subject', 'teacher', 'section'])
+        $schedules = $this->scheduleRepository->with(['subject', 'teacher', 'section'])
             ->orderBy('day')
             ->orderBy('start_time')
             ->paginate(10);
@@ -31,20 +38,19 @@ class AdminScheduleController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:teachers,id',
             'day'        => 'required|string',
-            // Binago mula H:i:s tungo sa H:i
             'start_time'=> 'required|date_format:H:i', 
             'end_time'  => 'required|date_format:H:i|after:start_time',
             'room'      => 'required|string'
         ]);
 
-        Schedule::create($request->all());
+        $this->scheduleRepository->create($request->all());
         
         return back()->with('success', 'Schedule Added Successfully!');
     }
+
     public function destroy($id)
     {
-        $schedule = Schedule::findOrFail($id);
-        $schedule->delete();
+        $this->scheduleRepository->delete($id);
         return back()->with('success', 'Schedule Deleted!');
     }
 }

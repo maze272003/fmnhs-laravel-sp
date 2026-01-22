@@ -37,4 +37,32 @@ class TeacherRepository extends BaseRepository implements TeacherRepositoryInter
             ->orWhere('email', 'like', "%{$query}%")
             ->get();
     }
+
+    public function searchPaginate(string $query, int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        return $this->model->where(function($q) use ($query) {
+            $q->where('employee_id', 'like', "%{$query}%")
+              ->orWhere('first_name', 'like', "%{$query}%")
+              ->orWhere('last_name', 'like', "%{$query}%");
+        })->with('advisorySection')->orderBy('last_name')->paginate($perPage);
+    }
+
+    public function getArchivedPaginate(int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        return $this->model->onlyTrashed()->with('advisorySection')->orderBy('last_name')->paginate($perPage);
+    }
+
+    public function searchArchivedPaginate(string $query, int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        return $this->model->onlyTrashed()->where(function($q) use ($query) {
+            $q->where('employee_id', 'like', "%{$query}%")
+              ->orWhere('first_name', 'like', "%{$query}%")
+              ->orWhere('last_name', 'like', "%{$query}%");
+        })->with('advisorySection')->orderBy('last_name')->paginate($perPage);
+    }
+
+    public function restore(int $id): bool
+    {
+        return $this->model->onlyTrashed()->findOrFail($id)->restore();
+    }
 }

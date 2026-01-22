@@ -276,27 +276,43 @@ For each repository:
 - [ ] AuthController
 
 ### Controller Refactoring Progress
+**Detailed Plan:** See `controller-refactoring-plan.md` for complete refactoring strategy
+
+**Completed Controllers:**
 - [x] Teacher/AttendanceController (Session 5)
+
+**Phase 6.1: Critical Controllers (Day 1)**
+- [x] Teacher/TeacherController::dashboard() (Refactored)
+- [x] Student/StudentDashboardController (Refactored)
+- [x] Admin/AdminDashboardController (Refactored)
+- [x] Teacher/TeacherController grading methods (Refactored)
+- [x] Student/StudentProfileController (Refactored)
+
+**Phase 6.2: High-Priority Controllers (Day 2)**
 - [ ] Admin/AdminStudentController
 - [ ] Admin/AdminTeacherController
 - [ ] Admin/AdminSubjectController
-- [ ] Admin/AdminScheduleController
-- [ ] Admin/AdminAttendanceController
-- [ ] Admin/AdminAnnouncementController
-- [ ] Admin/AdminDashboardController
-- [ ] Teacher/TeacherController
-- [ ] Teacher/TeacherDashboardController
 - [ ] Teacher/AssignmentController
-- [ ] Teacher/TeacherAnnouncementController
-- [ ] Teacher/TeacherAuthController
-- [ ] Student/StudentController
-- [ ] Student/StudentDashboardController
-- [ ] Student/StudentProfileController
 - [ ] Student/StudentAssignmentController
+
+**Phase 6.3: Medium-Priority Controllers (Day 3)**
+- [ ] Admin/AdminScheduleController
+- [ ] Admin/AdminAnnouncementController
+- [ ] Teacher/TeacherAnnouncementController
+- [ ] Teacher/TeacherController
+- [ ] Student/StudentController
+
+**Phase 6.4: Remaining Controllers (Day 4)**
+- [ ] Admin/AdminAttendanceController
 - [ ] Student/StudentAttendanceController
+- [ ] Teacher/TeacherAuthController
 - [ ] AuthController
 
-**Progress: 1/17 controllers (6%)**
+**Phase 6.5: Form Requests & Testing (Day 5)**
+- [ ] Create 14 form request classes
+- [ ] Test all refactored controllers
+
+**Progress: 6/20 controllers (30%)**
 
 For each controller:
 - [ ] Inject dependencies via constructor

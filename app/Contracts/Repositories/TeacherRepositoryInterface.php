@@ -14,4 +14,12 @@ interface TeacherRepositoryInterface extends BaseRepositoryInterface
     public function getAdvisoryClasses(): Collection;
 
     public function search(string $query): Collection;
+
+    public function searchPaginate(string $query, int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator;
+
+    public function getArchivedPaginate(int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator;
+
+    public function searchArchivedPaginate(string $query, int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator;
+
+    public function restore(int $id): bool;
 }

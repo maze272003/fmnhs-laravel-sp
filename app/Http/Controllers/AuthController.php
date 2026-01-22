@@ -1,20 +1,21 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Student;
+use App\Contracts\Services\AuthServiceInterface;
 
 class AuthController extends Controller
 {
-    // Show the form
+    public function __construct(
+        private AuthServiceInterface $authService
+    ) {}
+
     public function showLoginForm()
     {
         return view('auth.student');
     }
 
-    // Process the login
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -22,25 +23,24 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // PALITAN ITO: Magdagdag ng guard('student')
-        if (Auth::guard('student')->attempt($credentials)) {
+        try {
+            $this->authService->login($request->email, $request->password, 'student');
             $request->session()->regenerate();
             
             return redirect()->route('student.dashboard');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ])->onlyInput('email');
         }
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
     {
-        // Logout specific guard
-        Auth::guard('student')->logout(); 
+        $this->authService->logout('student');
         
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('student/login'); // O kaya sa student login page
+        return redirect('student/login');
     }
 }

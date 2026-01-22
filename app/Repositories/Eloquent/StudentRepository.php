@@ -41,6 +41,16 @@ class StudentRepository extends BaseRepository implements StudentRepositoryInter
         })->with('section')->orderBy('last_name')->get();
     }
 
+    public function searchPaginate(string $query, int $perPage = 10): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        return $this->model->where(function($q) use ($query) {
+            $q->where('first_name', 'like', "%{$query}%")
+              ->orWhere('last_name', 'like', "%{$query}%")
+              ->orWhere('email', 'like', "%{$query}%")
+              ->orWhere('lrn', 'like', "%{$query}%");
+        })->with('section')->orderBy('last_name')->paginate($perPage);
+    }
+
     public function getGradeReport(int $studentId): Student
     {
         return $this->with(['section', 'grades.subject'])
