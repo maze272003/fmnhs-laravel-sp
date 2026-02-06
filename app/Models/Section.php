@@ -16,7 +16,8 @@ class Section extends Model
         'name',
         'grade_level',
         'strand',
-        'teacher_id', // Foreign key para sa Advisor
+        'teacher_id',
+        'school_year',
     ];
 
     /**

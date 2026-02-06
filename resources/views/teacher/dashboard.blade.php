@@ -6,6 +6,7 @@
     <title>Faculty Hub | Teacher Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -101,6 +102,43 @@
                 </div>
             </div>
 
+            {{-- Analytics Section --}}
+            @if(isset($attendanceTrends) && isset($gradeDistribution))
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                {{-- School Year Filter --}}
+                <div class="lg:col-span-2">
+                    <form method="GET" action="{{ route('teacher.dashboard') }}" class="flex items-center gap-3">
+                        <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Filter by School Year:</label>
+                        <select name="school_year" onchange="this.form.submit()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400">
+                            @foreach($schoolYears as $sy)
+                                <option value="{{ $sy }}" {{ $selectedSchoolYear == $sy ? 'selected' : '' }}>S.Y. {{ $sy }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
+                        <h3 class="font-black text-sm text-slate-800 tracking-tight uppercase">Attendance Overview</h3>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-2 h-6 bg-emerald-500 rounded-full"></div>
+                        <h3 class="font-black text-sm text-slate-800 tracking-tight uppercase">Grade Distribution</h3>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="gradeDistChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             @if(isset($recentAnnouncements))
             <div class="mt-16">
                 <div class="flex items-center justify-between mb-10 px-4">
@@ -179,5 +217,66 @@
     </div>
 
     <script src="{{ asset('js/sidebar.js') }}"></script>
+
+    @if(isset($attendanceTrends) && isset($gradeDistribution))
+    <script>
+        // Attendance Trends Chart
+        const attendanceData = @json($attendanceTrends);
+        const attLabels = attendanceData.map(item => item.status.charAt(0).toUpperCase() + item.status.slice(1));
+        const attCounts = attendanceData.map(item => item.total);
+        const attColors = { 'Present': '#10b981', 'Late': '#f59e0b', 'Absent': '#ef4444' };
+
+        new Chart(document.getElementById('attendanceChart'), {
+            type: 'doughnut',
+            data: {
+                labels: attLabels,
+                datasets: [{
+                    data: attCounts,
+                    backgroundColor: attLabels.map(l => attColors[l] || '#6366f1'),
+                    hoverOffset: 15,
+                    borderWidth: 4,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { weight: 'bold', size: 11 } } }
+                }
+            }
+        });
+
+        // Grade Distribution Chart
+        const gradeData = @json($gradeDistribution);
+        const grLabels = gradeData.map(item => item.grade_range);
+        const grCounts = gradeData.map(item => item.total);
+        const grColors = ['#10b981', '#3b82f6', '#6366f1', '#f59e0b', '#ef4444'];
+
+        new Chart(document.getElementById('gradeDistChart'), {
+            type: 'bar',
+            data: {
+                labels: grLabels,
+                datasets: [{
+                    label: 'Students',
+                    data: grCounts,
+                    backgroundColor: grColors,
+                    borderRadius: 10,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'bold', size: 9 }, maxRotation: 45 } },
+                    y: { grid: { color: '#f1f5f9' }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    </script>
+    @endif
 </body>
 </html>

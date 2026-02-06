@@ -9,23 +9,27 @@ use App\Models\Grade;
 use App\Models\Schedule;
 use App\Models\Announcement;
 use App\Models\Section;
+use App\Models\Attendance;
+use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Teacher;
 use App\Helpers\SchoolYearHelper;
+use Illuminate\Support\Facades\DB;
 
 
 class TeacherController extends Controller
 {
     /**
-     * Dashboard view with dynamic counters
+     * Dashboard view with dynamic counters and analytics
      */
-    public function dashboard(): View
+    public function dashboard(Request $request): View
     {
         $teacher = Auth::guard('teacher')->user();
-        
+        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
+
         // Count unique sections handled via Schedule
         $totalClasses = Schedule::where('teacher_id', $teacher->id)
             ->get()
@@ -36,10 +40,39 @@ class TeacherController extends Controller
         $sectionIds = Schedule::where('teacher_id', $teacher->id)->pluck('section_id')->unique();
         $totalStudents = Student::whereIn('section_id', $sectionIds)->count();
         
-        // Fetch Advisory Class using the relationship
+        // Fetch Advisory Class
         $advisory = Section::where('teacher_id', $teacher->id)->first();
         
         $recentAnnouncements = Announcement::latest()->take(3)->get();
+
+        // Analytics: Attendance trends
+        $attendanceTrends = Attendance::where('teacher_id', $teacher->id)
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->get();
+
+        // Analytics: Grade distribution
+        $gradeDistribution = Grade::where('teacher_id', $teacher->id)
+            ->where('school_year', $schoolYear)
+            ->select(
+                DB::raw("CASE 
+                    WHEN grade_value >= 90 THEN 'Outstanding (90-100)'
+                    WHEN grade_value >= 85 THEN 'Very Satisfactory (85-89)'
+                    WHEN grade_value >= 80 THEN 'Satisfactory (80-84)'
+                    WHEN grade_value >= 75 THEN 'Fairly Satisfactory (75-79)'
+                    ELSE 'Did Not Meet (Below 75)'
+                END as grade_range"),
+                DB::raw('count(*) as total')
+            )
+            ->groupBy('grade_range')
+            ->get();
+
+        // Available school years for filter
+        $schoolYears = Grade::where('teacher_id', $teacher->id)
+            ->select('school_year')
+            ->distinct()
+            ->orderBy('school_year', 'desc')
+            ->pluck('school_year');
 
         return view('teacher.dashboard', [
             'totalClasses' => $totalClasses,
@@ -47,18 +80,20 @@ class TeacherController extends Controller
             'advisoryClass' => $advisory ? "Grade {$advisory->grade_level} - {$advisory->name}" : 'None',
             'recentAnnouncements' => $recentAnnouncements,
             'teacher' => $teacher,
+            'attendanceTrends' => $attendanceTrends,
+            'gradeDistribution' => $gradeDistribution,
+            'schoolYears' => $schoolYears,
+            'selectedSchoolYear' => $schoolYear,
         ]);
     }
 
     /**
-     * FIX: myClasses now uses Schedule as the source of truth
-     * so it syncs properly when schedules are removed from admin.
+     * myClasses uses Schedule as the source of truth
      */
     public function myClasses(): View
     {
         $teacherId = Auth::guard('teacher')->id();
 
-        // Use Schedule as source of truth, not Grade records
         $classes = Schedule::where('teacher_id', $teacherId)
             ->with(['subject', 'section'])
             ->get()
@@ -85,11 +120,10 @@ class TeacherController extends Controller
     }
 
     /**
-     * FIX: Added missing myStudents method for /teacher/students
+     * Show students filtered by section
      */
     public function myStudents(Request $request): View
     {
-        // Eager load 'teacher' (o kung ano man ang tawag sa relationship sa Section model)
         $sections = Section::with('teacher')->orderBy('grade_level')->get();
         
         $selectedSectionId = $request->section_id;
@@ -98,7 +132,6 @@ class TeacherController extends Controller
         $currentTeacherId = Auth::guard('teacher')->id();
 
         if ($selectedSectionId) {
-            // Load section kasama ang advisor nito
             $selectedSection = Section::with('teacher')->find($selectedSectionId);
             $students = Student::where('section_id', $selectedSectionId)
                         ->orderBy('last_name')
@@ -131,15 +164,24 @@ class TeacherController extends Controller
 
         $subject = Subject::findOrFail($request->subject_id);
         $section = Section::findOrFail($request->section_id);
+        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
 
         $students = Student::where('section_id', $section->id)
-                    ->with(['grades' => function($q) use ($subject) {
-                        $q->where('subject_id', $subject->id);
+                    ->with(['grades' => function($q) use ($subject, $schoolYear) {
+                        $q->where('subject_id', $subject->id)
+                          ->where('school_year', $schoolYear);
                     }])
                     ->orderBy('last_name')
                     ->get();
 
-        return view('teacher.grade', compact('students', 'subject', 'section'));
+        // Check if grades are locked
+        $gradesLocked = Grade::where('subject_id', $subject->id)
+            ->where('school_year', $schoolYear)
+            ->whereHas('student', fn($q) => $q->where('section_id', $section->id))
+            ->where('is_locked', true)
+            ->exists();
+
+        return view('teacher.grade', compact('students', 'subject', 'section', 'schoolYear', 'gradesLocked'));
     }
 
     public function storeGrades(Request $request): RedirectResponse
@@ -151,11 +193,31 @@ class TeacherController extends Controller
         ]);
 
         $teacherId = Auth::guard('teacher')->id();
+        $teacher = Auth::guard('teacher')->user();
         $schoolYear = $request->input('school_year', SchoolYearHelper::current());
+
+        // Check if grades are locked
+        $lockedGrades = Grade::where('subject_id', $request->subject_id)
+            ->where('school_year', $schoolYear)
+            ->where('is_locked', true)
+            ->exists();
+
+        if ($lockedGrades) {
+            return redirect()->back()->withErrors(['error' => 'Cannot modify grades: grades are locked for this subject and school year. Contact admin to unlock.']);
+        }
 
         foreach ($request->grades as $studentId => $quarters) {
             foreach ($quarters as $quarter => $value) {
                 if ($value === null || $value === '') continue;
+
+                $existing = Grade::where([
+                    'student_id' => $studentId,
+                    'subject_id' => $request->subject_id,
+                    'quarter'    => $quarter,
+                    'school_year' => $schoolYear,
+                ])->first();
+
+                $oldValue = $existing ? $existing->grade_value : null;
 
                 Grade::updateOrCreate(
                     [
@@ -169,9 +231,25 @@ class TeacherController extends Controller
                         'grade_value' => $value,
                     ]
                 );
+
+                // Audit trail for grade changes
+                if ($oldValue !== null && $oldValue != $value) {
+                    $grade = Grade::where([
+                        'student_id' => $studentId,
+                        'subject_id' => $request->subject_id,
+                        'quarter'    => $quarter,
+                        'school_year' => $schoolYear,
+                    ])->first();
+
+                    AuditTrail::log(
+                        'Grade', $grade->id, 'updated',
+                        'grade_value', (string)$oldValue, (string)$value,
+                        'teacher', $teacherId, $teacher->first_name . ' ' . $teacher->last_name
+                    );
+                }
             }
         }
 
-        return redirect()->back()->with('success', 'Grades archived successfully!');
+        return redirect()->back()->with('success', 'Grades saved successfully!');
     }
 }

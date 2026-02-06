@@ -22,7 +22,13 @@ class Student extends Authenticatable
         'section_id',
         'avatar',
         'enrollment_type',
+        'enrollment_status',
+        'is_alumni',
         'school_year',
+    ];
+
+    protected $casts = [
+        'is_alumni' => 'boolean',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -38,6 +44,32 @@ class Student extends Authenticatable
     public function promotionHistories()
     {
         return $this->hasMany(PromotionHistory::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    /**
+     * Scope: only alumni students.
+     */
+    public function scopeAlumni($query)
+    {
+        return $query->where('is_alumni', true);
+    }
+
+    /**
+     * Scope: only active (non-alumni) students.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_alumni', false);
     }
 
     /**

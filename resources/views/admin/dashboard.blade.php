@@ -80,6 +80,46 @@
                 </div>
             </div>
 
+            {{-- KPI Cards Row --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-arrow-up-right-dots"></i>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promoted</p>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900">{{ $promotedCount }}</h3>
+                </div>
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alumni</p>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900">{{ $alumniCount }}</h3>
+                </div>
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Archived</p>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900">{{ $archivedCount }}</h3>
+                </div>
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-user-xmark"></i>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dropped</p>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900">{{ $droppedCount }}</h3>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
@@ -102,6 +142,80 @@
                     </div>
                 </div>
 
+            </div>
+
+            {{-- Enrollment Trend and Section Capacity --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-2 h-6 bg-indigo-500 rounded-full"></div>
+                        <h3 class="font-black text-lg text-slate-800 tracking-tight uppercase">Enrollment Trend by SY</h3>
+                    </div>
+                    <div class="relative h-72">
+                        <canvas id="enrollmentTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-2 h-6 bg-amber-500 rounded-full"></div>
+                        <h3 class="font-black text-lg text-slate-800 tracking-tight uppercase">Section Capacity</h3>
+                    </div>
+                    <div class="overflow-y-auto max-h-72">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                    <th class="pb-3 px-2">Section</th>
+                                    <th class="pb-3 px-2 text-center">Grade</th>
+                                    <th class="pb-3 px-2 text-center">Students</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                @foreach($sectionCapacity as $sec)
+                                <tr class="hover:bg-slate-50/50">
+                                    <td class="py-3 px-2 font-semibold text-sm text-slate-700">{{ $sec->name }}</td>
+                                    <td class="py-3 px-2 text-center text-sm text-slate-500">{{ $sec->grade_level }}</td>
+                                    <td class="py-3 px-2 text-center">
+                                        <span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-full text-xs font-black {{ $sec->students_count > 40 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600' }}">
+                                            {{ $sec->students_count }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Teacher Load Summary --}}
+            <div class="mt-8 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-2 h-6 bg-violet-500 rounded-full"></div>
+                    <h3 class="font-black text-lg text-slate-800 tracking-tight uppercase">Teacher Load Distribution</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                <th class="pb-3 px-4">Teacher</th>
+                                <th class="pb-3 px-4 text-center">Classes</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @foreach($teacherLoad->sortByDesc('schedule_count')->take(10) as $tl)
+                            <tr class="hover:bg-slate-50/50">
+                                <td class="py-3 px-4 font-semibold text-sm text-slate-700">{{ $tl->first_name }} {{ $tl->last_name }}</td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-full text-xs font-black bg-violet-50 text-violet-600">
+                                        {{ $tl->schedule_count }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </main>
@@ -170,6 +284,38 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'black', size: 10 } } },
+                    y: { grid: { color: '#f1f5f9' }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+        // --- 3. ENROLLMENT TREND BY SCHOOL YEAR ---
+        const enrollmentData = @json($enrollmentByYear);
+        const syLabels = enrollmentData.map(item => 'SY ' + item.school_year);
+        const syCounts = enrollmentData.map(item => item.total);
+
+        new Chart(document.getElementById('enrollmentTrendChart'), {
+            type: 'line',
+            data: {
+                labels: syLabels,
+                datasets: [{
+                    label: 'Students Enrolled',
+                    data: syCounts,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderWidth: 3,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'bold', size: 10 } } },
                     y: { grid: { color: '#f1f5f9' }, border: { display: false }, beginAtZero: true, ticks: { precision: 0 } }
                 }
             }

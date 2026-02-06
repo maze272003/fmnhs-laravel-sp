@@ -57,13 +57,25 @@
             <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-10">
                 <div>
                     <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Academic Records</h1>
-                    <p class="text-slate-500 font-medium">Detailed breakdown of your quarterly performance for S.Y. 2025-2026.</p>
+                    <p class="text-slate-500 font-medium">Detailed breakdown of your quarterly performance{{ $schoolYear ? " for S.Y. {$schoolYear}" : '' }}.</p>
                 </div>
                 
-                <a href="{{ route('student.grades.pdf') }}" class="flex items-center justify-center gap-3 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rose-100 transition-all active:scale-95 group">
-                    <i class="fa-solid fa-file-pdf text-sm group-hover:scale-110 transition-transform"></i>
-                    Generate Report Card
-                </a>
+                <div class="flex items-center gap-3">
+                    {{-- School Year Filter --}}
+                    <form method="GET" action="{{ route('student.grades') }}" class="flex items-center gap-2">
+                        <select name="school_year" onchange="this.form.submit()" class="px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400">
+                            <option value="">All School Years</option>
+                            @foreach($schoolYears as $sy)
+                                <option value="{{ $sy }}" {{ $schoolYear == $sy ? 'selected' : '' }}>S.Y. {{ $sy }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+
+                    <a href="{{ route('student.grades.pdf', ['school_year' => $schoolYear]) }}" class="flex items-center justify-center gap-3 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rose-100 transition-all active:scale-95 group">
+                        <i class="fa-solid fa-file-pdf text-sm group-hover:scale-110 transition-transform"></i>
+                        Generate Report Card
+                    </a>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -193,7 +205,7 @@
 
                 <div class="p-8 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Official Academic Record • S.Y. 2025-2026
+                        Official Academic Record {{ $schoolYear ? "• S.Y. {$schoolYear}" : '' }}
                     </p>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-shield-halved text-blue-200"></i>

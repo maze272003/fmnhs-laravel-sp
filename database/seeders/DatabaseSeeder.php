@@ -11,15 +11,18 @@ class DatabaseSeeder extends Seeder
 public function run(): void
 {
     $this->call([
-        AdminSeeder::class,      // Gagawa tayo nito sa baba
-        SectionSeeder::class,    // Siguraduhing may file ka nito
+        AdminSeeder::class,
+        SectionSeeder::class,
         SubjectSeeder::class,    
         TeacherSeeder::class,
-        StudentSeeder::class,    
+        StudentSeeder::class,
+        RoomSeeder::class,
         ScheduleSeeder::class, 
         AssignmentSeeder::class,  
         GradeSeeder::class,      
-        AttendanceSeeder::class, 
+        AttendanceSeeder::class,
+        SchoolYearConfigSeeder::class,
+        FeatureFlagSeeder::class,
     ]);
 }
 }
