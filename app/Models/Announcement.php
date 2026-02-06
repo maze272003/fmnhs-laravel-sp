@@ -9,13 +9,13 @@ class Announcement extends Model
 {
     use HasFactory;
 
-    // DAPAT KASAMA ANG 'image' DITO
     protected $fillable = [
         'title', 
         'content', 
         'author_name', 
         'role', 
-        'image' // <--- IDAGDAG MO ITO
+        'image',
+        'target_audience',
     ];
 
     

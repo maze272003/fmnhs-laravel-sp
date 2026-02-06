@@ -14,8 +14,9 @@ class StudentFactory extends Factory
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
-            // Automatically pick a random section existing in the DB
             'section_id' => Section::inRandomOrder()->first()->id ?? 1,
+            'enrollment_type' => fake()->randomElement(['Regular', 'Regular', 'Regular', 'Transferee']),
+            'school_year' => '2024-2025',
         ];
     }
 }

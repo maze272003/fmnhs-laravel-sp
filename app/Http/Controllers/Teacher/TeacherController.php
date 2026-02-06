@@ -50,25 +50,33 @@ class TeacherController extends Controller
     }
 
     /**
-     * FIX: Added missing myClasses method for /teacher/my-classes
+     * FIX: myClasses now uses Schedule as the source of truth
+     * so it syncs properly when schedules are removed from admin.
      */
     public function myClasses(): View
     {
         $teacherId = Auth::guard('teacher')->id();
 
-        // Fetch all classes where teacher has encoded grades
-        $classes = Grade::where('teacher_id', $teacherId)
-            ->with(['subject', 'student.section']) 
+        // Use Schedule as source of truth, not Grade records
+        $classes = Schedule::where('teacher_id', $teacherId)
+            ->with(['subject', 'section'])
             ->get()
-            ->groupBy(function($data) {
-                return $data->subject_id . '-' . $data->student->section_id;
+            ->groupBy(function($sched) {
+                return $sched->subject_id . '-' . $sched->section_id;
             })
-            ->map(function($group) {
+            ->map(function($group) use ($teacherId) {
+                $first = $group->first();
+                $studentCount = Student::where('section_id', $first->section_id)->count();
+                $avgGrade = Grade::where('teacher_id', $teacherId)
+                    ->where('subject_id', $first->subject_id)
+                    ->whereHas('student', fn($q) => $q->where('section_id', $first->section_id))
+                    ->avg('grade_value');
+
                 return [
-                    'subject' => $group->first()->subject,
-                    'section' => $group->first()->student->section,
-                    'student_count' => $group->unique('student_id')->count(),
-                    'average_grade' => $group->avg('grade_value'),
+                    'subject' => $first->subject,
+                    'section' => $first->section,
+                    'student_count' => $studentCount,
+                    'average_grade' => $avgGrade ?? 0,
                 ];
             });
 
@@ -138,9 +146,11 @@ class TeacherController extends Controller
         $request->validate([
             'grades' => 'required|array',
             'subject_id' => 'required|exists:subjects,id',
+            'school_year' => 'nullable|string|max:20',
         ]);
 
         $teacherId = Auth::guard('teacher')->id();
+        $schoolYear = $request->input('school_year', '2024-2025');
 
         foreach ($request->grades as $studentId => $quarters) {
             foreach ($quarters as $quarter => $value) {
@@ -151,6 +161,7 @@ class TeacherController extends Controller
                         'student_id' => $studentId,
                         'subject_id' => $request->subject_id,
                         'quarter'    => $quarter,
+                        'school_year' => $schoolYear,
                     ],
                     [
                         'teacher_id'  => $teacherId,

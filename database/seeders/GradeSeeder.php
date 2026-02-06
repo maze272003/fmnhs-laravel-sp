@@ -25,7 +25,8 @@ class GradeSeeder extends Seeder
                         'subject_id'  => $sched->subject_id,
                         'teacher_id'  => $sched->teacher_id,
                         'quarter'     => $q,
-                        'grade_value' => rand(75, 98), // Random passing grades
+                        'grade_value' => rand(75, 98),
+                        'school_year' => '2024-2025',
                     ]);
                 }
             }
