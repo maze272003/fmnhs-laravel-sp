@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\Section;
+use App\Models\Grade;
 
 class AdminScheduleController extends Controller
 {
@@ -44,7 +45,17 @@ class AdminScheduleController extends Controller
     public function destroy($id)
     {
         $schedule = Schedule::findOrFail($id);
+
+        // Clean up related grade records for this teacher-subject-section combination
+        // so the removal syncs across teacher class list and attendance views
+        Grade::where('teacher_id', $schedule->teacher_id)
+            ->where('subject_id', $schedule->subject_id)
+            ->whereHas('student', function ($q) use ($schedule) {
+                $q->where('section_id', $schedule->section_id);
+            })
+            ->delete();
+
         $schedule->delete();
-        return back()->with('success', 'Schedule Deleted!');
+        return back()->with('success', 'Schedule and related class assignments have been removed!');
     }
 }

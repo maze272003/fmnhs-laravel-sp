@@ -73,9 +73,18 @@
                                      class="w-full h-full rounded-[2.5rem] object-cover border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-500">
                                 <label class="absolute -bottom-2 -right-2 w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center cursor-pointer hover:bg-indigo-600 transition-colors shadow-lg border-2 border-white">
                                     <i class="fa-solid fa-camera text-xs"></i>
-                                    <input type="file" name="avatar" class="hidden" onchange="this.form.submit()"/>
+                                    <input type="file" name="avatar" class="hidden" accept=".jpg,.jpeg,.png" onchange="this.form.submit()"/>
                                 </label>
                             </div>
+
+                            @if($student->avatar && $student->avatar !== 'default.png')
+                            <form action="{{ route('student.profile.removeAvatar') }}" method="POST" class="mt-2" id="removeAvatarForm">
+                                @csrf @method('DELETE')
+                                <button type="button" onclick="confirmRemoveAvatar()" class="text-[10px] font-bold text-rose-500 hover:text-rose-700 uppercase tracking-widest transition-colors">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> Remove Photo
+                                </button>
+                            </form>
+                            @endif
 
                             <div class="space-y-1">
                                 <h4 class="font-black text-xl text-slate-900">{{ $student->first_name }}</h4>
@@ -188,5 +197,20 @@
     </div>
 
     <script src="{{ asset('js/sidebar.js') }}"></script>
+    <script>
+        function confirmRemoveAvatar() {
+            Swal.fire({
+                title: 'Remove Profile Picture?',
+                text: 'Your profile picture will be reset to the default avatar.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, Remove'
+            }).then((result) => {
+                if (result.isConfirmed) document.getElementById('removeAvatarForm').submit();
+            });
+        }
+    </script>
 </body>
 </html>

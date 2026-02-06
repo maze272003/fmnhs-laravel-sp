@@ -30,54 +30,80 @@ class StudentProfileController extends Controller
      * Update the student's avatar or password.
      */
     public function update(Request $request): RedirectResponse
-{
-    $student = Auth::guard('student')->user();
+    {
+        $student = Auth::guard('student')->user();
 
-    $request->validate([
-        'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:15360',
-        'current_password' => 'nullable|required_with:new_password',
-        'new_password' => 'nullable|min:8|confirmed',
-    ]);
+        $request->validate([
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:15360',
+            'current_password' => 'nullable|required_with:new_password',
+            'new_password' => 'nullable|min:8|confirmed',
+        ], [
+            'avatar.image' => 'The file must be an image.',
+            'avatar.mimes' => 'Only JPG and PNG files are allowed.',
+            'avatar.max' => 'The image must not exceed 15MB.',
+        ]);
 
-    try {
-        // 1. Handle Avatar Upload
-        if ($request->hasFile('avatar')) {
-            $file = $request->file('avatar');
-            
-            // Generate unique filename
-            $filename = time() . '_' . $student->id . '.' . $file->extension();
-            $path = 'avatars/' . $filename;
+        try {
+            // 1. Handle Avatar Upload
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+                
+                $filename = time() . '_' . $student->id . '.' . $file->extension();
+                $path = 'avatars/' . $filename;
 
-            // Upload sa S3 na may 'public' visibility para mabasa ng browser
-            Storage::disk('s3')->put($path, file_get_contents($file), 'public');
+                Storage::disk('s3')->put($path, file_get_contents($file), 'public');
 
-            // Cleanup: Burahin ang lumang avatar kung hindi ito default
+                // Cleanup old avatar
+                if ($student->avatar && $student->avatar !== 'default.png') {
+                    $oldPath = 'avatars/' . $student->avatar;
+                    if (Storage::disk('s3')->exists($oldPath)) {
+                        Storage::disk('s3')->delete($oldPath);
+                    }
+                }
+                
+                $student->avatar = $filename;
+            }
+
+            // 2. Handle Password Change
+            if ($request->filled('current_password')) {
+                if (!Hash::check($request->current_password, $student->password)) {
+                    return back()->withErrors(['current_password' => 'Your current password is incorrect.']);
+                }
+                $student->password = Hash::make($request->new_password);
+            }
+
+            $student->save();
+
+            return back()->with('success', 'Your profile has been updated successfully!');
+
+        } catch (\Exception $e) {
+            \Log::error("Avatar Upload Failed: " . $e->getMessage());
+            return back()->withErrors(['avatar' => 'There was a problem uploading your avatar. Please try again.']);
+        }
+    }
+
+    /**
+     * Remove the student's profile picture.
+     */
+    public function removeAvatar(): RedirectResponse
+    {
+        $student = Auth::guard('student')->user();
+
+        try {
             if ($student->avatar && $student->avatar !== 'default.png') {
                 $oldPath = 'avatars/' . $student->avatar;
                 if (Storage::disk('s3')->exists($oldPath)) {
                     Storage::disk('s3')->delete($oldPath);
                 }
             }
-            
-            $student->avatar = $filename;
+
+            $student->avatar = null;
+            $student->save();
+
+            return back()->with('success', 'Profile picture has been removed successfully.');
+        } catch (\Exception $e) {
+            \Log::error("Avatar Remove Failed: " . $e->getMessage());
+            return back()->withErrors(['avatar' => 'There was a problem removing your profile picture.']);
         }
-
-        // 2. Handle Password Change
-        if ($request->filled('current_password')) {
-            if (!Hash::check($request->current_password, $student->password)) {
-                return back()->withErrors(['current_password' => 'Ang iyong kasalukuyang password ay mali.']);
-            }
-            $student->password = Hash::make($request->new_password);
-        }
-
-        $student->save();
-
-        return back()->with('success', 'Ang iyong profile ay matagumpay na na-update!');
-
-    } catch (\Exception $e) {
-        // Log ang error para sa debugging
-        \Log::error("Avatar Upload Failed: " . $e->getMessage());
-        return back()->withErrors(['avatar' => 'Nagkaroon ng problema sa pag-upload: ' . $e->getMessage()]);
     }
-}
 }

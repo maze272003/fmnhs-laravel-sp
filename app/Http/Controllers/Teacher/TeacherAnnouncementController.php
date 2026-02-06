@@ -18,12 +18,20 @@ class TeacherAnnouncementController extends Controller
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'title' => 'required',
-        'content' => 'required',
-        'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480' 
-    ]);
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'target_audience' => 'required|string|in:all,students,teachers',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480' 
+        ], [
+            'title.required' => 'The announcement title is required.',
+            'content.required' => 'The announcement content is required.',
+            'target_audience.required' => 'Please select a target audience.',
+            'target_audience.in' => 'Invalid target audience selected.',
+            'image.mimes' => 'Only JPEG, PNG, GIF, MP4, MOV, and AVI files are allowed.',
+            'image.max' => 'The media file must not exceed 40MB.',
+        ]);
 
     $teacher = Auth::guard('teacher')->user();
     $mediaPath = null;
@@ -40,7 +48,8 @@ class TeacherAnnouncementController extends Controller
         'content' => $request->content,
         'image' => $mediaPath, 
         'author_name' => 'Teacher ' . $teacher->last_name,
-        'role' => 'teacher' 
+        'role' => 'teacher',
+        'target_audience' => $request->target_audience,
     ]);
 
     // Check if request is AJAX/Axios

@@ -60,6 +60,12 @@
                 </script>
             @endif
 
+            @if($errors->any())
+                <script>
+                    Swal.fire({ icon: 'error', title: 'Validation Error', html: '{!! implode("<br>", $errors->all()) !!}', showConfirmButton: true, confirmButtonColor: '#0f172a' });
+                </script>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 
                 <div class="lg:col-span-5 xl:col-span-4">
@@ -86,6 +92,15 @@
                                 <textarea name="content" rows="5" required 
                                           class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-600 leading-relaxed custom-scrollbar" 
                                           placeholder="Describe the update in detail..."></textarea>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Audience</label>
+                                <select name="target_audience" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-slate-700">
+                                    <option value="all">All (Students & Teachers)</option>
+                                    <option value="students">Students Only</option>
+                                    <option value="teachers">Teachers Only</option>
+                                </select>
                             </div>
 
                             <div class="space-y-2">

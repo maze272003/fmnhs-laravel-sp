@@ -42,6 +42,7 @@ Route::middleware(['auth:student'])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
     Route::get('/student/profile', [App\Http\Controllers\Student\StudentProfileController::class, 'index'])->name('student.profile');
     Route::post('/student/profile', [App\Http\Controllers\Student\StudentProfileController::class, 'update'])->name('student.profile.update');
+    Route::delete('/student/profile/avatar', [App\Http\Controllers\Student\StudentProfileController::class, 'removeAvatar'])->name('student.profile.removeAvatar');
 
    Route::get('/student/grades', [StudentController::class, 'grades'])->name('student.grades');
    Route::get('/student/grades/pdf', [App\Http\Controllers\Student\StudentController::class, 'downloadGrades'])->name('student.grades.pdf');
@@ -88,6 +89,12 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::get('/admin/students', [AdminStudentController::class, 'index'])->name('admin.students.index');
+    Route::get('/admin/students/archived', [AdminStudentController::class, 'archived'])->name('admin.students.archived');
+    Route::post('/admin/students', [AdminStudentController::class, 'store'])->name('admin.students.store');
+    Route::post('/admin/students/promote', [AdminStudentController::class, 'promote'])->name('admin.students.promote');
+    Route::put('/admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
+    Route::delete('/admin/students/{id}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
+    Route::post('/admin/students/{id}/restore', [AdminStudentController::class, 'restore'])->name('admin.students.restore');
     
     // Manage Teachers
     Route::get('/admin/teachers', [AdminTeacherController::class, 'index'])->name('admin.teachers.index');
@@ -106,9 +113,6 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::delete('/admin/schedules/{id}', [App\Http\Controllers\Admin\AdminScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
     Route::get('/admin/attendance', [App\Http\Controllers\Admin\AdminAttendanceController::class, 'index'])->name('admin.attendance.index');
 
-    Route::post('/admin/students', [AdminStudentController::class, 'store'])->name('admin.students.store');
-    Route::put('/admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
-    Route::delete('/admin/students/{id}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
     Route::post('/admin/subjects/{subject}/archive', [AdminSubjectController::class, 'archive'])->name('admin.subjects.archive');
     Route::post('/admin/subjects/{id}/restore', [AdminSubjectController::class, 'restore'])->name('admin.subjects.restore');
     Route::delete('/admin/subjects/{id}/force-delete', [AdminSubjectController::class, 'forceDelete'])->name('admin.subjects.force-delete');
