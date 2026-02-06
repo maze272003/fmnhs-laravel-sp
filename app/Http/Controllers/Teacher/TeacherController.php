@@ -14,6 +14,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Teacher;
+use App\Helpers\SchoolYearHelper;
 
 
 class TeacherController extends Controller
@@ -150,7 +151,7 @@ class TeacherController extends Controller
         ]);
 
         $teacherId = Auth::guard('teacher')->id();
-        $schoolYear = $request->input('school_year', '2024-2025');
+        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
 
         foreach ($request->grades as $studentId => $quarters) {
             foreach ($quarters as $quarter => $value) {

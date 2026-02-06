@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Student;
 use App\Models\Section;
 use Illuminate\Support\Facades\Hash;
+use App\Helpers\SchoolYearHelper;
 
 class StudentSeeder extends Seeder
 {
@@ -24,7 +25,7 @@ class StudentSeeder extends Seeder
             'password' => Hash::make('password'),
             'section_id' => $rizalSection->id,
             'enrollment_type' => 'Regular',
-            'school_year' => '2024-2025',
+            'school_year' => SchoolYearHelper::current(),
         ]);
 
         Student::create([
@@ -35,7 +36,7 @@ class StudentSeeder extends Seeder
             'password' => Hash::make('password'),
             'section_id' => $rizalSection->id,
             'enrollment_type' => 'Regular',
-            'school_year' => '2024-2025',
+            'school_year' => SchoolYearHelper::current(),
         ]);
 
         // Grade 7 new enrollee
@@ -48,7 +49,7 @@ class StudentSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'section_id' => $aguinaldoSection->id,
                 'enrollment_type' => 'Regular',
-                'school_year' => '2024-2025',
+                'school_year' => SchoolYearHelper::current(),
             ]);
 
             // Transferee example
@@ -60,7 +61,7 @@ class StudentSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'section_id' => $aguinaldoSection->id,
                 'enrollment_type' => 'Transferee',
-                'school_year' => '2024-2025',
+                'school_year' => SchoolYearHelper::current(),
             ]);
         }
 

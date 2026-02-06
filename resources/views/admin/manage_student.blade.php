@@ -221,7 +221,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">School Year</label>
-                        <input type="text" name="school_year" value="2024-2025" required placeholder="e.g. 2024-2025" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
+                        <input type="text" name="school_year" value="{{ \App\Helpers\SchoolYearHelper::current() }}" required placeholder="e.g. 2024-2025" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
                     </div>
                 </div>
 
@@ -316,7 +316,7 @@
 
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">New School Year</label>
-                    <input type="text" name="to_school_year" value="2025-2026" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none" placeholder="e.g. 2025-2026">
+                    <input type="text" name="to_school_year" value="{{ \App\Helpers\SchoolYearHelper::next() }}" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none" placeholder="e.g. 2025-2026">
                 </div>
 
                 <div class="pt-6">

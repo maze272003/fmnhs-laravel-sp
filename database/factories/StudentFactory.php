@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Section;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Helpers\SchoolYearHelper;
 
 class StudentFactory extends Factory
 {
@@ -16,7 +17,7 @@ class StudentFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'section_id' => Section::inRandomOrder()->first()->id ?? 1,
             'enrollment_type' => fake()->randomElement(['Regular', 'Regular', 'Regular', 'Transferee']),
-            'school_year' => '2024-2025',
+            'school_year' => SchoolYearHelper::current(),
         ];
     }
 }
