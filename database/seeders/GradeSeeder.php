@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Grade;
 use App\Models\Student;
 use App\Models\Schedule;
+use App\Helpers\SchoolYearHelper;
 
 class GradeSeeder extends Seeder
 {
@@ -25,7 +26,8 @@ class GradeSeeder extends Seeder
                         'subject_id'  => $sched->subject_id,
                         'teacher_id'  => $sched->teacher_id,
                         'quarter'     => $q,
-                        'grade_value' => rand(75, 98), // Random passing grades
+                        'grade_value' => rand(75, 98),
+                        'school_year' => SchoolYearHelper::current(),
                     ]);
                 }
             }

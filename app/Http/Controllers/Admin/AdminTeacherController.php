@@ -1,7 +1,10 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Teacher;
+use App\Models\Section;
+use App\Models\Subject; // <--- ADDED: Import the Subject model
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +16,7 @@ class AdminTeacherController extends Controller
         $search = $request->input('search');
         $viewArchived = $request->has('archived');
 
+        // 1. Fetch Teachers
         $teachers = Teacher::with('advisorySection')
             ->when($viewArchived, function ($query) {
                 return $query->onlyTrashed();
@@ -28,10 +32,19 @@ class AdminTeacherController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.manage_teacher', compact('teachers', 'viewArchived'));
+        // 2. Fetch Sections (for Advisory dropdown)
+        $sections = Section::with('advisor')
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get();
+
+        // 3. Fetch Subjects (for Department dropdown) <--- ADDED THIS
+        // We get all subjects to populate the department list dynamically
+        $subjects = Subject::all();
+
+        return view('admin.manage_teacher', compact('teachers', 'viewArchived', 'sections', 'subjects'));
     }
 
-    // --- ADDED THIS METHOD ---
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,8 +55,7 @@ class AdminTeacherController extends Controller
             'department' => 'required|string',
         ]);
 
-        // Create teacher with default password
-        $validated['password'] = Hash::make('password'); // Default password is 'password'
+        $validated['password'] = Hash::make('password');
 
         Teacher::create($validated);
 
@@ -57,15 +69,35 @@ class AdminTeacherController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:teachers,email,' . $teacher->id,
             'department' => 'required|string',
+            'advisory_section' => 'nullable|exists:sections,id',
         ]);
 
-        $teacher->update($validated);
-        return back()->with('success', 'Faculty profile updated successfully!');
+        // Update Basic Info
+        $teacher->update([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
+            'department' => $validated['department'],
+        ]);
+
+        // Handle Advisory Transfer
+        Section::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+
+        if ($request->filled('advisory_section')) {
+            $section = Section::find($request->advisory_section);
+            $section->teacher_id = $teacher->id;
+            $section->save();
+        }
+
+        return back()->with('success', 'Faculty profile and advisory updated successfully!');
     }
 
     public function archive(Teacher $teacher)
     {
-        $teacher->delete(); // Soft delete
+        if($teacher->advisorySection) {
+            $teacher->advisorySection->update(['teacher_id' => null]);
+        }
+        $teacher->delete(); 
         return back()->with('success', 'Faculty member moved to archive.');
     }
 
@@ -76,4 +108,3 @@ class AdminTeacherController extends Controller
         return back()->with('success', 'Faculty access restored successfully!');
     }
 }
-

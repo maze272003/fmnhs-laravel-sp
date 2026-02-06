@@ -15,6 +15,7 @@ class Grade extends Model
         'subject_id',
         'quarter',
         'grade_value',
+        'school_year',
     ];
 
     /**

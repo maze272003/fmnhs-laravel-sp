@@ -60,11 +60,25 @@
                                    class="w-full sm:w-72 pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold text-sm shadow-sm">
                             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         </div>
+                        <select name="school_year" class="py-3 px-4 bg-white border border-slate-200 rounded-2xl font-bold text-sm outline-none" onchange="this.form.submit()">
+                            <option value="">All SY</option>
+                            @foreach($schoolYears as $sy)
+                                <option value="{{ $sy }}" {{ request('school_year') == $sy ? 'selected' : '' }}>SY {{ $sy }}</option>
+                            @endforeach
+                        </select>
                     </form>
 
-                    <button onclick="openModal('addModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-user-plus"></i> Add Student
-                    </button>
+                    <div class="flex gap-2">
+                        <a href="{{ route('admin.students.archived') }}" class="bg-slate-600 hover:bg-slate-700 text-white px-4 py-3 rounded-2xl font-black shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-box-archive"></i> Archived
+                        </a>
+                        <button onclick="openModal('addModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i> Add Student
+                        </button>
+                        <button onclick="openModal('promoteModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-2xl font-black shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-arrow-up"></i> Promote
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -96,6 +110,11 @@
                                         <div>
                                             <p class="font-bold text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">{{ $student->last_name }}, {{ $student->first_name }}</p>
                                             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{{ $student->email }}</p>
+                                            @if($student->enrollment_badge)
+                                                <span class="inline-block mt-1 px-2 py-0.5 rounded-lg text-[9px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase tracking-tighter">
+                                                    {{ $student->enrollment_badge }}
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -192,6 +211,20 @@
                     </select>
                 </div>
 
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Enrollment Type</label>
+                        <select name="enrollment_type" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
+                            <option value="Regular">Regular</option>
+                            <option value="Transferee">Transferee</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">School Year</label>
+                        <input type="text" name="school_year" value="{{ \App\Helpers\SchoolYearHelper::current() }}" required placeholder="e.g. 2024-2025" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
+                    </div>
+                </div>
+
                 <div class="pt-6">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 transition-all active:scale-95">
                         Register Student
@@ -224,6 +257,14 @@
                     </select>
                 </div>
 
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Enrollment Type</label>
+                    <select id="edit_enrollment_type" name="enrollment_type" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
+                        <option value="Regular">Regular</option>
+                        <option value="Transferee">Transferee</option>
+                    </select>
+                </div>
+
                 <div class="pt-4 border-t border-slate-100">
                     <label class="block text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1.5">Reset Password</label>
                     <input type="password" name="new_password" placeholder="Leave blank to keep current" class="w-full p-3.5 bg-rose-50/30 border border-rose-100 rounded-2xl text-sm font-bold outline-none">
@@ -232,6 +273,55 @@
                 <div class="pt-6">
                     <button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
                         Update Student Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Promote Students Modal --}}
+    <div id="promoteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl modal-animate border border-white">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight leading-none">Promote Students</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Move students to next grade level</p>
+                </div>
+                <button onclick="closeModal('promoteModal')" class="text-slate-300 hover:text-rose-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <form action="{{ route('admin.students.promote') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Select Students to Promote</label>
+                    <div class="max-h-48 overflow-y-auto border border-slate-200 rounded-2xl p-3 bg-slate-50 space-y-2">
+                        @foreach($students as $s)
+                            <label class="flex items-center gap-2 p-2 hover:bg-white rounded-xl cursor-pointer transition-colors">
+                                <input type="checkbox" name="student_ids[]" value="{{ $s->id }}" class="rounded border-slate-300">
+                                <span class="text-sm font-bold text-slate-700">{{ $s->last_name }}, {{ $s->first_name }} (Grade {{ $s->section->grade_level }})</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1.5 ml-1">Destination Section</label>
+                    <select name="to_section_id" required class="w-full p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl font-bold text-sm outline-none">
+                        <option value="">-- Choose Destination --</option>
+                        @foreach($sections as $sec)
+                            <option value="{{ $sec->id }}">Grade {{ $sec->grade_level }} - {{ $sec->name }} {{ $sec->strand ? '('.$sec->strand.')' : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">New School Year</label>
+                    <input type="text" name="to_school_year" value="{{ \App\Helpers\SchoolYearHelper::next() }}" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none" placeholder="e.g. 2025-2026">
+                </div>
+
+                <div class="pt-6">
+                    <button type="submit" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-emerald-100 transition-all active:scale-95">
+                        <i class="fa-solid fa-arrow-up mr-2"></i> Promote Selected Students
                     </button>
                 </div>
             </form>
@@ -254,6 +344,7 @@
             document.getElementById('edit_last_name').value = student.last_name;
             document.getElementById('edit_email').value = student.email;
             document.getElementById('edit_section_id').value = student.section_id;
+            document.getElementById('edit_enrollment_type').value = student.enrollment_type || 'Regular';
             
             document.getElementById('editForm').action = `/admin/students/${student.id}`;
             openModal('editModal');
@@ -262,8 +353,8 @@
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 Swal.fire({
-                    title: 'Delete Student?', text: "This action cannot be undone!", icon: 'warning',
-                    showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#cbd5e1', confirmButtonText: 'Yes, Delete', borderRadius: '25px'
+                    title: 'Archive Student?', text: "The student will be archived and removed from active enrollment. Records will be preserved for reference.", icon: 'warning',
+                    showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#cbd5e1', confirmButtonText: 'Yes, Archive', borderRadius: '25px'
                 }).then((r) => { if(r.isConfirmed) this.closest('form').submit(); });
             });
         });

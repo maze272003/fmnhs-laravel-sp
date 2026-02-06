@@ -34,7 +34,15 @@ class AdminAnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480' // 40MB limit
+            'target_audience' => 'required|string|in:all,students,teachers',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:40480'
+        ], [
+            'title.required' => 'The announcement title is required.',
+            'content.required' => 'The announcement content is required.',
+            'target_audience.required' => 'Please select a target audience.',
+            'target_audience.in' => 'Invalid target audience selected.',
+            'image.mimes' => 'Only JPEG, PNG, GIF, MP4, MOV, and AVI files are allowed.',
+            'image.max' => 'The media file must not exceed 40MB.',
         ]);
 
         $imagePath = null;
@@ -49,13 +57,13 @@ class AdminAnnouncementController extends Controller
         }
 
         // 1. Save to Database
-        // Gagamitin natin ang Auth name para malaman kung sinong Admin ang nag-post
         $announcement = Announcement::create([
             'title' => $request->title,
             'content' => $request->content,
             'image' => $imagePath,
             'author_name' => Auth::guard('admin')->user()->name, 
-            'role' => 'admin'
+            'role' => 'admin',
+            'target_audience' => $request->target_audience,
         ]);
 
         // 2. Broadcast via Queued Email

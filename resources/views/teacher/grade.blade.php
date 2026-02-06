@@ -72,6 +72,7 @@
                     @csrf
                     <input type="hidden" name="subject_id" value="{{ $subject->id }}">
                     <input type="hidden" name="section_id" value="{{ $section->id }}">
+                    <input type="hidden" name="school_year" value="{{ \App\Helpers\SchoolYearHelper::current() }}">
 
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse whitespace-nowrap">

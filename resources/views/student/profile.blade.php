@@ -42,7 +42,13 @@
                         Grade {{ $student->section->grade_level }} - {{ $student->section->name }}
                     </p>
                 </div>
-                <img src="{{ $student->avatar_url }}" alt="Profile" class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md">
+                <img src="{{ 
+                        ($student->avatar && $student->avatar !== 'default.png') 
+                        ? (Str::startsWith($student->avatar, 'http') ? $student->avatar : \Illuminate\Support\Facades\Storage::disk('s3')->url('avatars/' . $student->avatar)) 
+                        : 'https://ui-avatars.com/api/?name=' . urlencode($student->first_name . '+' . $student->last_name) . '&background=0D8ABC&color=fff'
+                     }}" 
+                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff';"
+                     alt="Profile" class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md">
             </div>
         </header>
 
@@ -50,6 +56,16 @@
 
             @if(session('success'))
                 <script>Swal.fire({icon: 'success', title: 'Updated!', text: "{{ session('success') }}", showConfirmButton: false, timer: 1500, borderRadius: '24px'});</script>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-8 bg-rose-50 text-rose-700 p-4 rounded-2xl border border-rose-100 text-xs font-bold">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
 
             <div class="mb-10">
@@ -69,15 +85,29 @@
                             <h3 class="font-black text-xs text-slate-400 uppercase tracking-[0.2em] mb-6">Display Avatar</h3>
                             
                             <div class="relative w-36 h-36 mx-auto mb-6">
-                                <img src="{{ $student->avatar_url }}" 
+                                <img src="{{ 
+                                        ($student->avatar && $student->avatar !== 'default.png') 
+                                        ? (Str::startsWith($student->avatar, 'http') ? $student->avatar : \Illuminate\Support\Facades\Storage::disk('s3')->url('avatars/' . $student->avatar)) 
+                                        : 'https://ui-avatars.com/api/?name=' . urlencode($student->first_name . '+' . $student->last_name) . '&background=0D8ABC&color=fff&size=512'
+                                     }}" 
+                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff';"
                                      class="w-full h-full rounded-[2.5rem] object-cover border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-500">
+                                
                                 <label class="absolute -bottom-2 -right-2 w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center cursor-pointer hover:bg-indigo-600 transition-colors shadow-lg border-2 border-white">
                                     <i class="fa-solid fa-camera text-xs"></i>
-                                    <input type="file" name="avatar" class="hidden" onchange="this.form.submit()"/>
+                                    <input type="file" name="avatar" class="hidden" accept=".jpg,.jpeg,.png" onchange="this.form.submit()"/>
                                 </label>
                             </div>
 
-                            <div class="space-y-1">
+                            @if($student->avatar && $student->avatar !== 'default.png')
+                            <div class="mt-2">
+                                <button type="button" onclick="confirmRemoveAvatar()" class="text-[10px] font-bold text-rose-500 hover:text-rose-700 uppercase tracking-widest transition-colors">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> Remove Photo
+                                </button>
+                            </div>
+                            @endif
+
+                            <div class="space-y-1 mt-6">
                                 <h4 class="font-black text-xl text-slate-900">{{ $student->first_name }}</h4>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Learner ID: {{ $student->lrn }}</p>
                             </div>
@@ -104,7 +134,6 @@
                     </div>
 
                     <div class="lg:col-span-8 space-y-6">
-                        
                         <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
                             <div class="flex items-center gap-3 mb-8">
                                 <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xs">
@@ -140,16 +169,6 @@
                                 <h3 class="font-black text-lg text-slate-800 tracking-tight">Security & Credentials</h3>
                             </div>
 
-                            @if ($errors->any())
-                                <div class="bg-rose-50 text-rose-700 p-4 rounded-2xl mb-8 border border-rose-100 text-xs font-bold">
-                                    <ul class="list-disc list-inside">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-
                             <div class="space-y-6">
                                 <div class="space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
@@ -184,9 +203,32 @@
                     </div>
                 </div>
             </form>
+            
+            <form id="removeAvatarForm" action="{{ route('student.profile.removeAvatar') }}" method="POST" style="display: none;">
+                @csrf 
+                @method('DELETE')
+            </form>
+
         </main>
     </div>
 
     <script src="{{ asset('js/sidebar.js') }}"></script>
+    <script>
+        function confirmRemoveAvatar() {
+            Swal.fire({
+                title: 'Remove Profile Picture?',
+                text: 'Your profile picture will be reset to the default avatar.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, Remove'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('removeAvatarForm').submit();
+                }
+            });
+        }
+    </script>
 </body>
 </html>

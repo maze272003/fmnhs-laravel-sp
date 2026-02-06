@@ -36,11 +36,6 @@
                     </div>
                 </div>
             </div>
-            <div class="hidden sm:block">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                    SY 2025-2026
-                </span>
-            </div>
         </header>
 
         <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
@@ -74,11 +69,6 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-hover:text-emerald-500 transition-colors">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </div>
-                        @if(request('search'))
-                            <a href="{{ route('admin.teachers.index', ($viewArchived ?? false) ? ['archived' => 1] : []) }}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-rose-500">
-                                <i class="fa-solid fa-circle-xmark"></i>
-                            </a>
-                        @endif
                     </form>
 
                     <div class="flex items-center gap-3">
@@ -90,7 +80,6 @@
                             <a href="{{ route('admin.teachers.index', ['archived' => 1]) }}" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-4 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-100 transition-all active:scale-95">
                                 <i class="fa-solid fa-box-archive"></i> Archive
                             </a>
-                            <!-- FIXED: Added onclick event -->
                             <button onclick="openModal('addModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-[1.5rem] font-black shadow-xl shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-3">
                                 <i class="fa-solid fa-user-plus text-xs"></i> Add Faculty
                             </button>
@@ -154,7 +143,7 @@
                                         @if($teacher->trashed())
                                             <form action="{{ route('admin.teachers.restore', $teacher->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Restore Faculty">
+                                                <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
                                                     <i class="fa-solid fa-rotate-left"></i>
                                                 </button>
                                             </form>
@@ -183,7 +172,6 @@
         </main>
     </div>
 
-    <!-- NEW ADD MODAL -->
     <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl border border-white">
             <div class="flex justify-between items-center mb-8">
@@ -221,18 +209,15 @@
                 </div>
                 <div class="space-y-2">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
+                    
                     <select name="department" required 
                         class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none appearance-none">
                         <option value="" disabled selected>Select Department</option>
-                        <option>Mathematics</option>
-                        <option>Science</option>
-                        <option>English</option>
-                        <option>Filipino</option>
-                        <option>Araling Panlipunan</option>
-                        <option>TLE (Livelihood Education)</option>
-                        <option>MAPEH</option>
-                        <option>Values Education</option>
+                        @foreach($subjects as $sub)
+                            <option value="{{ $sub->name }}">{{ $sub->name }}</option>
+                        @endforeach
                     </select>
+
                 </div>
                 <div class="pt-4">
                     <button type="submit" class="w-full bg-emerald-600 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 uppercase text-xs tracking-widest">
@@ -243,7 +228,6 @@
         </div>
     </div>
 
-    <!-- EDIT MODAL -->
     <div id="editModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl border border-white">
             <div class="flex justify-between items-center mb-8">
@@ -253,8 +237,10 @@
                 </div>
                 <button onclick="closeModal('editModal')" class="w-10 h-10 rounded-full bg-slate-50 text-slate-300 hover:text-rose-500 transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            
             <form id="editForm" method="POST" class="space-y-6">
                 @csrf @method('PUT')
+                
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
@@ -267,25 +253,55 @@
                             class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
                     </div>
                 </div>
+                
                 <div class="space-y-2">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
                     <input type="email" id="edit_email" name="email" required 
                         class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-sm">
                 </div>
+                
                 <div class="space-y-2">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
+                    
                     <select id="edit_department" name="department" required 
                         class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none appearance-none">
-                        <option>Mathematics</option>
-                        <option>Science</option>
-                        <option>English</option>
-                        <option>Filipino</option>
-                        <option>Araling Panlipunan</option>
-                        <option>TLE (Livelihood Education)</option>
-                        <option>MAPEH</option>
-                        <option>Values Education</option>
+                        @foreach($subjects as $sub)
+                            <option value="{{ $sub->name }}">{{ $sub->name }}</option>
+                        @endforeach
                     </select>
                 </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                        Advisory Class Assignment
+                    </label>
+                    <div class="relative">
+                        <select id="edit_advisory_section" name="advisory_section" 
+                            class="w-full p-4 bg-indigo-50/50 border border-indigo-100 text-indigo-900 rounded-2xl font-bold text-sm outline-none appearance-none focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                            
+                            <option value="">-- No Advisory Class --</option>
+                            
+                            @foreach($sections as $section)
+                                <option value="{{ $section->id }}">
+                                    Grade {{ $section->grade_level }} - {{ $section->name }}
+                                    @if($section->teacher_id)
+                                        (Assigned to: {{ $section->advisor->last_name ?? 'Faculty' }})
+                                    @else
+                                        (Available)
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-indigo-400">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 font-medium ml-1">
+                        <i class="fa-solid fa-circle-info text-indigo-400"></i> 
+                        Selecting a section will transfer ownership.
+                    </p>
+                </div>
+
                 <div class="pt-4">
                     <button type="submit" class="w-full bg-slate-900 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-slate-200 hover:bg-emerald-600 transition-all active:scale-95 uppercase text-xs tracking-widest">
                         Save Changes
@@ -313,7 +329,17 @@
             document.getElementById('edit_first_name').value = teacher.first_name;
             document.getElementById('edit_last_name').value = teacher.last_name;
             document.getElementById('edit_email').value = teacher.email;
+            
+            // This will now match the dynamic values from your database
             document.getElementById('edit_department').value = teacher.department;
+            
+            const advisorySelect = document.getElementById('edit_advisory_section');
+            if (teacher.advisory_section) {
+                advisorySelect.value = teacher.advisory_section.id;
+            } else {
+                advisorySelect.value = "";
+            }
+
             document.getElementById('editForm').action = `/admin/teachers/${teacher.id}`;
             openModal('editModal');
         }
@@ -322,7 +348,7 @@
             btn.addEventListener('click', function() {
                 Swal.fire({
                     title: 'Archive Faculty?', 
-                    text: "Access to the portal will be suspended, but all historic records will be preserved.", 
+                    text: "Access to the portal will be suspended.", 
                     icon: 'warning', 
                     showCancelButton: true, 
                     confirmButtonColor: '#f59e0b', 
@@ -333,7 +359,6 @@
             });
         });
 
-        // Close modals on escape key
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeModal('addModal');

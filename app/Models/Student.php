@@ -3,16 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-// 1. Palitan ang import na ito:
 use Illuminate\Foundation\Auth\User as Authenticatable; 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
-// 2. Palitan ang extends:
 class Student extends Authenticatable 
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'lrn',
@@ -20,8 +19,10 @@ class Student extends Authenticatable
         'last_name',
         'email',
         'password',
-        'section_id', // Link to the new sections table
-        'avatar'
+        'section_id',
+        'avatar',
+        'enrollment_type',
+        'school_year',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -33,6 +34,35 @@ class Student extends Authenticatable
     }
 
     public function grades() { return $this->hasMany(Grade::class); }
+
+    public function promotionHistories()
+    {
+        return $this->hasMany(PromotionHistory::class);
+    }
+
+    /**
+     * Check if this student is a new enrollee.
+     * Grade 7 students are always new enrollees.
+     * Transferees are tagged as "New Enrollee – Transferee".
+     */
+    public function isNewEnrollee(): bool
+    {
+        if (!$this->section) return false;
+        return $this->section->grade_level === 7 || $this->enrollment_type === 'Transferee';
+    }
+
+    public function getEnrollmentBadgeAttribute(): ?string
+    {
+        if (!$this->section) return null;
+
+        if ($this->enrollment_type === 'Transferee') {
+            return 'New Enrollee – Transferee';
+        }
+        if ($this->section->grade_level === 7) {
+            return 'Newly Enrolled';
+        }
+        return null;
+    }
 
     protected function avatarUrl(): Attribute
     {

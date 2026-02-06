@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Student;
 use App\Models\Section;
 use Illuminate\Support\Facades\Hash;
+use App\Helpers\SchoolYearHelper;
 
 class StudentSeeder extends Seeder
 {
@@ -13,6 +14,7 @@ class StudentSeeder extends Seeder
     {
         // Get the ID for "Rizal" section
         $rizalSection = Section::where('name', 'Rizal')->first();
+        $aguinaldoSection = Section::where('name', 'Aguinaldo')->first();
 
         // 1. CREATE SPECIFIC STUDENTS
         Student::create([
@@ -22,6 +24,8 @@ class StudentSeeder extends Seeder
             'email' => 'dev@gmail.com',
             'password' => Hash::make('password'),
             'section_id' => $rizalSection->id,
+            'enrollment_type' => 'Regular',
+            'school_year' => SchoolYearHelper::current(),
         ]);
 
         Student::create([
@@ -31,15 +35,35 @@ class StudentSeeder extends Seeder
             'email' => 'elicegerman@gmail.com',
             'password' => Hash::make('password'),
             'section_id' => $rizalSection->id,
+            'enrollment_type' => 'Regular',
+            'school_year' => SchoolYearHelper::current(),
         ]);
-        // Student::create([
-        //     'lrn' => '100000000004',
-        //     'first_name' => 'Stefhanie',
-        //     'last_name' => 'Sangbaan',
-        //     'email' => 'sangbaanstefhaniemary@gmail.com',
-        //     'password' => Hash::make('password'),
-        //     'section_id' => $rizalSection->id,
-        // ]);
+
+        // Grade 7 new enrollee
+        if ($aguinaldoSection) {
+            Student::create([
+                'lrn' => '100000000003',
+                'first_name' => 'Juan',
+                'last_name' => 'Dela Cruz',
+                'email' => 'juandelacruz@gmail.com',
+                'password' => Hash::make('password'),
+                'section_id' => $aguinaldoSection->id,
+                'enrollment_type' => 'Regular',
+                'school_year' => SchoolYearHelper::current(),
+            ]);
+
+            // Transferee example
+            Student::create([
+                'lrn' => '100000000005',
+                'first_name' => 'Maria',
+                'last_name' => 'Santos',
+                'email' => 'mariasantos@gmail.com',
+                'password' => Hash::make('password'),
+                'section_id' => $aguinaldoSection->id,
+                'enrollment_type' => 'Transferee',
+                'school_year' => SchoolYearHelper::current(),
+            ]);
+        }
 
         // 2. CREATE RANDOM STUDENTS
         Student::factory(50)->create([
