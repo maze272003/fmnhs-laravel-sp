@@ -51,9 +51,6 @@ class AdminDashboardController extends Controller
 
         // KPI: Teacher load distribution
         $teacherLoad = Teacher::select('teachers.id', 'teachers.first_name', 'teachers.last_name')
-            ->withCount(['grades as class_count' => function ($q) {
-                $q->select(DB::raw('count(distinct concat(subject_id, "-", student_id))'));
-            }])
             ->get()
             ->map(function ($teacher) {
                 $scheduleCount = Schedule::where('teacher_id', $teacher->id)
