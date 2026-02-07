@@ -29,8 +29,10 @@ class StudentController extends Controller
             if ($gradeLevel) {
                 $q->whereHas('student', function($sq) use ($gradeLevel) {
                     $sq->whereHas('promotionHistories', function($ph) use ($gradeLevel) {
-                        $ph->where('from_grade_level', $gradeLevel)
-                           ->orWhere('to_grade_level', $gradeLevel);
+                        $ph->where(function($inner) use ($gradeLevel) {
+                            $inner->where('from_grade_level', $gradeLevel)
+                                  ->orWhere('to_grade_level', $gradeLevel);
+                        });
                     });
                 });
             }
