@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Student;
 use App\Models\Section;
 use App\Models\PromotionHistory;
+use App\Models\SchoolYearConfig;
 use App\Models\AuditTrail;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -12,13 +13,36 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\StudentAccountCreated;
+use Illuminate\Support\Facades\DB;
 
 class AdminStudentController extends Controller
 {
+    /**
+     * Display the list of students with Sidebar Logic.
+     */
     public function index(Request $request)
     {
-        $query = Student::with('section');
+        // 1. Sidebar Data: Get Sections grouped by Grade Level with active student counts
+        $sectionsList = Section::withCount(['students' => function($q) {
+            $q->where('is_alumni', false)->whereNull('deleted_at');
+        }])
+        ->orderBy('grade_level')
+        ->orderBy('name')
+        ->get()
+        ->groupBy('grade_level');
 
+        // 2. Main Query for Student Table
+        $query = Student::with(['section', 'schoolYearConfig'])
+            ->where('is_alumni', false); // Exclude Alumni from active lists
+
+        // 3. Filter by Specific Section (When clicking sidebar items)
+        $activeSection = null;
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->input('section_id'));
+            $activeSection = Section::find($request->input('section_id'));
+        }
+
+        // 4. Search Logic
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -29,18 +53,42 @@ class AdminStudentController extends Controller
             });
         }
 
-        if ($request->filled('school_year')) {
-            $query->where('school_year', $request->input('school_year'));
+        // 5. School Year Filter
+        if ($request->filled('school_year_id')) {
+            $query->where('school_year_id', $request->input('school_year_id'));
         }
 
-        $students = $query->orderBy('last_name')->paginate(10);
-        $sections = Section::all();
+        $students = $query->orderBy('last_name')->paginate(15);
+        
+        // Data for Modals
+        $allSections = Section::orderBy('grade_level')->orderBy('name')->get();
+        $schoolYears = SchoolYearConfig::orderBy('school_year', 'desc')->get();
 
-        $schoolYears = Student::select('school_year')->distinct()->orderBy('school_year', 'desc')->pluck('school_year');
-
-        return view('admin.manage_student', compact('students', 'sections', 'schoolYears'));
+        return view('admin.manage_student', compact(
+            'students', 
+            'sectionsList', 
+            'activeSection', 
+            'allSections', 
+            'schoolYears'
+        ));
     }
 
+    /**
+     * View Immutable Student Record (Permanent Record).
+     */
+    public function show($id)
+    {
+        // Fetch student with all academic history, including soft deleted ones (Alumni)
+        $student = Student::with(['grades.subject', 'promotionHistory', 'schoolYearConfig'])
+            ->withTrashed()
+            ->findOrFail($id);
+
+        return view('admin.student_record', compact('student'));
+    }
+
+    /**
+     * Store a newly created student.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -50,22 +98,18 @@ class AdminStudentController extends Controller
             'email' => 'required|email|unique:students,email',
             'section_id' => 'required|exists:sections,id',
             'enrollment_type' => 'required|in:Regular,Transferee',
-            'school_year' => 'required|string|max:20',
+            'school_year_id' => 'required|exists:school_year_configs,id',
         ]);
 
         $rawPassword = $request->lrn;
         $validated['password'] = Hash::make($rawPassword);
         $validated['enrollment_status'] = 'Enrolled';
+        $validated['is_alumni'] = false;
 
         $student = Student::create($validated);
 
-        // Audit trail
         $admin = Auth::guard('admin')->user();
-        AuditTrail::log(
-            'Student', $student->id, 'created',
-            null, null, $student->toArray(),
-            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
-        );
+        AuditTrail::log('Student', $student->id, 'created', null, null, $student->toArray(), 'admin', $admin->id ?? null);
 
         try {
             Mail::to($student->email)->send(new StudentAccountCreated($student, $rawPassword));
@@ -73,16 +117,18 @@ class AdminStudentController extends Controller
             \Log::error('Mail failed: ' . $e->getMessage());
         }
 
-        return redirect()->back()->with('success', 'Student registered to section successfully!');
+        return redirect()->back()->with('success', 'Student registered successfully!');
     }
 
+    /**
+     * Update the specified student.
+     */
     public function update(Request $request, $id)
     {
         $student = Student::findOrFail($id);
 
-        // Prevent editing alumni records
         if ($student->is_alumni) {
-            return redirect()->back()->withErrors(['error' => 'Alumni records are read-only and cannot be modified.']);
+            return redirect()->back()->withErrors(['error' => 'Alumni records are read-only.']);
         }
 
         $oldData = $student->toArray();
@@ -90,10 +136,11 @@ class AdminStudentController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email,'.$student->id, 
+            'email' => 'required|email|unique:students,email,' . $student->id,
             'section_id' => 'required|exists:sections,id',
             'enrollment_type' => 'required|in:Regular,Transferee',
-            'new_password' => 'nullable|min:6'
+            'new_password' => 'nullable|min:6',
+            'school_year_id' => 'sometimes|exists:school_year_configs,id',
         ]);
 
         if ($request->filled('new_password')) {
@@ -102,217 +149,169 @@ class AdminStudentController extends Controller
 
         $student->update($validated);
 
-        // Audit trail
         $admin = Auth::guard('admin')->user();
-        AuditTrail::log(
-            'Student', $student->id, 'updated',
-            null, $oldData, $student->fresh()->toArray(),
-            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
-        );
+        AuditTrail::log('Student', $student->id, 'updated', null, $oldData, $student->fresh()->toArray(), 'admin', $admin->id ?? null);
 
         return redirect()->back()->with('success', 'Student record updated!');
     }
 
-    public function destroy($id)
-    {
-        $student = Student::findOrFail($id);
-
-        // Prevent archiving alumni
-        if ($student->is_alumni) {
-            return redirect()->back()->withErrors(['error' => 'Alumni records cannot be archived.']);
-        }
-
-        $student->update(['enrollment_status' => 'Archived']);
-        $student->delete();
-
-        // Audit trail
-        $admin = Auth::guard('admin')->user();
-        AuditTrail::log(
-            'Student', $id, 'archived',
-            'enrollment_status', 'Enrolled', 'Archived',
-            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
-        );
-
-        return redirect()->back()->with('success', 'Student has been archived successfully. Records are preserved for reference.');
-    }
-
-    public function archived()
-    {
-        $students = Student::onlyTrashed()->with('section')->orderBy('deleted_at', 'desc')->paginate(10);
-        return view('admin.archived_students', compact('students'));
-    }
-
-    public function restore($id)
-    {
-        $student = Student::onlyTrashed()->findOrFail($id);
-        $student->restore();
-        $student->update(['enrollment_status' => 'Enrolled']);
-
-        // Audit trail
-        $admin = Auth::guard('admin')->user();
-        AuditTrail::log(
-            'Student', $id, 'restored',
-            'enrollment_status', 'Archived', 'Enrolled',
-            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
-        );
-
-        return redirect()->back()->with('success', 'Student has been restored to active enrollment.');
-    }
-
+    /**
+     * Promote students (Grade Up) or Graduate them (Alumni).
+     */
     public function promote(Request $request)
     {
         $request->validate([
             'student_ids' => 'required|array|min:1',
             'student_ids.*' => 'exists:students,id',
-            'to_section_id' => 'required|exists:sections,id',
-            'to_school_year' => 'required|string|max:20',
+            'to_school_year_id' => 'required|exists:school_year_configs,id',
+            // Nullable because graduating students don't need a section
+            'to_section_id' => 'nullable|exists:sections,id', 
         ]);
 
-        $toSection = Section::findOrFail($request->to_section_id);
+        $toSchoolYearConfig = SchoolYearConfig::find($request->to_school_year_id);
         $admin = Auth::guard('admin')->user();
-        $promoted = 0;
-        $alumniCount = 0;
+        
+        $promotedCount = 0;
+        $graduatedCount = 0;
 
         foreach ($request->student_ids as $studentId) {
             $student = Student::findOrFail($studentId);
 
-            // Prevent downgrading alumni
-            if ($student->is_alumni) {
-                continue;
-            }
+            if ($student->is_alumni) continue;
 
             $fromSection = $student->section;
+            // LOGIC: If currently Grade 12, they become Alumni
+            $isGraduating = $fromSection->grade_level == 12;
 
-            // Record promotion history
+            // Validation: Non-graduating students MUST have a section
+            if (!$isGraduating && !$request->to_section_id) {
+                return back()->withErrors(['error' => 'Regular promotion requires a destination section.']);
+            }
+
+            // 1. Archive History
             PromotionHistory::create([
                 'student_id' => $student->id,
-                'from_grade_level' => $fromSection->grade_level,
-                'to_grade_level' => $toSection->grade_level,
-                'from_school_year' => $student->school_year,
-                'to_school_year' => $request->to_school_year,
+                'from_grade_level' => (string)$fromSection->grade_level,
+                // If graduating, new grade is "Alumni", else it is current + 1
+                'to_grade_level' => $isGraduating ? 'Alumni' : (string)($fromSection->grade_level + 1),
+                
+                'from_school_year' => $student->schoolYearConfig->school_year ?? 'N/A',
+                'to_school_year' => $toSchoolYearConfig->school_year,
+                
                 'from_section_id' => $fromSection->id,
-                'to_section_id' => $toSection->id,
+                'to_section_id' => $isGraduating ? null : $request->to_section_id,
                 'promoted_by' => $admin->name ?? 'Admin',
             ]);
 
-            // Grade 12 → Alumni automatically
-            $isGraduating = $fromSection->grade_level == 12;
-
-            $updateData = [
-                'section_id' => $toSection->id,
-                'school_year' => $request->to_school_year,
+            // 2. Update Student Data
+            $student->update([
+                'school_year_id' => $toSchoolYearConfig->id,
                 'enrollment_type' => 'Regular',
                 'enrollment_status' => $isGraduating ? 'Alumni' : 'Promoted',
                 'is_alumni' => $isGraduating,
-            ];
+                // Remove from section if graduated, otherwise assign new section
+                'section_id' => $isGraduating ? null : $request->to_section_id,
+            ]);
 
-            $student->update($updateData);
-
-            // Audit trail
+            // 3. Log Audit
             AuditTrail::log(
                 'Student', $student->id,
                 $isGraduating ? 'graduated' : 'promoted',
                 'grade_level',
                 $fromSection->grade_level,
-                $isGraduating ? 'Alumni' : $toSection->grade_level,
-                'admin', $admin->id ?? null, $admin->name ?? 'Admin'
+                $isGraduating ? 'Alumni' : ($fromSection->grade_level + 1),
+                'admin', $admin->id ?? null
             );
 
-            if ($isGraduating) {
-                $alumniCount++;
-            }
-            $promoted++;
+            if ($isGraduating) $graduatedCount++;
+            else $promotedCount++;
         }
 
-        $message = "{$promoted} student(s) promoted successfully to Grade {$toSection->grade_level} for SY {$request->to_school_year}.";
-        if ($alumniCount > 0) {
-            $message .= " {$alumniCount} student(s) marked as Alumni (Grade 12 graduates).";
-        }
+        $message = "Processed successfully.";
+        if ($promotedCount > 0) $message = "$promotedCount students promoted to next grade level.";
+        if ($graduatedCount > 0) $message = "$graduatedCount students graduated and moved to Alumni Archives.";
 
         return redirect()->back()->with('success', $message);
     }
 
     /**
-     * Update enrollment status to Dropped.
+     * Archive a student (Soft Delete).
      */
+    public function destroy($id)
+    {
+        $student = Student::findOrFail($id);
+
+        if ($student->is_alumni) {
+            return redirect()->back()->withErrors(['error' => 'Alumni records are permanent and cannot be archived manually.']);
+        }
+
+        $student->update(['enrollment_status' => 'Archived']);
+        $student->delete();
+
+        $admin = Auth::guard('admin')->user();
+        AuditTrail::log('Student', $id, 'archived', 'status', 'Enrolled', 'Archived', 'admin', $admin->id ?? null);
+
+        return redirect()->back()->with('success', 'Student archived successfully.');
+    }
+
+    /**
+     * View archived/alumni students.
+     */
+    public function archived()
+    {
+        $students = Student::onlyTrashed()->with('section')->orderBy('deleted_at', 'desc')->paginate(15);
+        return view('admin.archived_students', compact('students'));
+    }
+
+    /**
+     * Restore student.
+     */
+    public function restore($id)
+    {
+        $student = Student::onlyTrashed()->findOrFail($id);
+        
+        // If restoring an Alumni, keep them as Alumni? Or revert?
+        // Usually, we revert them to 'Enrolled' if it was a mistake.
+        $student->restore();
+        $student->update(['enrollment_status' => 'Enrolled', 'is_alumni' => false]);
+
+        $admin = Auth::guard('admin')->user();
+        AuditTrail::log('Student', $id, 'restored', 'status', 'Archived', 'Enrolled', 'admin', $admin->id ?? null);
+
+        return redirect()->back()->with('success', 'Student record restored.');
+    }
+
+    // Status Management Methods
     public function dropStudent(Request $request, $id)
     {
-        $student = Student::findOrFail($id);
-
-        if ($student->is_alumni) {
-            return redirect()->back()->withErrors(['error' => 'Alumni records cannot be modified.']);
-        }
-
-        if ($student->enrollment_status === 'Dropped') {
-            return redirect()->back()->withErrors(['error' => 'Student is already dropped.']);
-        }
-
-        $oldStatus = $student->enrollment_status;
-        $student->update(['enrollment_status' => 'Dropped']);
-
-        $admin = Auth::guard('admin')->user();
-        AuditTrail::log(
-            'Student', $student->id, 'updated',
-            'enrollment_status', $oldStatus, 'Dropped',
-            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
-        );
-
-        return redirect()->back()->with('success', "Student {$student->first_name} {$student->last_name} has been marked as Dropped.");
+        $this->changeStatus($id, 'Dropped');
+        return redirect()->back()->with('success', 'Student marked as Dropped.');
     }
 
-    /**
-     * Update enrollment status to Transferred.
-     */
     public function transferStudent(Request $request, $id)
     {
-        $student = Student::findOrFail($id);
+        $this->changeStatus($id, 'Transferred');
+        return redirect()->back()->with('success', 'Student marked as Transferred.');
+    }
 
-        if ($student->is_alumni) {
-            return redirect()->back()->withErrors(['error' => 'Alumni records cannot be modified.']);
-        }
-
-        if ($student->enrollment_status === 'Transferred') {
-            return redirect()->back()->withErrors(['error' => 'Student is already marked as transferred.']);
-        }
-
-        $oldStatus = $student->enrollment_status;
-        $student->update(['enrollment_status' => 'Transferred']);
-
-        $admin = Auth::guard('admin')->user();
-        AuditTrail::log(
-            'Student', $student->id, 'updated',
-            'enrollment_status', $oldStatus, 'Transferred',
-            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
-        );
-
-        return redirect()->back()->with('success', "Student {$student->first_name} {$student->last_name} has been marked as Transferred.");
+    public function reenrollStudent(Request $request, $id)
+    {
+        $this->changeStatus($id, 'Enrolled');
+        return redirect()->back()->with('success', 'Student re-enrolled.');
     }
 
     /**
-     * Re-enroll a dropped or transferred student.
+     * Helper for status changes to reduce duplication
      */
-    public function reenrollStudent(Request $request, $id)
+    private function changeStatus($id, $newStatus)
     {
         $student = Student::findOrFail($id);
-
-        if ($student->is_alumni) {
-            return redirect()->back()->withErrors(['error' => 'Alumni records cannot be re-enrolled.']);
-        }
-
-        if (!in_array($student->enrollment_status, ['Dropped', 'Transferred'])) {
-            return redirect()->back()->withErrors(['error' => 'Only dropped or transferred students can be re-enrolled.']);
-        }
-
+        if ($student->is_alumni) abort(403, 'Cannot modify Alumni records.');
+        
         $oldStatus = $student->enrollment_status;
-        $student->update(['enrollment_status' => 'Enrolled']);
+        $student->update(['enrollment_status' => $newStatus]);
 
         $admin = Auth::guard('admin')->user();
-        AuditTrail::log(
-            'Student', $student->id, 'updated',
-            'enrollment_status', $oldStatus, 'Enrolled',
-            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
-        );
-
-        return redirect()->back()->with('success', "Student {$student->first_name} {$student->last_name} has been re-enrolled.");
+        AuditTrail::log('Student', $student->id, 'status_change', 'status', $oldStatus, $newStatus, 'admin', $admin->id ?? null);
     }
 }

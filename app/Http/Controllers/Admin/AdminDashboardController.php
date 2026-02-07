@@ -7,8 +7,6 @@ use App\Models\Teacher;
 use App\Models\Subject;
 use App\Models\Section;
 use App\Models\Schedule;
-use App\Models\PromotionHistory;
-use App\Models\Grade;
 use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
@@ -33,9 +31,11 @@ class AdminDashboardController extends Controller
             ->get();
 
         // KPI: Enrollment by school year (trend)
-        $enrollmentByYear = Student::select('school_year', DB::raw('count(*) as total'))
-            ->groupBy('school_year')
-            ->orderBy('school_year')
+        // FIXED: Joined with school_year_configs to get the year string
+        $enrollmentByYear = Student::join('school_year_configs', 'students.school_year_id', '=', 'school_year_configs.id')
+            ->select('school_year_configs.school_year', DB::raw('count(*) as total'))
+            ->groupBy('school_year_configs.school_year')
+            ->orderBy('school_year_configs.school_year')
             ->get();
 
         // KPI: Promotion vs dropout/archived rates

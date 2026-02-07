@@ -12,8 +12,11 @@ return new class extends Migration
         Schema::create('promotion_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
-            $table->integer('from_grade_level');
-            $table->integer('to_grade_level');
+            
+            // FIX: Changed from integer to string to support "Alumni"
+            $table->string('from_grade_level');
+            $table->string('to_grade_level');
+            
             $table->string('from_school_year');
             $table->string('to_school_year');
             $table->unsignedBigInteger('from_section_id')->nullable();

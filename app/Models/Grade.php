@@ -14,8 +14,8 @@ class Grade extends Model
         'teacher_id',
         'subject_id',
         'quarter',
-        'grade_value',
-        'school_year',
+        'grade_value',      // Matches your database column
+        'school_year_id',   // <--- UPDATED: Changed from 'school_year' to 'school_year_id'
         'is_locked',
         'locked_at',
         'locked_by',
@@ -42,27 +42,28 @@ class Grade extends Model
         return $query->where('is_locked', false);
     }
 
-    /**
-     * Get the student that owns the grade.
-     */
+    // =================RELATIONSHIPS=================
+
     public function student()
     {
         return $this->belongsTo(Student::class);
     }
 
-    /**
-     * Get the teacher who gave the grade.
-     */
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
     }
 
-    /**
-     * Get the subject associated with the grade.
-     */
     public function subject()
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    /**
+     * NEW: Relationship to School Year Config
+     */
+    public function schoolYearConfig()
+    {
+        return $this->belongsTo(SchoolYearConfig::class, 'school_year_id');
     }
 }

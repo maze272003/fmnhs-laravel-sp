@@ -9,12 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('school_year_configs', function (Blueprint $table) {
-            $table->id();
-            $table->string('school_year')->unique(); // e.g. 2024-2025
+            $table->id(); // This creates the 'id' column automatically.
+            
+            // CORRECT: Name this 'school_year' so it holds "2025-2026"
+            // DO NOT name this 'school_year_id'
+            $table->string('school_year')->unique(); 
+            
             $table->boolean('is_active')->default(false);
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->string('status')->default('active'); // active, closed, archived
+            $table->string('status')->default('active'); 
             $table->timestamps();
         });
     }
