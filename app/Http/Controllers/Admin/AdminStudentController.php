@@ -231,4 +231,88 @@ class AdminStudentController extends Controller
 
         return redirect()->back()->with('success', $message);
     }
+
+    /**
+     * Update enrollment status to Dropped.
+     */
+    public function dropStudent(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
+
+        if ($student->is_alumni) {
+            return redirect()->back()->withErrors(['error' => 'Alumni records cannot be modified.']);
+        }
+
+        if ($student->enrollment_status === 'Dropped') {
+            return redirect()->back()->withErrors(['error' => 'Student is already dropped.']);
+        }
+
+        $oldStatus = $student->enrollment_status;
+        $student->update(['enrollment_status' => 'Dropped']);
+
+        $admin = Auth::guard('admin')->user();
+        AuditTrail::log(
+            'Student', $student->id, 'updated',
+            'enrollment_status', $oldStatus, 'Dropped',
+            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
+        );
+
+        return redirect()->back()->with('success', "Student {$student->first_name} {$student->last_name} has been marked as Dropped.");
+    }
+
+    /**
+     * Update enrollment status to Transferred.
+     */
+    public function transferStudent(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
+
+        if ($student->is_alumni) {
+            return redirect()->back()->withErrors(['error' => 'Alumni records cannot be modified.']);
+        }
+
+        if ($student->enrollment_status === 'Transferred') {
+            return redirect()->back()->withErrors(['error' => 'Student is already marked as transferred.']);
+        }
+
+        $oldStatus = $student->enrollment_status;
+        $student->update(['enrollment_status' => 'Transferred']);
+
+        $admin = Auth::guard('admin')->user();
+        AuditTrail::log(
+            'Student', $student->id, 'updated',
+            'enrollment_status', $oldStatus, 'Transferred',
+            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
+        );
+
+        return redirect()->back()->with('success', "Student {$student->first_name} {$student->last_name} has been marked as Transferred.");
+    }
+
+    /**
+     * Re-enroll a dropped or transferred student.
+     */
+    public function reenrollStudent(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
+
+        if ($student->is_alumni) {
+            return redirect()->back()->withErrors(['error' => 'Alumni records cannot be re-enrolled.']);
+        }
+
+        if (!in_array($student->enrollment_status, ['Dropped', 'Transferred'])) {
+            return redirect()->back()->withErrors(['error' => 'Only dropped or transferred students can be re-enrolled.']);
+        }
+
+        $oldStatus = $student->enrollment_status;
+        $student->update(['enrollment_status' => 'Enrolled']);
+
+        $admin = Auth::guard('admin')->user();
+        AuditTrail::log(
+            'Student', $student->id, 'updated',
+            'enrollment_status', $oldStatus, 'Enrolled',
+            'admin', $admin->id ?? null, $admin->name ?? 'Admin'
+        );
+
+        return redirect()->back()->with('success', "Student {$student->first_name} {$student->last_name} has been re-enrolled.");
+    }
 }

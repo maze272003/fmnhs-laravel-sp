@@ -97,6 +97,9 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::put('/admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
     Route::delete('/admin/students/{id}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
     Route::post('/admin/students/{id}/restore', [AdminStudentController::class, 'restore'])->name('admin.students.restore');
+    Route::post('/admin/students/{id}/drop', [AdminStudentController::class, 'dropStudent'])->name('admin.students.drop');
+    Route::post('/admin/students/{id}/transfer', [AdminStudentController::class, 'transferStudent'])->name('admin.students.transfer');
+    Route::post('/admin/students/{id}/reenroll', [AdminStudentController::class, 'reenrollStudent'])->name('admin.students.reenroll');
     Route::put('/admin/teachers/{teacher}', [AdminTeacherController::class, 'update'])->name('admin.teachers.update');
     // Manage Teachers
     Route::get('/admin/teachers', [AdminTeacherController::class, 'index'])->name('admin.teachers.index');
