@@ -20,6 +20,7 @@ class Student extends Authenticatable
         'email',
         'password',
         'section_id',
+        'school_year',
         'school_year_id',
         'enrollment_type',
         'enrollment_status',
@@ -46,6 +47,16 @@ class Student extends Authenticatable
         return $this->belongsTo(Section::class);
     }
 
+    public function scopeAlumni($query)
+    {
+        return $query->where('is_alumni', true);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_alumni', false)->whereNull('deleted_at');
+    }
+
     public function schoolYearConfig()
     {
         return $this->belongsTo(SchoolYearConfig::class, 'school_year_id');
@@ -70,5 +81,51 @@ class Student extends Authenticatable
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function setSchoolYearAttribute(?string $schoolYear): void
+    {
+        if (!$schoolYear) {
+            $this->attributes['school_year_id'] = null;
+            return;
+        }
+
+        $config = SchoolYearConfig::firstOrCreate(
+            ['school_year' => $schoolYear],
+            [
+                'start_date' => now()->startOfYear(),
+                'end_date' => now()->endOfYear(),
+                'status' => 'upcoming',
+                'is_active' => false,
+            ]
+        );
+
+        $this->attributes['school_year_id'] = $config->id;
+    }
+
+    public function getSchoolYearAttribute(): ?string
+    {
+        return $this->schoolYearConfig?->school_year;
+    }
+
+    public function getEnrollmentBadgeAttribute(): ?string
+    {
+        if ($this->is_alumni) {
+            return 'Alumni';
+        }
+
+        if ($this->enrollment_type === 'Transferee') {
+            return 'New Enrollee – Transferee';
+        }
+
+        if ((int) ($this->section?->grade_level ?? 0) === 7) {
+            return 'Newly Enrolled';
+        }
+
+        if ($this->enrollment_status === 'Promoted') {
+            return 'Promoted';
+        }
+
+        return null;
     }
 }

@@ -57,16 +57,16 @@
             <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-10">
                 <div>
                     <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Academic Records</h1>
-                    <p class="text-slate-500 font-medium">Detailed breakdown of your quarterly performance{{ $schoolYear ? " for S.Y. {$schoolYear}" : '' }}.</p>
+                    <p class="text-slate-500 font-medium">Detailed breakdown of your quarterly performance{{ $schoolYearLabel ? " for S.Y. {$schoolYearLabel}" : '' }}.</p>
                 </div>
                 
                 <div class="flex items-center gap-3">
                     {{-- School Year Filter --}}
                     <form method="GET" action="{{ route('student.grades') }}" class="flex items-center gap-2">
-                        <select name="school_year" onchange="this.form.submit()" class="px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400">
+                        <select name="school_year_id" onchange="this.form.submit()" class="px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400">
                             <option value="">All School Years</option>
                             @foreach($schoolYears as $sy)
-                                <option value="{{ $sy }}" {{ $schoolYear == $sy ? 'selected' : '' }}>S.Y. {{ $sy }}</option>
+                                <option value="{{ $sy->id }}" {{ $schoolYearId == $sy->id ? 'selected' : '' }}>S.Y. {{ $sy->school_year }}</option>
                             @endforeach
                         </select>
                         @if(isset($gradeLevels) && $gradeLevels->isNotEmpty())
@@ -79,7 +79,7 @@
                         @endif
                     </form>
 
-                    <a href="{{ route('student.grades.pdf', ['school_year' => $schoolYear]) }}" class="flex items-center justify-center gap-3 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rose-100 transition-all active:scale-95 group">
+                    <a href="{{ route('student.grades.pdf', ['school_year_id' => $schoolYearId]) }}" class="flex items-center justify-center gap-3 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rose-100 transition-all active:scale-95 group">
                         <i class="fa-solid fa-file-pdf text-sm group-hover:scale-110 transition-transform"></i>
                         Generate Report Card
                     </a>
@@ -213,7 +213,7 @@
 
                 <div class="p-8 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        Official Academic Record {{ $schoolYear ? "• S.Y. {$schoolYear}" : '' }}
+                        Official Academic Record {{ $schoolYearLabel ? "• S.Y. {$schoolYearLabel}" : '' }}
                     </p>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-shield-halved text-blue-200"></i>

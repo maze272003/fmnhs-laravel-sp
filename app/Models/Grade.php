@@ -15,6 +15,7 @@ class Grade extends Model
         'subject_id',
         'quarter',
         'grade_value',      // Matches your database column
+        'school_year',
         'school_year_id',   // <--- UPDATED: Changed from 'school_year' to 'school_year_id'
         'is_locked',
         'locked_at',
@@ -65,5 +66,30 @@ class Grade extends Model
     public function schoolYearConfig()
     {
         return $this->belongsTo(SchoolYearConfig::class, 'school_year_id');
+    }
+
+    public function setSchoolYearAttribute(?string $schoolYear): void
+    {
+        if (!$schoolYear) {
+            $this->attributes['school_year_id'] = null;
+            return;
+        }
+
+        $config = SchoolYearConfig::firstOrCreate(
+            ['school_year' => $schoolYear],
+            [
+                'start_date' => now()->startOfYear(),
+                'end_date' => now()->endOfYear(),
+                'status' => 'upcoming',
+                'is_active' => false,
+            ]
+        );
+
+        $this->attributes['school_year_id'] = $config->id;
+    }
+
+    public function getSchoolYearAttribute(): ?string
+    {
+        return $this->schoolYearConfig?->school_year;
     }
 }

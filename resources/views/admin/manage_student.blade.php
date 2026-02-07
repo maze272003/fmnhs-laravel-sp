@@ -68,7 +68,7 @@
                         <h2 class="text-xl font-bold text-slate-800">
                             {{ $activeSection ? "Grade {$activeSection->grade_level} - {$activeSection->name}" : 'All Active Students' }}
                         </h2>
-                        <p class="text-xs text-slate-500 font-bold">SY {{ \App\Models\SchoolYearConfig::where('status', 'active')->first()->school_year ?? 'N/A' }}</p>
+                        <p class="text-xs text-slate-500 font-bold">SY {{ $activeSchoolYear ?? 'N/A' }}</p>
                     </div>
                     
                     {{-- Bulk Actions (Only show if a section is selected) --}}

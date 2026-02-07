@@ -11,12 +11,11 @@ use App\Models\Announcement;
 use App\Models\Section;
 use App\Models\Attendance;
 use App\Models\AuditTrail;
+use App\Models\SchoolYearConfig;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Teacher;
-use App\Helpers\SchoolYearHelper;
 use Illuminate\Support\Facades\DB;
 
 
@@ -28,7 +27,8 @@ class TeacherController extends Controller
     public function dashboard(Request $request): View
     {
         $teacher = Auth::guard('teacher')->user();
-        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
+        $activeSchoolYearId = SchoolYearConfig::active()?->id;
+        $selectedSchoolYearId = $request->integer('school_year_id') ?: $activeSchoolYearId;
 
         // Count unique sections handled via Schedule
         $totalClasses = Schedule::where('teacher_id', $teacher->id)
@@ -53,7 +53,7 @@ class TeacherController extends Controller
 
         // Analytics: Grade distribution
         $gradeDistribution = Grade::where('teacher_id', $teacher->id)
-            ->where('school_year', $schoolYear)
+            ->where('school_year_id', $selectedSchoolYearId)
             ->select(
                 DB::raw("CASE 
                     WHEN grade_value >= 90 THEN 'Outstanding (90-100)'
@@ -68,11 +68,23 @@ class TeacherController extends Controller
             ->get();
 
         // Available school years for filter
-        $schoolYears = Grade::where('teacher_id', $teacher->id)
-            ->select('school_year')
+        $schoolYearIds = Grade::where('teacher_id', $teacher->id)
+            ->select('school_year_id')
             ->distinct()
+            ->pluck('school_year_id')
+            ->filter();
+
+        $schoolYears = SchoolYearConfig::whereIn('id', $schoolYearIds)
             ->orderBy('school_year', 'desc')
-            ->pluck('school_year');
+            ->get(['id', 'school_year']);
+
+        if ($schoolYears->isEmpty()) {
+            $schoolYears = SchoolYearConfig::orderBy('school_year', 'desc')
+                ->get(['id', 'school_year']);
+        }
+
+        $selectedSchoolYearLabel = $schoolYears->firstWhere('id', $selectedSchoolYearId)?->school_year
+            ?? SchoolYearConfig::find($selectedSchoolYearId)?->school_year;
 
         return view('teacher.dashboard', [
             'totalClasses' => $totalClasses,
@@ -83,7 +95,8 @@ class TeacherController extends Controller
             'attendanceTrends' => $attendanceTrends,
             'gradeDistribution' => $gradeDistribution,
             'schoolYears' => $schoolYears,
-            'selectedSchoolYear' => $schoolYear,
+            'selectedSchoolYearId' => $selectedSchoolYearId,
+            'selectedSchoolYearLabel' => $selectedSchoolYearLabel,
         ]);
     }
 
@@ -164,24 +177,33 @@ class TeacherController extends Controller
 
         $subject = Subject::findOrFail($request->subject_id);
         $section = Section::findOrFail($request->section_id);
-        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
+        $activeSchoolYearId = SchoolYearConfig::active()?->id;
+        $schoolYearId = $request->integer('school_year_id') ?: $activeSchoolYearId;
+        $schoolYearLabel = SchoolYearConfig::find($schoolYearId)?->school_year;
 
         $students = Student::where('section_id', $section->id)
-                    ->with(['grades' => function($q) use ($subject, $schoolYear) {
+                    ->with(['grades' => function($q) use ($subject, $schoolYearId) {
                         $q->where('subject_id', $subject->id)
-                          ->where('school_year', $schoolYear);
+                          ->where('school_year_id', $schoolYearId);
                     }])
                     ->orderBy('last_name')
                     ->get();
 
         // Check if grades are locked
         $gradesLocked = Grade::where('subject_id', $subject->id)
-            ->where('school_year', $schoolYear)
+            ->where('school_year_id', $schoolYearId)
             ->whereHas('student', fn($q) => $q->where('section_id', $section->id))
             ->where('is_locked', true)
             ->exists();
 
-        return view('teacher.grade', compact('students', 'subject', 'section', 'schoolYear', 'gradesLocked'));
+        return view('teacher.grade', compact(
+            'students',
+            'subject',
+            'section',
+            'schoolYearId',
+            'schoolYearLabel',
+            'gradesLocked'
+        ));
     }
 
     public function storeGrades(Request $request): RedirectResponse
@@ -190,16 +212,16 @@ class TeacherController extends Controller
             'grades' => 'required|array',
             'grades.*.*' => 'nullable|numeric|min:60|max:100',
             'subject_id' => 'required|exists:subjects,id',
-            'school_year' => 'nullable|string|max:20',
+            'school_year_id' => 'nullable|exists:school_year_configs,id',
         ]);
 
         $teacherId = Auth::guard('teacher')->id();
         $teacher = Auth::guard('teacher')->user();
-        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
+        $schoolYearId = $request->integer('school_year_id') ?: SchoolYearConfig::active()?->id;
 
         // Check if grades are locked
         $lockedGrades = Grade::where('subject_id', $request->subject_id)
-            ->where('school_year', $schoolYear)
+            ->where('school_year_id', $schoolYearId)
             ->where('is_locked', true)
             ->exists();
 
@@ -215,7 +237,7 @@ class TeacherController extends Controller
                     'student_id' => $studentId,
                     'subject_id' => $request->subject_id,
                     'quarter'    => $quarter,
-                    'school_year' => $schoolYear,
+                    'school_year_id' => $schoolYearId,
                 ])->first();
 
                 $oldValue = $existing ? $existing->grade_value : null;
@@ -225,7 +247,7 @@ class TeacherController extends Controller
                         'student_id' => $studentId,
                         'subject_id' => $request->subject_id,
                         'quarter'    => $quarter,
-                        'school_year' => $schoolYear,
+                        'school_year_id' => $schoolYearId,
                     ],
                     [
                         'teacher_id'  => $teacherId,
@@ -239,7 +261,7 @@ class TeacherController extends Controller
                         'student_id' => $studentId,
                         'subject_id' => $request->subject_id,
                         'quarter'    => $quarter,
-                        'school_year' => $schoolYear,
+                        'school_year_id' => $schoolYearId,
                     ])->first();
 
                     AuditTrail::log(
@@ -267,12 +289,13 @@ class TeacherController extends Controller
         $teacher = Auth::guard('teacher')->user();
         $subject = Subject::findOrFail($request->subject_id);
         $section = Section::findOrFail($request->section_id);
-        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
+        $schoolYearId = $request->integer('school_year_id') ?: SchoolYearConfig::active()?->id;
+        $schoolYear = SchoolYearConfig::find($schoolYearId)?->school_year ?? 'N/A';
 
         $students = Student::where('section_id', $section->id)
-            ->with(['grades' => function ($q) use ($subject, $schoolYear) {
+            ->with(['grades' => function ($q) use ($subject, $schoolYearId) {
                 $q->where('subject_id', $subject->id)
-                  ->where('school_year', $schoolYear);
+                  ->where('school_year_id', $schoolYearId);
             }])
             ->orderBy('last_name')
             ->get();

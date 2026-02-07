@@ -40,6 +40,9 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">
                         Grade {{ $section->grade_level }} — {{ $section->name }}
                     </p>
+                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em] mt-1">
+                        S.Y. {{ $schoolYearLabel ?? 'N/A' }}
+                    </p>
                 </div>
             </div>
             
@@ -72,7 +75,7 @@
                     @csrf
                     <input type="hidden" name="subject_id" value="{{ $subject->id }}">
                     <input type="hidden" name="section_id" value="{{ $section->id }}">
-                    <input type="hidden" name="school_year" value="{{ \App\Helpers\SchoolYearHelper::current() }}">
+                    <input type="hidden" name="school_year_id" value="{{ $schoolYearId }}">
 
                     <div class="overflow-x-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
@@ -169,3 +172,5 @@
     <script src="{{ asset('js/sidebar.js') }}"></script>
 </body>
 </html>
+
+

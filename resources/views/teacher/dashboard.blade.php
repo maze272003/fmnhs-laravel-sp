@@ -38,7 +38,7 @@
             
             <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-[2.5rem] p-10 md:p-12 text-white shadow-2xl shadow-emerald-100 mb-12 relative overflow-hidden">
                 <div class="relative z-10">
-                    <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 inline-block">S.Y. 2025-2026</span>
+                    <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 inline-block">S.Y. {{ $selectedSchoolYearLabel ?? 'N/A' }}</span>
                     <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tight leading-tight">
                         Good Day, Teacher {{ Auth::guard('teacher')->user()->last_name }}! 🧑‍🏫
                     </h1>
@@ -109,9 +109,9 @@
                 <div class="lg:col-span-2">
                     <form method="GET" action="{{ route('teacher.dashboard') }}" class="flex items-center gap-3">
                         <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Filter by School Year:</label>
-                        <select name="school_year" onchange="this.form.submit()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400">
+                        <select name="school_year_id" onchange="this.form.submit()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400">
                             @foreach($schoolYears as $sy)
-                                <option value="{{ $sy }}" {{ $selectedSchoolYear == $sy ? 'selected' : '' }}>S.Y. {{ $sy }}</option>
+                                <option value="{{ $sy->id }}" {{ $selectedSchoolYearId == $sy->id ? 'selected' : '' }}>S.Y. {{ $sy->school_year }}</option>
                             @endforeach
                         </select>
                     </form>

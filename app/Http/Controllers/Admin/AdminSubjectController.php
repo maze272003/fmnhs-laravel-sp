@@ -4,28 +4,24 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
+use App\Services\SubjectManagementService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class AdminSubjectController extends Controller
 {
+    public function __construct(private readonly SubjectManagementService $subjectManagement)
+    {
+    }
+
     /**
      * Display a listing of the subjects.
      */
     public function index(Request $request)
-{
-    // I-check kung ang user ay nasa 'archived' view base sa URL parameter (?archived=1)
-    $viewArchived = $request->has('archived');
-
-    // Kunin ang iyong data (halimbawa)
-    $subjects = Subject::when($viewArchived, function ($query) {
-            return $query->onlyTrashed();
-        })->paginate(10);
-
-    // SIGURADUHIN na kasama ang 'viewArchived' dito:
-    return view('admin.subject', compact('subjects', 'viewArchived'));
-}
+    {
+        return view('admin.subject', $this->subjectManagement->getAdminSubjects($request->has('archived')));
+    }
 
     /**
      * Store a newly created subject in storage.
@@ -38,7 +34,7 @@ class AdminSubjectController extends Controller
             'description' => 'nullable|string|max:500',
         ]);
 
-        Subject::create($validated);
+        $this->subjectManagement->create($validated);
 
         return redirect()->back()->with('success', 'New subject has been added to the curriculum!');
     }
@@ -56,7 +52,7 @@ class AdminSubjectController extends Controller
             'description' => 'nullable|string|max:500',
         ]);
 
-        $subject->update($validated);
+        $this->subjectManagement->update($subject, $validated);
 
         return redirect()->back()->with('success', 'Subject information has been successfully updated!');
     }
@@ -66,15 +62,14 @@ class AdminSubjectController extends Controller
      */
     public function archive(Subject $subject): RedirectResponse
     {
-        $subject->delete(); // Dahil sa SoftDeletes, ma-aarchive lang ito
+        $this->subjectManagement->archive($subject);
         return redirect()->back()->with('success', 'Subject has been moved to archive.');
     }
 
     // Function para ibalik ang inarchive
     public function restore($id): RedirectResponse
     {
-        $subject = Subject::onlyTrashed()->findOrFail($id);
-        $subject->restore();
+        $this->subjectManagement->restore((int) $id);
         return redirect()->back()->with('success', 'Subject has been restored successfully.');
     }
 }

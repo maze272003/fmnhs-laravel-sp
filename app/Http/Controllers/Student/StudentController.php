@@ -7,6 +7,7 @@ use App\Models\Subject;
 use App\Models\Schedule;
 use App\Models\Grade;
 use App\Models\PromotionHistory;
+use App\Models\SchoolYearConfig;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\View\View;
@@ -18,13 +19,13 @@ class StudentController extends Controller
     {
         $student = Auth::guard('student')->user();
         $studentId = $student->id;
-        $schoolYear = $request->input('school_year');
+        $schoolYearId = $request->integer('school_year_id');
         $gradeLevel = $request->input('grade_level');
 
-        $query = Subject::whereHas('grades', function($q) use ($studentId, $schoolYear, $gradeLevel) {
+        $query = Subject::whereHas('grades', function($q) use ($studentId, $schoolYearId, $gradeLevel) {
             $q->where('student_id', $studentId);
-            if ($schoolYear) {
-                $q->where('school_year', $schoolYear);
+            if ($schoolYearId) {
+                $q->where('school_year_id', $schoolYearId);
             }
             if ($gradeLevel) {
                 $q->whereHas('student', function($sq) use ($gradeLevel) {
@@ -36,21 +37,27 @@ class StudentController extends Controller
                     });
                 });
             }
-        })->with(['grades' => function($q) use ($studentId, $schoolYear) {
+        })->with(['grades' => function($q) use ($studentId, $schoolYearId) {
             $q->where('student_id', $studentId);
-            if ($schoolYear) {
-                $q->where('school_year', $schoolYear);
+            if ($schoolYearId) {
+                $q->where('school_year_id', $schoolYearId);
             }
         }]);
 
         $subjects = $query->get();
 
         // Get available school years for filter
-        $schoolYears = Grade::where('student_id', $studentId)
-            ->select('school_year')
+        $schoolYearIds = Grade::where('student_id', $studentId)
+            ->select('school_year_id')
             ->distinct()
+            ->pluck('school_year_id')
+            ->filter();
+
+        $schoolYears = SchoolYearConfig::whereIn('id', $schoolYearIds)
             ->orderBy('school_year', 'desc')
-            ->pluck('school_year');
+            ->get(['id', 'school_year']);
+
+        $schoolYearLabel = SchoolYearConfig::find($schoolYearId)?->school_year;
 
         // Get available grade levels from promotion history
         $gradeLevels = PromotionHistory::where('student_id', $studentId)
@@ -67,7 +74,14 @@ class StudentController extends Controller
             ->sort()
             ->values();
 
-        return view('student.grades', compact('subjects', 'schoolYears', 'schoolYear', 'gradeLevels', 'gradeLevel'));
+        return view('student.grades', compact(
+            'subjects',
+            'schoolYears',
+            'schoolYearId',
+            'schoolYearLabel',
+            'gradeLevels',
+            'gradeLevel'
+        ));
     }
 
     public function schedule(Request $request): View
@@ -102,23 +116,29 @@ class StudentController extends Controller
     {
         $student = Auth::guard('student')->user();
         $student->load('section');
-        $schoolYear = $request->input('school_year');
+        $schoolYearId = $request->integer('school_year_id');
+        $schoolYearLabel = SchoolYearConfig::find($schoolYearId)?->school_year;
 
-        $subjects = Subject::whereHas('grades', function($q) use ($student, $schoolYear) {
+        $subjects = Subject::whereHas('grades', function($q) use ($student, $schoolYearId) {
             $q->where('student_id', $student->id);
-            if ($schoolYear) {
-                $q->where('school_year', $schoolYear);
+            if ($schoolYearId) {
+                $q->where('school_year_id', $schoolYearId);
             }
-        })->with(['grades' => function($q) use ($student, $schoolYear) {
+        })->with(['grades' => function($q) use ($student, $schoolYearId) {
             $q->where('student_id', $student->id);
-            if ($schoolYear) {
-                $q->where('school_year', $schoolYear);
+            if ($schoolYearId) {
+                $q->where('school_year_id', $schoolYearId);
             }
         }])->get();
 
-        $pdf = Pdf::loadView('student.pdf-grades', compact('subjects', 'student', 'schoolYear'));
+        $pdf = Pdf::loadView('student.pdf-grades', compact(
+            'subjects',
+            'student',
+            'schoolYearId',
+            'schoolYearLabel'
+        ));
 
-        $suffix = $schoolYear ? "-SY{$schoolYear}" : '';
+        $suffix = $schoolYearLabel ? "-SY{$schoolYearLabel}" : '';
         return $pdf->download("ReportCard-{$student->last_name}{$suffix}.pdf");
     }
 }
