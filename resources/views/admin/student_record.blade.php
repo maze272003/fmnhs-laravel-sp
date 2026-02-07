@@ -40,10 +40,13 @@
                     <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Form 137 / Academic History</p>
                 </div>
             </div>
+            
+            {{-- Main Print Button (Defaults to Latest/Current Year) --}}
             <div class="flex gap-2">
-                <button onclick="window.print()" class="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-700 shadow-lg transition-all">
-                    <i class="fa-solid fa-print mr-2"></i> Print Record
-                </button>
+                <a href="{{ route('admin.students.print', $student->id) }}" target="_blank" 
+                   class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Print Latest Record
+                </a>
             </div>
         </div>
 
@@ -109,14 +112,28 @@
                 @endphp
 
                 <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden break-inside-avoid">
-                    {{-- School Year Header --}}
+                    
+                    {{-- School Year Header with Print Button --}}
                     <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                        <span class="font-black text-indigo-900 text-sm uppercase tracking-widest">
-                            SY: {{ $yearLabel }}
-                        </span>
-                        <span class="text-xs font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-200">
-                            {{ $gradesBySubject->count() }} Subjects
-                        </span>
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-indigo-900 text-sm uppercase tracking-widest">
+                                SY: {{ $yearLabel }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-200">
+                                {{ $gradesBySubject->count() }} Subjects
+                            </span>
+
+                            {{-- SPECIFIC PRINT BUTTON FOR THIS PAST YEAR --}}
+                            {{-- This sends ?sy_id=X to the controller so it prints THAT year's card --}}
+                            <a href="{{ route('admin.students.print', ['id' => $student->id, 'sy_id' => $yearId]) }}" 
+                               target="_blank"
+                               class="flex items-center gap-2 px-4 py-1.5 bg-slate-800 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-slate-700 transition-colors shadow-sm">
+                                <i class="fa-solid fa-print"></i> Print Card
+                            </a>
+                        </div>
                     </div>
 
                     {{-- Subjects List --}}

@@ -89,6 +89,9 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/students/{id}/drop', [AdminStudentController::class, 'dropStudent'])->name('admin.students.drop');
     Route::post('/admin/students/{id}/transfer', [AdminStudentController::class, 'transferStudent'])->name('admin.students.transfer');
     Route::post('/admin/students/{id}/reenroll', [AdminStudentController::class, 'reenrollStudent'])->name('admin.students.reenroll');
+
+    Route::get('admin/students/{id}/print', [App\Http\Controllers\Admin\AdminStudentController::class, 'printRecord'])
+        ->name('admin.students.print');
     
     // FIX: Renamed 'students.show' to 'admin.students.show' to match the View
     Route::get('/admin/students/{id}/record', [AdminStudentController::class, 'show'])->name('admin.students.show');

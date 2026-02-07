@@ -39,7 +39,7 @@
                     </div>
                 </div>
                 <div class="hidden md:block text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-                    <i class="fa-regular fa-calendar-check mr-1"></i> S.Y. 2024-2025
+                    <i class="fa-regular fa-calendar-check mr-1"></i> {{ \Carbon\Carbon::now()->format('F j, Y') }}
                 </div>
             </div>
         </div>
@@ -168,7 +168,7 @@
         <div class="text-sm text-gray-500 flex items-center gap-2">
             <span class="font-medium text-slate-900">Powered by</span> 
             <a href="#" class="font-bold text-green-600 hover:text-green-700 transition-colors">
-                Coolify X JonatasDev
+                Dokploy X JonatasDev
             </a>
         </div>
         

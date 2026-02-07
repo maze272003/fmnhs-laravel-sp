@@ -191,4 +191,37 @@ class AdminStudentController extends Controller
         $admin = Auth::guard('admin')->user();
         $this->studentLifecycle->changeStatus($student, $newStatus, $admin);
     }
+
+    public function printRecord(Request $request, $id)
+{
+    // 1. Fetch Student
+    $student = $this->students->findWithRecordOrFail((int) $id);
+
+    // 2. Determine School Year to Print
+    // CHECK: Did the user click a specific "Print" button for a past year?
+    if ($request->has('sy_id')) {
+        $targetSyId = $request->integer('sy_id');
+    } else {
+        // DEFAULT: Latest School Year with grades
+        $targetSyId = $student->grades->max('school_year_id');
+    }
+
+    $schoolYear = \App\Models\SchoolYearConfig::find($targetSyId);
+
+    if (!$schoolYear) {
+        return redirect()->back()->with('error', 'No academic records found to print.');
+    }
+
+    // 3. Filter Grades for that SPECIFIC School Year
+    $subjects = \App\Models\Subject::whereHas('grades', function($q) use ($student, $targetSyId) {
+        $q->where('student_id', $student->id)
+          ->where('school_year_id', $targetSyId);
+    })->with(['grades' => function($q) use ($student, $targetSyId) {
+        $q->where('student_id', $student->id)
+          ->where('school_year_id', $targetSyId);
+    }])->get();
+
+    // 4. Return View
+    return view('admin.print_student_card', compact('student', 'subjects', 'schoolYear'));
+}
 }
