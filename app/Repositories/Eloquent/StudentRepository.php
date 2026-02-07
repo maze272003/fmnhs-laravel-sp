@@ -101,12 +101,13 @@ class StudentRepository implements StudentRepositoryInterface
     }
 
     public function archivedPaginated(int $perPage = 15): LengthAwarePaginator
-    {
-        return Student::onlyTrashed()
-            ->with('section')
-            ->orderBy('deleted_at', 'desc')
-            ->paginate($perPage);
-    }
+{
+    return Student::onlyTrashed() // Gets the soft-deleted/archived ones
+        ->orWhere('is_alumni', true) // Gets the graduated ones
+        ->with('section')
+        ->latest('updated_at')
+        ->paginate($perPage);
+}
 
     public function findArchivedOrFail(int $id): Student
     {
