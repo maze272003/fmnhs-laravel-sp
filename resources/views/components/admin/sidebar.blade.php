@@ -71,6 +71,27 @@
             </a>
         </li>
 
+        <li>
+            <a href="{{ route('admin.rooms.index') }}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-indigo-50">
+                <i class="fa-solid fa-door-open nav-icon w-6 text-center text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                <span class="nav-text ml-3 font-bold text-slate-600 group-hover:text-indigo-700 md:hidden lg:block">Manage Rooms</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ route('admin.school-years.index') }}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-indigo-50">
+                <i class="fa-solid fa-calendar-check nav-icon w-6 text-center text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                <span class="nav-text ml-3 font-bold text-slate-600 group-hover:text-indigo-700 md:hidden lg:block">School Years</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ route('admin.audit-trail.index') }}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-indigo-50">
+                <i class="fa-solid fa-clock-rotate-left nav-icon w-6 text-center text-slate-400 group-hover:text-indigo-600 transition-colors"></i>
+                <span class="nav-text ml-3 font-bold text-slate-600 group-hover:text-indigo-700 md:hidden lg:block">Audit Trail</span>
+            </a>
+        </li>
+
         {{-- <li>
             <a href="#" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-indigo-50">
                 <i class="fa-solid fa-gear nav-icon w-6 text-center text-slate-400 group-hover:text-indigo-600 transition-colors"></i>

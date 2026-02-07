@@ -188,6 +188,7 @@ class TeacherController extends Controller
     {
         $request->validate([
             'grades' => 'required|array',
+            'grades.*.*' => 'nullable|numeric|min:60|max:100',
             'subject_id' => 'required|exists:subjects,id',
             'school_year' => 'nullable|string|max:20',
         ]);
@@ -251,5 +252,35 @@ class TeacherController extends Controller
         }
 
         return redirect()->back()->with('success', 'Grades saved successfully!');
+    }
+
+    /**
+     * Generate printable PDF grade sheet for a class.
+     */
+    public function printGradeSheet(Request $request)
+    {
+        $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+            'section_id' => 'required|exists:sections,id',
+        ]);
+
+        $teacher = Auth::guard('teacher')->user();
+        $subject = Subject::findOrFail($request->subject_id);
+        $section = Section::findOrFail($request->section_id);
+        $schoolYear = $request->input('school_year', SchoolYearHelper::current());
+
+        $students = Student::where('section_id', $section->id)
+            ->with(['grades' => function ($q) use ($subject, $schoolYear) {
+                $q->where('subject_id', $subject->id)
+                  ->where('school_year', $schoolYear);
+            }])
+            ->orderBy('last_name')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('teacher.pdf-gradesheet', compact(
+            'students', 'subject', 'section', 'schoolYear', 'teacher'
+        ));
+
+        return $pdf->download("GradeSheet-{$subject->code}-{$section->name}-{$schoolYear}.pdf");
     }
 }

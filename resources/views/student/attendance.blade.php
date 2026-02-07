@@ -111,9 +111,18 @@
                         <h3 class="font-black text-2xl text-slate-900 tracking-tight">Recent Logs</h3>
                         <span class="bg-slate-100 text-slate-500 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-slate-200">History</span>
                     </div>
-                    <div class="flex items-center gap-2 text-slate-300">
-                        <i class="fa-solid fa-filter-list text-sm"></i>
-                    </div>
+                    <form method="GET" action="{{ route('student.attendance.index') }}" class="flex items-center gap-2">
+                        <input type="date" name="date_from" value="{{ $dateFrom ?? '' }}" placeholder="From"
+                            class="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-200">
+                        <input type="date" name="date_to" value="{{ $dateTo ?? '' }}" placeholder="To"
+                            class="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-200">
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-black hover:bg-indigo-700 transition-all">
+                            <i class="fa-solid fa-filter"></i>
+                        </button>
+                        <a href="{{ route('student.attendance.index') }}" class="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-all">
+                            <i class="fa-solid fa-rotate-right text-sm"></i>
+                        </a>
+                    </form>
                 </div>
 
                 <div class="overflow-x-auto custom-scrollbar">

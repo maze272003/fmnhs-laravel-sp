@@ -69,6 +69,14 @@
                                 <option value="{{ $sy }}" {{ $schoolYear == $sy ? 'selected' : '' }}>S.Y. {{ $sy }}</option>
                             @endforeach
                         </select>
+                        @if(isset($gradeLevels) && $gradeLevels->isNotEmpty())
+                        <select name="grade_level" onchange="this.form.submit()" class="px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400">
+                            <option value="">All Grade Levels</option>
+                            @foreach($gradeLevels as $gl)
+                                <option value="{{ $gl }}" {{ (isset($gradeLevel) && $gradeLevel == $gl) ? 'selected' : '' }}>Grade {{ $gl }}</option>
+                            @endforeach
+                        </select>
+                        @endif
                     </form>
 
                     <a href="{{ route('student.grades.pdf', ['school_year' => $schoolYear]) }}" class="flex items-center justify-center gap-3 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-rose-100 transition-all active:scale-95 group">

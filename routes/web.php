@@ -65,6 +65,7 @@ Route::middleware(['auth:teacher'])->group(function () {
     // 2. The Actual Grading Page (Using GET so we can share links easily)
     Route::get('/teacher/grading/show', [TeacherController::class, 'showClass'])->name('teacher.grading.show');
     Route::post('/teacher/grading/save', [TeacherController::class, 'storeGrades'])->name('teacher.grades.store');
+    Route::get('/teacher/grading/print', [TeacherController::class, 'printGradeSheet'])->name('teacher.grades.print');
     Route::get('/teacher/students', [TeacherController::class, 'myStudents'])->name('teacher.students.index');
 
     Route::get('/teacher/announcements', [App\Http\Controllers\Teacher\TeacherAnnouncementController::class, 'index'])->name('teacher.announcements.index');
@@ -124,6 +125,21 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/teachers/{teacher}/archive', [AdminTeacherController::class, 'archive'])->name('admin.teachers.archive');
     Route::post('/admin/teachers/{id}/restore', [AdminTeacherController::class, 'restore'])->name('admin.teachers.restore');
     Route::post('/admin/teachers', [AdminTeacherController::class, 'store'])->name('admin.teachers.store');
+
+    // Audit Trail
+    Route::get('/admin/audit-trail', [App\Http\Controllers\Admin\AdminAuditTrailController::class, 'index'])->name('admin.audit-trail.index');
+
+    // School Year Management
+    Route::get('/admin/school-years', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'index'])->name('admin.school-years.index');
+    Route::post('/admin/school-years', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'store'])->name('admin.school-years.store');
+    Route::post('/admin/school-years/{id}/activate', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'activate'])->name('admin.school-years.activate');
+    Route::post('/admin/school-years/{id}/close', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'close'])->name('admin.school-years.close');
+
+    // Room Management
+    Route::get('/admin/rooms', [App\Http\Controllers\Admin\AdminRoomController::class, 'index'])->name('admin.rooms.index');
+    Route::post('/admin/rooms', [App\Http\Controllers\Admin\AdminRoomController::class, 'store'])->name('admin.rooms.store');
+    Route::put('/admin/rooms/{id}', [App\Http\Controllers\Admin\AdminRoomController::class, 'update'])->name('admin.rooms.update');
+    Route::delete('/admin/rooms/{id}', [App\Http\Controllers\Admin\AdminRoomController::class, 'destroy'])->name('admin.rooms.destroy');
 });
 
 require __DIR__.'/db.php';

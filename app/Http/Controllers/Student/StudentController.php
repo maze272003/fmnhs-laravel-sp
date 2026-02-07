@@ -19,11 +19,20 @@ class StudentController extends Controller
         $student = Auth::guard('student')->user();
         $studentId = $student->id;
         $schoolYear = $request->input('school_year');
+        $gradeLevel = $request->input('grade_level');
 
-        $query = Subject::whereHas('grades', function($q) use ($studentId, $schoolYear) {
+        $query = Subject::whereHas('grades', function($q) use ($studentId, $schoolYear, $gradeLevel) {
             $q->where('student_id', $studentId);
             if ($schoolYear) {
                 $q->where('school_year', $schoolYear);
+            }
+            if ($gradeLevel) {
+                $q->whereHas('student', function($sq) use ($gradeLevel) {
+                    $sq->whereHas('promotionHistories', function($ph) use ($gradeLevel) {
+                        $ph->where('from_grade_level', $gradeLevel)
+                           ->orWhere('to_grade_level', $gradeLevel);
+                    });
+                });
             }
         })->with(['grades' => function($q) use ($studentId, $schoolYear) {
             $q->where('student_id', $studentId);
@@ -41,7 +50,22 @@ class StudentController extends Controller
             ->orderBy('school_year', 'desc')
             ->pluck('school_year');
 
-        return view('student.grades', compact('subjects', 'schoolYears', 'schoolYear'));
+        // Get available grade levels from promotion history
+        $gradeLevels = PromotionHistory::where('student_id', $studentId)
+            ->select('from_grade_level')
+            ->distinct()
+            ->pluck('from_grade_level')
+            ->merge(
+                PromotionHistory::where('student_id', $studentId)
+                    ->select('to_grade_level')
+                    ->distinct()
+                    ->pluck('to_grade_level')
+            )
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('student.grades', compact('subjects', 'schoolYears', 'schoolYear', 'gradeLevels', 'gradeLevel'));
     }
 
     public function schedule(Request $request): View
