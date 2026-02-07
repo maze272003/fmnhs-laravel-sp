@@ -18,6 +18,7 @@
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
+        {{-- HEADER --}}
         <header class="glass-header border-b border-slate-200/60 sticky top-0 z-40 px-8 py-5 flex justify-between items-center shadow-sm">
             <div class="flex items-center gap-4">
                 <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
@@ -41,6 +42,7 @@
             <div class="w-full max-w-lg">
                 <div class="bg-white p-10 md:p-12 rounded-[3rem] shadow-2xl shadow-emerald-100/50 border border-slate-200/50 relative overflow-hidden group">
                     
+                    {{-- DECORATIVE BACKGROUND ICON --}}
                     <i class="fa-solid fa-stamp absolute -right-12 -bottom-12 text-[12rem] text-slate-50 opacity-80 pointer-events-none rotate-12 group-hover:rotate-[20deg] transition-transform duration-700"></i>
 
                     <div class="text-center mb-10 relative z-10">
@@ -81,7 +83,13 @@
                                         
                                         @foreach($assignedClasses as $sched)
                                             <option value="{{ $sched->subject_id }}|{{ $sched->section_id }}">
+                                                {{-- DISPLAY: Subject Code — Section (Grade) --}}
                                                 {{ $sched->subject->code }} — {{ $sched->section->name }} (Grade {{ $sched->section->grade_level }})
+                                                
+                                                {{-- ADDED: School Year Display --}}
+                                                @if($sched->section->schoolYear)
+                                                    [SY {{ $sched->section->schoolYear->school_year }}]
+                                                @endif
                                             </option>
                                         @endforeach
                                     </select>
@@ -95,6 +103,7 @@
                                 </div>
                             </div>
 
+                            {{-- HIDDEN INPUTS POPULATED BY JS --}}
                             <input type="hidden" name="subject_id" id="input_subject_id">
                             <input type="hidden" name="section_id" id="input_section_id">
 
@@ -122,10 +131,7 @@
     <script src="{{ asset('js/sidebar.js') }}"></script>
 
     <script>
-        /**
-         * MGM, in-update natin ang script para makuha ang section_id 
-         * mula sa split value ng selector.
-         */
+        // Logic to split the value "subject_id|section_id" and populate hidden inputs
         const selector = document.getElementById('classSelector');
         const subjectInput = document.getElementById('input_subject_id');
         const sectionIdInput = document.getElementById('input_section_id');

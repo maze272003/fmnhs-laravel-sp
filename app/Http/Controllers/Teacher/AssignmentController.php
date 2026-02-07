@@ -15,10 +15,14 @@ class AssignmentController extends Controller
     {
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $teacherId = Auth::guard('teacher')->id();
-        return view('teacher.assignment', $this->assignmentWorkflow->getTeacherAssignmentPageData($teacherId));
+        $search = $request->query('search'); // Get search from URL (?search=...)
+
+        return view('teacher.assignment', 
+            $this->assignmentWorkflow->getTeacherAssignmentPageData($teacherId, $search)
+        );
     }
 
     public function show($id)

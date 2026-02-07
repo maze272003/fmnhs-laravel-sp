@@ -3,231 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classwork Management | Faculty</title>
+    <title>Classwork | Google Classroom Style</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+        body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; }
+        
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; }
+        .page-link { padding: 0.5rem 1rem; border-radius: 0.375rem; background: white; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; }
+        .page-item.active .page-link { background: #10b981; color: white; border-color: #10b981; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-[#f8fafc] text-slate-800 antialiased">
+<body class="text-slate-800 antialiased">
 
     @include('components.teacher.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
-        <header class="glass-header border-b border-slate-200/60 sticky top-0 z-40 px-8 py-5 flex justify-between items-center shadow-sm">
+        {{-- HEADER --}}
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-8 py-4 flex justify-between items-center shadow-sm">
             <div class="flex items-center gap-4">
-                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
-                    <i class="fa-solid fa-bars-staggered text-xl"></i>
-                </button>
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-100">
-                        <i class="fa-solid fa-file-signature text-sm"></i>
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+                        <i class="fa-solid fa-bars text-lg"></i>
                     </div>
-                    <div class="flex flex-col">
-                        <h2 class="text-lg font-black text-slate-900 tracking-tight leading-none mb-1">Classwork</h2>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assignments & Submissions</p>
-                    </div>
+                    <h2 class="text-xl font-medium text-slate-700">Classwork</h2>
                 </div>
             </div>
-
             @include('components.teacher.header_details')
         </header>
 
         <main class="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
-            
-            <div class="mb-10">
-                <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Manage Assignments</h1>
-                <p class="text-slate-500 font-medium">Create tasks, attach resources, and monitor student progress per section.</p>
-            </div>
 
             @if(session('success'))
                 <script>
-                    Swal.fire({ icon: 'success', title: 'Task Created', text: "{{ session('success') }}", showConfirmButton: false, timer: 2000, borderRadius: '24px' });
+                    Swal.fire({ icon: 'success', title: 'Success', text: "{{ session('success') }}", timer: 2000, showConfirmButton: false });
                 </script>
             @endif
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
-                <div class="lg:col-span-5 xl:col-span-4">
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-emerald-100/50 border border-slate-200/50 sticky top-28">
-                        <div class="flex items-center gap-3 mb-8">
-                            <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
-                                <i class="fa-solid fa-plus text-sm"></i>
-                            </div>
-                            <h3 class="font-black text-lg text-slate-800 tracking-tight">Post New Task</h3>
-                        </div>
+                {{-- LEFT: CREATE FORM --}}
+                <div class="lg:col-span-4">
+                    <div class="bg-white p-6 rounded-lg shadow border border-slate-200 sticky top-24">
+                        <h3 class="text-lg font-medium text-slate-800 mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-plus text-emerald-600"></i> Create
+                        </h3>
 
-                        <form action="{{ route('teacher.assignments.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                        <form action="{{ route('teacher.assignments.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                             @csrf
-                            
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Class & Section</label>
-                                <select name="class_info" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-bold text-sm cursor-pointer appearance-none">
-                                    <option value="" disabled selected>-- Select Assignment Target --</option>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">For</label>
+                                <select name="class_info" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm text-slate-700">
+                                    <option value="" disabled selected>Select Class</option>
                                     @foreach($classes as $class)
                                         <option value="{{ $class->subject_id }}|{{ $class->section_id }}">
-                                            {{ $class->subject->code }} — {{ $class->section->name }} (Grade {{ $class->section->grade_level }})
+                                            {{ $class->section->name }} ({{ $class->subject->code }}) 
+                                            @if($class->section->schoolYear)
+                                                - SY {{ $class->section->schoolYear->school_year }}
+                                            @endif
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assignment Title</label>
-                                <input type="text" name="title" required placeholder="e.g. Laboratory Report #1" 
-                                       class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
+                                <input type="text" name="title" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="Assignment Title">
                             </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Instructions</label>
-                                <textarea name="description" rows="4" placeholder="Provide clear steps for the students..." 
-                                          class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium text-slate-600 custom-scrollbar"></textarea>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Instructions</label>
+                                <textarea name="description" rows="3" class="w-full p-3 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm custom-scrollbar" placeholder="Instructions (optional)"></textarea>
                             </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Submission Deadline</label>
-                                <input type="datetime-local" name="deadline" required 
-                                       class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Due Date</label>
+                                <input type="datetime-local" name="deadline" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm text-slate-500">
                             </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Supporting Material</label>
-                                <div class="relative group cursor-pointer">
-                                    <div class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-[2rem] group-hover:border-emerald-400 group-hover:bg-emerald-50/30 transition-all">
-                                        <i class="fa-solid fa-file-arrow-up text-slate-300 group-hover:text-emerald-500 text-2xl mb-2 transition-colors"></i>
-                                        <span class="text-[9px] font-black text-slate-400 group-hover:text-emerald-600 uppercase tracking-widest">Attach File (Max 10MB)</span>
-                                        <input type="file" name="attachment" class="absolute inset-0 opacity-0 cursor-pointer"/>
-                                    </div>
-                                </div>
+                            <div class="border-2 border-dashed border-slate-300 rounded p-4 text-center hover:bg-slate-50 transition cursor-pointer relative">
+                                <i class="fa-solid fa-paperclip text-slate-400 text-lg mb-1"></i>
+                                <p class="text-xs text-slate-500 font-medium">Add Attachment</p>
+                                <input type="file" name="attachment" class="absolute inset-0 opacity-0 cursor-pointer">
                             </div>
-
-                            <button type="submit" class="w-full bg-slate-900 text-white font-black py-5 rounded-[2rem] hover:bg-emerald-600 shadow-xl shadow-slate-200 hover:shadow-emerald-200 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-3 group">
-                                <span>Assign to Class</span>
-                                <i class="fa-solid fa-paper-plane text-[10px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded shadow transition-colors text-sm uppercase tracking-wide">
+                                Assign
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <div class="lg:col-span-7 xl:col-span-8 space-y-8">
-                    <div class="flex items-center justify-between mb-4 px-4">
-                        <div class="flex items-center gap-3">
-                            <h3 class="font-black text-2xl text-slate-900 tracking-tight">Active Tasks</h3>
-                            <span class="bg-emerald-50 text-emerald-600 text-[10px] font-black px-4 py-1.5 rounded-full border border-emerald-100 uppercase tracking-widest">
-                                {{ $assignments->count() }} Posted
+                {{-- RIGHT: STREAM --}}
+                <div class="lg:col-span-8">
+                    
+                    {{-- HEADER & SEARCH BAR --}}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-2xl font-normal text-slate-800">Stream</h2>
+                            <span class="text-sm text-slate-500">
+                                {{ $assignments->total() }} assignments posted
+                                @if($search)
+                                    <span class="text-emerald-600 font-bold">• Filtering by "{{ $search }}"</span>
+                                @endif
                             </span>
                         </div>
+
+                        {{-- SEARCH FORM --}}
+                        <form action="{{ route('teacher.assignments.index') }}" method="GET" class="relative w-full sm:w-64">
+                            <input type="text" name="search" value="{{ $search }}" 
+                                   placeholder="Search classwork..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition-shadow shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            </div>
+                            @if($search)
+                                <a href="{{ route('teacher.assignments.index') }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </a>
+                            @endif
+                        </form>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-6">
+                    {{-- ASSIGNMENTS LIST --}}
+                    <div class="space-y-4">
                         @forelse($assignments as $asn)
-                            <div class="bg-white p-8 rounded-[3rem] border border-slate-200/60 shadow-sm hover:shadow-2xl hover:shadow-emerald-100/30 transition-all duration-500 group overflow-hidden relative">
-                                
-                                <div class="flex flex-col md:flex-row justify-between items-start gap-6">
-                                    <div class="flex-1 space-y-4">
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <span class="bg-emerald-600 text-white text-[9px] font-black px-3 py-1.5 rounded-xl uppercase tracking-widest shadow-lg shadow-emerald-100">
-                                                {{ $asn->subject->code }}
-                                            </span>
-                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                <i class="fa-solid fa-users text-[10px]"></i>
-                                                {{ $asn->section->name }} (Grade {{ $asn->section->grade_level }})
-                                            </span>
-                                        </div>
-                                        
-                                        <h4 class="font-extrabold text-2xl text-slate-900 group-hover:text-emerald-600 transition-colors leading-tight">
-                                            {{ $asn->title }}
-                                        </h4>
-                                        
-                                        <div class="flex items-center gap-6">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-8 h-8 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center text-xs">
-                                                    <i class="fa-regular fa-clock"></i>
-                                                </div>
-                                                <p class="text-[11px] font-black text-slate-500 uppercase tracking-tight">
-                                                    Due: {{ \Carbon\Carbon::parse($asn->deadline)->format('M d, Y • h:i A') }}
-                                                </p>
-                                            </div>
-                                        </div>
+                            <div class="bg-white border border-slate-200 rounded-lg hover:shadow-md transition-shadow group overflow-hidden">
+                                <div class="px-6 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">
+                                            {{ $asn->subject->code }}
+                                        </span>
+                                        <span class="text-slate-300 text-xs">•</span>
+                                        <span class="text-xs font-medium text-slate-600">
+                                            {{ $asn->section->name }}
+                                        </span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 uppercase font-bold">
+                                        Posted {{ $asn->created_at->format('M d') }}
+                                    </span>
+                                </div>
+
+                                <div class="p-6 flex flex-col sm:flex-row gap-6">
+                                    <div class="hidden sm:flex shrink-0 w-12 h-12 bg-emerald-100 rounded-full items-center justify-center text-emerald-600">
+                                        <i class="fa-solid fa-clipboard-list text-xl"></i>
                                     </div>
 
-                                    <div class="bg-slate-50 rounded-[2.5rem] p-6 text-center min-w-[140px] border border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-all duration-500">
-                                        <span class="text-4xl font-black text-slate-900 group-hover:text-emerald-600 transition-colors tracking-tighter">
-                                            {{ $asn->submissions->count() }}
-                                        </span>
-                                        <p class="text-[9px] text-slate-400 uppercase font-black leading-none mt-2 tracking-widest">Student Replies</p>
-                                    </div>
-                                </div>
-                                
-                                @if($asn->file_path)
-                                    <div class="mt-8 p-4 bg-[#f8fafc] rounded-2xl flex items-center justify-between border border-slate-100 group-hover:bg-white transition-colors">
-                                        <div class="flex items-center gap-4">
-                                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                                                <i class="fa-solid fa-file-lines text-sm"></i>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <h3 class="text-lg font-medium text-slate-800 hover:text-emerald-600 transition-colors cursor-pointer" 
+                                                onclick="window.location='{{ route('teacher.assignments.show', $asn->id) }}'">
+                                                {{ $asn->title }}
+                                            </h3>
+                                            <button class="text-slate-400 hover:text-slate-600">
+                                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            </button>
+                                        </div>
+
+                                        <p class="text-xs text-slate-500 mt-1 mb-4 font-medium">
+                                            Due {{ \Carbon\Carbon::parse($asn->deadline)->format('M d, h:i A') }}
+                                        </p>
+
+                                        @if($asn->file_path)
+                                            <a href="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($asn->file_path) }}" target="_blank" 
+                                               class="inline-flex items-center gap-3 border border-slate-200 rounded-md p-2 pr-4 hover:bg-slate-50 transition-colors group/file mb-4 max-w-sm">
+                                                <div class="w-10 h-10 bg-red-100 rounded flex items-center justify-center text-red-500 shrink-0">
+                                                    <i class="fa-solid fa-file-pdf"></i>
+                                                </div>
+                                                <div class="overflow-hidden">
+                                                    <p class="text-xs font-medium text-slate-700 truncate group-hover/file:text-emerald-600 group-hover/file:underline">
+                                                        {{ basename($asn->file_path) }}
+                                                    </p>
+                                                    <p class="text-[10px] text-slate-400 uppercase">PDF / File</p>
+                                                </div>
+                                            </a>
+                                        @endif
+                                        
+                                        <div class="border-t border-slate-100 pt-4 mt-2 flex justify-between items-center">
+                                            <div class="flex -space-x-2">
+                                                 @foreach($asn->submissions->take(3) as $sub)
+                                                    <img src="{{ $sub->student->avatar_url ?? 'https://ui-avatars.com/api/?name='.$sub->student->first_name }}" 
+                                                         class="w-8 h-8 rounded-full border-2 border-white" title="{{ $sub->student->first_name }}">
+                                                 @endforeach
+                                                 @if($asn->submissions->count() > 3)
+                                                    <div class="w-8 h-8 rounded-full border-2 border-white bg-slate-100 text-[10px] flex items-center justify-center font-bold text-slate-500">
+                                                        +{{ $asn->submissions->count() - 3 }}
+                                                    </div>
+                                                 @endif
                                             </div>
-                                            <div class="flex flex-col">
-                                                <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest">Teacher Attachment</p>
-                                                <a href="{{ asset('uploads/assignments/'.$asn->file_path) }}" target="_blank" class="text-blue-600 hover:text-indigo-600 text-sm font-bold truncate max-w-[200px] md:max-w-md">
-                                                    {{ basename($asn->file_path) }}
+
+                                            <div class="flex items-center gap-4">
+                                                <span class="text-sm text-slate-500">
+                                                    <strong class="text-slate-800">{{ $asn->submissions->count() }}</strong> turned in
+                                                </span>
+                                                <div class="h-4 w-[1px] bg-slate-300"></div>
+                                                <a href="{{ route('teacher.assignments.show', $asn->id) }}" class="text-sm font-medium text-emerald-600 hover:underline">
+                                                    View Instructions
                                                 </a>
                                             </div>
                                         </div>
-                                        <i class="fa-solid fa-arrow-down-long text-slate-200 mr-4"></i>
                                     </div>
-                                @endif
-
-                                <div class="mt-8 pt-6 border-t border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-6">
-                                     <div class="flex items-center gap-3">
-                                        <div class="flex -space-x-3">
-                                            @foreach($asn->submissions->take(4) as $sub)
-                                                <div class="w-9 h-9 rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow-sm">
-                                                    <img src="{{ $sub->student->avatar_url }}" class="w-full h-full object-cover">
-                                                </div>
-                                            @endforeach
-                                            @if($asn->submissions->count() > 4)
-                                                <div class="w-9 h-9 rounded-full border-4 border-white bg-emerald-500 flex items-center justify-center text-[10px] text-white font-black shadow-sm">
-                                                    +{{ $asn->submissions->count() - 4 }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                        @if($asn->submissions->count() > 0)
-                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Activity</p>
-                                        @endif
-                                     </div>
-                                    
-                                    <a href="{{ route('teacher.assignments.show', $asn->id) }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-sm active:scale-95 group/link">
-                                        Review Submissions 
-                                        <i class="fa-solid fa-arrow-right text-[10px] group-hover/link:translate-x-1 transition-transform"></i>
-                                    </a>
                                 </div>
                             </div>
                         @empty
-                            <div class="py-32 flex flex-col items-center justify-center bg-white rounded-[4rem] border-2 border-dashed border-slate-200 shadow-inner">
-                                <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-8 relative">
-                                    <i class="fa-solid fa-folder-open text-5xl text-slate-200"></i>
-                                    <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-slate-50">
-                                        <i class="fa-solid fa-plus text-emerald-400 text-xs"></i>
-                                    </div>
-                                </div>
-                                <h3 class="text-xl font-black text-slate-900 tracking-tight mb-2 uppercase">No assignments yet</h3>
-                                <p class="text-slate-400 font-medium text-center max-w-xs px-6">
-                                    Ready to start class? Use the form on the left to create your first academic task.
-                                </p>
+                            <div class="text-center py-20 bg-white border border-slate-200 rounded-lg">
+                                <img src="https://www.gstatic.com/classroom/empty_states_home.svg" class="h-32 mx-auto opacity-50 mb-4">
+                                <p class="text-slate-500">No assignments found</p>
+                                @if($search)
+                                    <a href="{{ route('teacher.assignments.index') }}" class="text-sm text-emerald-600 font-bold hover:underline mt-2 inline-block">Clear Search</a>
+                                @endif
                             </div>
                         @endforelse
                     </div>
-                </div>
 
+                    {{-- PAGINATION LINKS (Appends search query) --}}
+                    <div class="mt-8">
+                        {{ $assignments->appends(['search' => $search])->links() }}
+                    </div>
+
+                </div>
             </div>
         </main>
     </div>
+    
     <script src="{{ asset('js/sidebar.js') }}"></script>
 </body>
 </html>

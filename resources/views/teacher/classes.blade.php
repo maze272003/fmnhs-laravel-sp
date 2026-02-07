@@ -67,10 +67,17 @@
                                     {{ $class['subject']->name }}
                                 </h3>
                                 
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Assigned to:</span>
                                     <span class="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">
                                         Grade {{ $class['section']->grade_level }} - {{ $class['section']->name }}
+                                        
+                                        {{-- DISPLAY SCHOOL YEAR HERE --}}
+                                        @if($class['section']->schoolYear)
+                                            <span class="text-indigo-400 font-bold ml-1 text-[10px]">
+                                                (SY {{ $class['section']->schoolYear->school_year }})
+                                            </span>
+                                        @endif
                                     </span>
                                 </div>
 

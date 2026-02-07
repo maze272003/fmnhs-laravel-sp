@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-// Eto ang kailangang-kailangan para gumana ang return type hint:
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -17,12 +16,20 @@ class Section extends Model
         'grade_level',
         'strand',
         'teacher_id',
-        'school_year',
+        'school_year_id', // FIXED: Changed from 'school_year' to match DB column
     ];
 
     /**
-     * Ang Teacher na nagsisilbing Advisor ng section na ito.
-     * Gagamitin natin ang pangalang 'teacher' para mag-match sa Controller logic.
+     * Relationship to the School Year Configuration.
+     * This fixes the "Call to undefined relationship" error.
+     */
+    public function schoolYear(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYearConfig::class, 'school_year_id');
+    }
+
+    /**
+     * The Teacher who is the Advisor of this section.
      */
     public function teacher(): BelongsTo
     {
@@ -30,7 +37,7 @@ class Section extends Model
     }
 
     /**
-     * Kung gusto mong 'advisor' ang itawag, pwede mong i-alias ito.
+     * Alias for teacher() if you prefer calling it advisor.
      */
     public function advisor(): BelongsTo
     {

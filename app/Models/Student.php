@@ -20,7 +20,6 @@ class Student extends Authenticatable
         'email',
         'password',
         'section_id',
-        'school_year',
         'school_year_id',
         'enrollment_type',
         'enrollment_status',

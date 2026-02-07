@@ -60,9 +60,10 @@
                             <p class="text-slate-500 font-medium text-lg leading-relaxed max-w-3xl">{{ $assignment->description }}</p>
                         </div>
                         
+                        {{-- TEACHER ATTACHMENT DOWNLOAD --}}
                         @if($assignment->file_path)
                             <div class="pt-2">
-                                <a href="{{ asset('uploads/assignments/'.$assignment->file_path) }}" target="_blank" 
+                                <a href="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($assignment->file_path) }}" target="_blank" 
                                    class="inline-flex items-center gap-3 px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl text-[11px] font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100 uppercase tracking-widest">
                                     <i class="fa-solid fa-paperclip"></i> View Instructions Reference
                                 </a>
@@ -124,8 +125,23 @@
                                     <tr class="hover:bg-indigo-50/20 transition-all duration-300 group">
                                         <td class="px-10 py-6">
                                             <div class="flex items-center gap-4">
-                                                <img src="{{ $submission->student->avatar_url }}" 
-                                                     class="w-12 h-12 rounded-2xl border-2 border-white shadow-md group-hover:scale-110 transition-transform duration-500 object-cover">
+                                                {{-- ROBUST AVATAR LOGIC --}}
+                                                <img src="{{ 
+                                                        ($submission->student->avatar && $submission->student->avatar !== 'default.png') 
+                                                        ? (
+                                                            \Illuminate\Support\Str::startsWith($submission->student->avatar, 'http') 
+                                                            ? $submission->student->avatar 
+                                                            : (
+                                                                \Illuminate\Support\Str::startsWith($submission->student->avatar, 'avatars/') 
+                                                                ? \Illuminate\Support\Facades\Storage::disk('s3')->url($submission->student->avatar) 
+                                                                : \Illuminate\Support\Facades\Storage::disk('s3')->url('avatars/' . $submission->student->avatar)
+                                                            )
+                                                        ) 
+                                                        : 'https://ui-avatars.com/api/?name=' . urlencode($submission->student->first_name . '+' . $submission->student->last_name) . '&background=059669&color=fff'
+                                                     }}" 
+                                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User&background=059669&color=fff';"
+                                                     class="w-12 h-12 rounded-2xl border-2 border-white shadow-md group-hover:scale-110 transition-transform duration-500 object-cover bg-slate-100">
+                                                
                                                 <div class="flex flex-col">
                                                     <p class="font-black text-slate-900 group-hover:text-emerald-700 transition-colors text-base">{{ $submission->student->last_name }}, {{ $submission->student->first_name }}</p>
                                                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">LRN: {{ $submission->student->lrn }}</p>
@@ -150,7 +166,8 @@
                                             @endif
                                         </td>
                                         <td class="px-10 py-6 text-right">
-                                            <a href="{{ asset('uploads/submissions/'.$submission->file_path) }}" target="_blank" 
+                                            {{-- STUDENT FILE DOWNLOAD (S3) --}}
+                                            <a href="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($submission->file_path) }}" target="_blank" 
                                                class="inline-flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black shadow-xl shadow-slate-200 hover:bg-emerald-600 hover:shadow-emerald-200 transition-all active:scale-95 group/btn uppercase tracking-widest">
                                                 <i class="fa-solid fa-cloud-arrow-down group-hover/btn:-translate-y-1 transition-transform"></i> 
                                                 <span>Download Work</span>

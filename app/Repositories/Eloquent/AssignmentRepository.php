@@ -7,24 +7,43 @@ use App\Models\Schedule;
 use App\Models\Submission;
 use App\Repositories\Contracts\AssignmentRepositoryInterface;
 use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class AssignmentRepository implements AssignmentRepositoryInterface
 {
-    public function getTeacherClasses(int $teacherId): Collection
+    public function getTeacherClasses(int $teacherId): \Illuminate\Support\Collection
     {
-        return Schedule::where('teacher_id', $teacherId)
-            ->with(['subject', 'section'])
+        // Fetch Schedules with Subject, Section, AND School Year
+        return \App\Models\Schedule::where('teacher_id', $teacherId)
+            ->with(['subject', 'section.schoolYear']) // <--- Added section.schoolYear
             ->get()
-            ->unique(fn ($item) => $item->subject_id . '-' . $item->section_id)
-            ->values();
+            ->unique(function ($item) {
+                return $item->subject_id . '-' . $item->section_id;
+            });
     }
 
-    public function getTeacherAssignments(int $teacherId): Collection
+    public function getTeacherAssignments(int $teacherId, int $perPage = 10, ?string $search = null): LengthAwarePaginator
     {
         return Assignment::where('teacher_id', $teacherId)
-            ->with(['subject', 'section'])
-            ->latest()
-            ->get();
+            ->with(['subject', 'section.schoolYear', 'submissions.student'])
+            
+            // The 'Builder' type hint here caused the error because it wasn't imported
+            ->when($search, function (Builder $query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhereHas('subject', function ($q) use ($search) {
+                          $q->where('code', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('section', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+                });
+            })
+            
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
     public function findWithSubmissionsOrFail(int $id): Assignment
@@ -40,10 +59,10 @@ class AssignmentRepository implements AssignmentRepositoryInterface
     public function getStudentAssignmentsWithOwnSubmission(int $sectionId, int $studentId): Collection
     {
         return Assignment::where('section_id', $sectionId)
-            ->with([
-                'subject',
-                'submissions' => fn ($q) => $q->where('student_id', $studentId),
-            ])
+            ->with(['submissions' => function($query) use ($studentId) {
+                // Eager load only THIS student's submission
+                $query->where('student_id', $studentId);
+            }])
             ->orderBy('deadline', 'asc')
             ->get();
     }
@@ -53,11 +72,12 @@ class AssignmentRepository implements AssignmentRepositoryInterface
         return Submission::updateOrCreate(
             [
                 'assignment_id' => $assignmentId,
-                'student_id' => $studentId,
+                'student_id'    => $studentId,
             ],
             [
-                'file_path' => $filePath,
+                'file_path'    => $filePath, // This is now the S3 path
                 'submitted_at' => now(),
+                'status'       => 'submitted',
             ]
         );
     }

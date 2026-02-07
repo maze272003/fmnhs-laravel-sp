@@ -119,4 +119,20 @@ class StudentSeeder extends Seeder
         $names = ['Reyes', 'Cruz', 'Santos', 'Ramos', 'Garcia', 'Mendoza', 'Torres', 'Rivera', 'Flores', 'Castillo', 'Navarro', 'Vargas', 'Del Rosario', 'Castro', 'Aguilar', 'Fernandez', 'Lopez', 'Medina', 'Santiago', 'Ponce'];
         return $names[array_rand($names)];
     }
+    public function getAvatarUrlAttribute()
+    {
+        // 1. If avatar is null or 'default.png', return a generated letter avatar
+        if (empty($this->avatar) || $this->avatar === 'default.png') {
+            $name = $this->first_name . ' ' . $this->last_name;
+            return 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&background=random&color=fff&size=128';
+        }
+
+        // 2. If it's already a complete URL (e.g., from Google Login), return it as is
+        if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
+            return $this->avatar;
+        }
+
+        // 3. Return the S3 URL
+        return Storage::disk('s3')->url($this->avatar);
+    }
 }

@@ -102,9 +102,24 @@
                                     <tr class="hover:bg-emerald-50/20 transition-all duration-300 group">
                                         <td class="px-10 py-5">
                                             <div class="flex items-center gap-4">
-                                                <div class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-[10px] font-black group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
-                                                    {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
-                                                </div>
+                                                
+                                                {{-- UPDATED IMAGE LOGIC HERE --}}
+                                                <img src="{{ 
+                                                        ($student->avatar && $student->avatar !== 'default.png') 
+                                                        ? (
+                                                            \Illuminate\Support\Str::startsWith($student->avatar, 'http') 
+                                                            ? $student->avatar 
+                                                            : (
+                                                                \Illuminate\Support\Str::startsWith($student->avatar, 'avatars/') 
+                                                                ? \Illuminate\Support\Facades\Storage::disk('s3')->url($student->avatar) 
+                                                                : \Illuminate\Support\Facades\Storage::disk('s3')->url('avatars/' . $student->avatar)
+                                                            )
+                                                        ) 
+                                                        : 'https://ui-avatars.com/api/?name=' . urlencode($student->first_name . '+' . $student->last_name) . '&background=059669&color=fff'
+                                                     }}" 
+                                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User&background=059669&color=fff';"
+                                                     class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md bg-slate-100 group-hover:scale-110 transition-transform duration-500">
+                                                
                                                 <div class="flex flex-col">
                                                     <span class="font-black text-slate-800 text-sm group-hover:text-emerald-600 transition-colors">
                                                         {{ $student->last_name }}, {{ $student->first_name }}
@@ -172,5 +187,3 @@
     <script src="{{ asset('js/sidebar.js') }}"></script>
 </body>
 </html>
-
-

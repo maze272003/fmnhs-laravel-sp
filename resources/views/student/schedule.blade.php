@@ -45,9 +45,13 @@
                     </p>
                 </div>
 
-                <img src="{{ $student->avatar_url }}" 
-                     alt="Profile" 
-                     class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md">
+                <img src="{{ 
+                        ($student->avatar && $student->avatar !== 'default.png') 
+                        ? (Str::startsWith($student->avatar, 'http') ? $student->avatar : \Illuminate\Support\Facades\Storage::disk('s3')->url('avatars/' . $student->avatar)) 
+                        : 'https://ui-avatars.com/api/?name=' . urlencode($student->first_name . '+' . $student->last_name) . '&background=0D8ABC&color=fff'
+                     }}" 
+                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff';"
+                     alt="Profile" class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md">
             </div>
         </header>
 

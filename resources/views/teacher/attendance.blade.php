@@ -18,6 +18,7 @@
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">
         
+        {{-- HEADER WITH PROFILE PICTURE --}}
         <header class="glass-header border-b border-slate-200/60 sticky top-0 z-40 px-8 py-5 flex justify-between items-center shadow-sm">
             <div class="flex items-center gap-4">
                 <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors">
@@ -33,7 +34,29 @@
                     </div>
                 </div>
             </div>
-            @include('components.teacher.header_details')
+
+            {{-- PROFILE SECTION --}}
+            <div class="flex items-center gap-3">
+                @php $teacher = Auth::guard('teacher')->user(); @endphp
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-black text-slate-800 leading-none mb-1">{{ $teacher->first_name }} {{ $teacher->last_name }}</p>
+                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Faculty Member</p>
+                </div>
+                
+                {{-- AVATAR LOGIC (S3 / URL / Fallback) --}}
+                <img src="{{ 
+                        ($teacher->avatar && $teacher->avatar !== 'default.png') 
+                        ? (
+                            \Illuminate\Support\Str::startsWith($teacher->avatar, 'http') 
+                            ? $teacher->avatar 
+                            : \Illuminate\Support\Facades\Storage::disk('s3')->url($teacher->avatar)
+                        ) 
+                        : 'https://ui-avatars.com/api/?name=' . urlencode($teacher->first_name . '+' . $teacher->last_name) . '&background=059669&color=fff'
+                     }}" 
+                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Teacher&background=059669&color=fff';"
+                     alt="Profile" 
+                     class="w-10 h-10 rounded-2xl object-cover border-2 border-white shadow-md bg-slate-100">
+            </div>
         </header>
 
         <main class="flex-1 p-6 flex flex-col justify-center items-center max-w-7xl mx-auto w-full">
@@ -62,11 +85,19 @@
                                     <select id="classSelector" required
                                             class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-bold text-slate-700 appearance-none cursor-pointer">
                                         <option value="" disabled selected>-- Select Class Pairing --</option>
+                                        
                                         @foreach($assignedClasses as $class)
                                             <option value="{{ $class->subject_id }}|{{ $class->section_id }}">
+                                                {{-- DISPLAY: Subject - Section (Grade) [SY] --}}
                                                 {{ $class->subject->code }} — {{ $class->section->name }} (Grade {{ $class->section->grade_level }})
+                                                
+                                                {{-- Added School Year Check --}}
+                                                @if($class->section->schoolYear)
+                                                    [SY {{ $class->section->schoolYear->school_year }}]
+                                                @endif
                                             </option>
                                         @endforeach
+
                                     </select>
                                     <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                                         <i class="fa-solid fa-chevron-down text-[10px]"></i>
