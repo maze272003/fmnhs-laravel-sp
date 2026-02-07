@@ -62,6 +62,13 @@
         </li>
 
         <li>
+            <a href="{{ route('teacher.conferences.index') }}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-emerald-50">
+                <i class="fa-solid fa-video nav-icon w-6 text-center text-slate-400 group-hover:text-emerald-600 transition-colors"></i>
+                <span class="nav-text ml-3 font-semibold text-slate-600 group-hover:text-emerald-700 md:hidden lg:block">Live Class</span>
+            </a>
+        </li>
+
+        <li>
             <a href="{{ route('teacher.announcements.index')}}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-emerald-50">
                 <i class="fa-solid fa-bullhorn nav-icon w-6 text-center text-slate-400 group-hover:text-emerald-600 transition-colors"></i>
                 <span class="nav-text ml-3 font-semibold text-slate-600 group-hover:text-emerald-700 md:hidden lg:block">Announcement</span>

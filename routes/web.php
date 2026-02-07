@@ -1,21 +1,24 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TeacherAuthController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\Admin\AdminStudentController;
-use App\Http\Controllers\Admin\AdminTeacherController;
-use App\Http\Controllers\Student\StudentController;
-use App\Http\Controllers\Teacher\TeacherController; 
-use App\Http\Controllers\Admin\AdminSubjectController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Models\Announcement;
+use App\Http\Controllers\Admin\AdminStudentController;
+use App\Http\Controllers\Admin\AdminSubjectController;
+use App\Http\Controllers\Admin\AdminTeacherController;
+use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConferenceAccessController;
+use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Teacher\TeacherController;
+use App\Http\Controllers\Teacher\VideoConferenceController;
+use App\Http\Controllers\TeacherAuthController;
+use App\Models\Announcement;
+use Illuminate\Support\Facades\Route;
 
 // Default Route
 Route::get('/', function () {
     $announcements = Announcement::orderBy('created_at', 'desc')->take(3)->get();
+
     return view('welcome', compact('announcements'));
 });
 
@@ -31,6 +34,15 @@ Route::post('/teacher/logout', [TeacherAuthController::class, 'logout'])->name('
 Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+
+// Public Meeting Join Page (student credentials required)
+Route::get('/conference/join/{conference}', [ConferenceAccessController::class, 'showJoinForm'])->name('conference.join.form');
+Route::post('/conference/join/{conference}', [ConferenceAccessController::class, 'joinWithCredentials'])->name('conference.join.attempt');
+
+// Shared Room Route (teacher or student session)
+Route::middleware(['auth:teacher,student'])->group(function () {
+    Route::get('/conference/{conference}/room', [ConferenceAccessController::class, 'room'])->name('conference.room');
+});
 
 // Student Protected Routes
 Route::middleware(['auth:student'])->group(function () {
@@ -70,6 +82,11 @@ Route::middleware(['auth:teacher'])->group(function () {
     Route::get('/teacher/attendance', [App\Http\Controllers\Teacher\AttendanceController::class, 'index'])->name('teacher.attendance.index');
     Route::get('/teacher/attendance/sheet', [App\Http\Controllers\Teacher\AttendanceController::class, 'show'])->name('teacher.attendance.show');
     Route::post('/teacher/attendance', [App\Http\Controllers\Teacher\AttendanceController::class, 'store'])->name('teacher.attendance.store');
+
+    Route::get('/teacher/conferences', [VideoConferenceController::class, 'index'])->name('teacher.conferences.index');
+    Route::post('/teacher/conferences', [VideoConferenceController::class, 'store'])->name('teacher.conferences.store');
+    Route::get('/teacher/conferences/{conference}', [VideoConferenceController::class, 'show'])->name('teacher.conferences.show');
+    Route::post('/teacher/conferences/{conference}/end', [VideoConferenceController::class, 'end'])->name('teacher.conferences.end');
 });
 
 // Admin Protected Dashboard
@@ -83,7 +100,7 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/students/promote', [AdminStudentController::class, 'promote'])->name('admin.students.promote');
     Route::put('/admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
     Route::delete('/admin/students/{id}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
-    
+
     // Status Changes
     Route::post('/admin/students/{id}/restore', [AdminStudentController::class, 'restore'])->name('admin.students.restore');
     Route::post('/admin/students/{id}/drop', [AdminStudentController::class, 'dropStudent'])->name('admin.students.drop');
@@ -92,7 +109,7 @@ Route::middleware(['auth:admin'])->group(function () {
 
     Route::get('admin/students/{id}/print', [App\Http\Controllers\Admin\AdminStudentController::class, 'printRecord'])
         ->name('admin.students.print');
-    
+
     // FIX: Renamed 'students.show' to 'admin.students.show' to match the View
     Route::get('/admin/students/{id}/record', [AdminStudentController::class, 'show'])->name('admin.students.show');
 
@@ -121,7 +138,7 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/schedules', [App\Http\Controllers\Admin\AdminScheduleController::class, 'index'])->name('admin.schedules.index');
     Route::post('/admin/schedules', [App\Http\Controllers\Admin\AdminScheduleController::class, 'store'])->name('admin.schedules.store');
     Route::delete('/admin/schedules/{id}', [App\Http\Controllers\Admin\AdminScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
-    
+
     // ATTENDANCE & GRADES
     Route::get('/admin/attendance', [App\Http\Controllers\Admin\AdminAttendanceController::class, 'index'])->name('admin.attendance.index');
     Route::post('/admin/grades/lock', [App\Http\Controllers\Admin\AdminGradeController::class, 'lockGrades'])->name('admin.grades.lock');

@@ -60,4 +60,9 @@ class Section extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+    public function videoConferences(): HasMany
+    {
+        return $this->hasMany(VideoConference::class);
+    }
 }

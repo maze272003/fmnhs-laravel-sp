@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable; // <--- IMPORANTE
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes; //
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Teacher extends Authenticatable
 {
@@ -19,6 +20,11 @@ class Teacher extends Authenticatable
     public function advisorySection()
     {
         return $this->hasOne(Section::class, 'teacher_id');
+    }
+
+    public function videoConferences(): HasMany
+    {
+        return $this->hasMany(VideoConference::class);
     }
 
     public function grades() { return $this->hasMany(Grade::class); }
