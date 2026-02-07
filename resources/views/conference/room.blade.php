@@ -123,7 +123,6 @@
     </div>
 
     @php
-        // Define arrays in PHP block to avoid @json parse errors with multi-line arrays
         $conferenceData = [
             'id' => $conference->id,
             'slug' => $conference->slug,
@@ -151,6 +150,7 @@
         const reverb = @json($reverbConfig);
         const meetingConfig = @json($meetingData);
 
+        // --- DOM Elements ---
         const localVideo = document.getElementById('local-video');
         const videoGrid = document.getElementById('video-grid');
         const participantsList = document.getElementById('participants-list');
@@ -164,12 +164,23 @@
         const copyLinkBtn = document.getElementById('copy-link-btn');
         const endMeetingBtn = document.getElementById('end-meeting-btn');
 
+        // --- Manual Trigger Button ---
+        const headerActions = document.querySelector('header .flex.flex-wrap');
+        const reconnectBtn = document.createElement('button');
+        reconnectBtn.className = 'px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold uppercase tracking-wide transition-colors ml-2';
+        reconnectBtn.innerHTML = '<i class="fa-solid fa-sync mr-1"></i>Connect Video';
+        reconnectBtn.onclick = () => forceReconnect();
+        headerActions.appendChild(reconnectBtn);
+
+        // --- State ---
         const peers = new Map();
         const members = new Map();
         let localStream = null;
         let pusher = null;
         let channel = null;
+        let isSubscribed = false;
 
+        // --- UI Helpers ---
         function showBanner(message) {
             statusBanner.textContent = message;
             statusBanner.classList.remove('hidden');
@@ -177,8 +188,8 @@
 
         function addSystemMessage(text) {
             const row = document.createElement('div');
-            row.className = 'text-center text-xs text-slate-400';
-            row.textContent = text;
+            row.className = 'text-center text-xs text-amber-400 font-mono my-1';
+            row.textContent = `[SYS] ${text}`;
             chatLog.appendChild(row);
             chatLog.scrollTop = chatLog.scrollHeight;
         }
@@ -186,20 +197,16 @@
         function addChatMessage(payload, mine = false) {
             const wrapper = document.createElement('div');
             wrapper.className = mine ? 'flex justify-end' : 'flex justify-start';
-
             const card = document.createElement('div');
             card.className = mine
                 ? 'max-w-[85%] bg-emerald-500 text-slate-900 rounded-2xl px-3 py-2'
                 : 'max-w-[85%] bg-slate-800 text-slate-100 rounded-2xl px-3 py-2';
-
             const meta = document.createElement('p');
             meta.className = mine ? 'text-[10px] font-bold text-slate-800/70 mb-1' : 'text-[10px] font-bold text-slate-400 mb-1';
             meta.textContent = `${payload.name} (${payload.role})`;
-
             const body = document.createElement('p');
             body.className = 'text-sm';
             body.textContent = payload.message;
-
             card.appendChild(meta);
             card.appendChild(body);
             wrapper.appendChild(card);
@@ -209,33 +216,26 @@
 
         function renderParticipants() {
             participantsList.innerHTML = '';
-
             members.forEach((info, id) => {
                 const row = document.createElement('div');
                 row.className = 'px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-between';
                 const left = document.createElement('div');
                 left.className = 'min-w-0';
-
                 const name = document.createElement('p');
                 name.className = 'text-sm font-semibold text-slate-100 truncate';
                 name.textContent = info.name || id;
-
                 const role = document.createElement('p');
                 role.className = 'text-[10px] uppercase tracking-wider text-slate-400';
                 role.textContent = info.role || 'participant';
-
                 left.appendChild(name);
                 left.appendChild(role);
-
                 const badge = document.createElement('span');
                 badge.className = `text-[10px] font-black px-2 py-1 rounded-full ${id === actor.id ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700 text-slate-300'}`;
                 badge.textContent = id === actor.id ? 'You' : 'Online';
-
                 row.appendChild(left);
                 row.appendChild(badge);
                 participantsList.appendChild(row);
             });
-
             participantsCount.textContent = String(members.size || 1);
         }
 
@@ -248,11 +248,9 @@
             video.autoplay = true;
             video.playsInline = true;
             video.className = 'absolute inset-0 w-full h-full object-cover bg-black';
-
             const caption = document.createElement('div');
             caption.className = 'absolute bottom-2 left-2 px-2 py-1 rounded-lg bg-black/60 text-xs font-bold';
             caption.textContent = label;
-
             tile.appendChild(video);
             tile.appendChild(caption);
             videoGrid.appendChild(tile);
@@ -260,36 +258,38 @@
         }
 
         function removePeer(peerId) {
-            const existing = peers.get(peerId);
-            if (existing) {
-                existing.pc.close();
+            const state = peers.get(peerId);
+            if (state) {
+                state.pc.close();
                 peers.delete(peerId);
             }
-
             const tile = document.getElementById(`tile-${peerId}`);
-            if (tile) {
-                tile.remove();
+            if (tile) tile.remove();
+        }
+
+        function triggerChannelEvent(eventName, payload) {
+            if (!channel || !isSubscribed) return;
+            try {
+                channel.trigger(eventName, payload);
+            } catch (error) {
+                console.error(`Failed to trigger ${eventName}:`, error);
             }
         }
 
-        function signalPeer(payload) {
-            if (!channel) {
-                return;
-            }
-
-            channel.trigger('client-signal', {
-                ...payload,
-                from: actor.id,
-            });
-        }
+        // --- WebRTC Core ---
 
         function ensurePeer(peerId) {
-            if (peers.has(peerId)) {
-                return peers.get(peerId);
-            }
+            if (peers.has(peerId)) return peers.get(peerId);
+
+            addSystemMessage(`Setting up video with ${members.get(peerId)?.name || peerId}...`);
 
             const pc = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+                iceServers: (reverb.iceServers && reverb.iceServers.length)
+                    ? reverb.iceServers
+                    : [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
             });
 
             if (localStream) {
@@ -298,111 +298,144 @@
 
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
-                    signalPeer({
+                    triggerChannelEvent('client-signal', {
+                        from: actor.id,
                         to: peerId,
-                        type: 'candidate',
                         candidate: event.candidate,
                     });
                 }
             };
 
             pc.ontrack = (event) => {
+                addSystemMessage(`Received video stream from ${members.get(peerId)?.name}`);
                 const label = members.get(peerId)?.name || peerId;
                 const videoEl = document.getElementById(`video-${peerId}`) || createRemoteTile(peerId, label);
                 if (event.streams[0]) {
                     videoEl.srcObject = event.streams[0];
+                    videoEl.play().catch(e => console.error('Autoplay error:', e));
                 }
             };
 
             pc.onconnectionstatechange = () => {
-                if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+                if (['failed', 'closed'].includes(pc.connectionState)) {
                     removePeer(peerId);
                 }
             };
 
-            const data = { pc };
-            peers.set(peerId, data);
-            return data;
+            const state = { pc, candidateBuffer: [], remoteDescriptionSet: false };
+            peers.set(peerId, state);
+            return state;
         }
 
-        async function createOfferFor(peerId) {
-            const { pc } = ensurePeer(peerId);
-
-            if (pc.signalingState !== 'stable') {
-                return;
-            }
-
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            signalPeer({
-                to: peerId,
-                type: 'offer',
-                description: pc.localDescription,
-            });
-        }
-
-        async function handleSignal(payload) {
-            if (!payload || payload.from === actor.id) {
-                return;
-            }
-
-            if (payload.to && payload.to !== actor.id) {
-                return;
-            }
-
-            const peerId = payload.from;
-            const { pc } = ensurePeer(peerId);
-
-            if (payload.type === 'offer' && payload.description) {
-                await pc.setRemoteDescription(new RTCSessionDescription(payload.description));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                signalPeer({
-                    to: peerId,
-                    type: 'answer',
-                    description: pc.localDescription,
-                });
-                return;
-            }
-
-            if (payload.type === 'answer' && payload.description) {
-                await pc.setRemoteDescription(new RTCSessionDescription(payload.description));
-                return;
-            }
-
-            if (payload.type === 'candidate' && payload.candidate) {
-                try {
-                    await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
-                } catch (error) {
-                    console.error('ICE candidate error:', error);
-                }
-            }
-        }
-
+        // --- UPDATED LOGIC: Teacher Always Calls ---
         function shouldInitiateWith(peerId) {
+            // 1. If I am the Teacher, I call EVERYONE.
+            if (actor.role === 'teacher') return true;
+
+            // 2. If I am a Student...
+            const peerRole = members.get(peerId)?.role;
+            
+            // ... I NEVER call the Teacher (I wait for them to call me)
+            if (peerRole === 'teacher') return false;
+
+            // ... I only call other Students if my ID is "lower" (to prevent double-dialing)
             return actor.id.localeCompare(peerId) < 0;
         }
 
-        async function setupLocalMedia() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showBanner('Your browser does not support camera/microphone access.');
-                return;
+        async function initiateConnection(peerId) {
+            const { pc } = ensurePeer(peerId);
+            addSystemMessage(`Calling ${members.get(peerId)?.name}...`);
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                triggerChannelEvent('client-signal', {
+                    from: actor.id,
+                    to: peerId,
+                    description: pc.localDescription,
+                });
+            } catch (err) {
+                console.error('Offer Error:', err);
             }
+        }
 
+        function forceReconnect() {
+             members.forEach((info, id) => {
+                 if (id !== actor.id) {
+                     addSystemMessage(`Forcing connection to ${info.name}...`);
+                     if(peers.has(id)) removePeer(id);
+                     initiateConnection(id);
+                 }
+             });
+        }
+
+        async function handleSignal(payload) {
+            if (!payload || payload.from === actor.id) return;
+            if (payload.to && payload.to !== actor.id) return;
+
+            const peerId = payload.from;
+            const peerState = ensurePeer(peerId);
+            const { pc } = peerState;
+
+            try {
+                if (payload.description) {
+                    const desc = new RTCSessionDescription(payload.description);
+                    if (desc.type === 'offer') {
+                        addSystemMessage(`Incoming call from ${members.get(peerId)?.name}`);
+                        await pc.setRemoteDescription(desc);
+                        peerState.remoteDescriptionSet = true;
+
+                        // Flush any ICE candidates that arrived before the offer
+                        for (const buffered of peerState.candidateBuffer) {
+                            await pc.addIceCandidate(buffered);
+                        }
+                        peerState.candidateBuffer = [];
+
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        triggerChannelEvent('client-signal', {
+                            from: actor.id,
+                            to: peerId,
+                            description: pc.localDescription,
+                        });
+                    } else if (desc.type === 'answer') {
+                        addSystemMessage(`Call accepted by ${members.get(peerId)?.name}`);
+                        await pc.setRemoteDescription(desc);
+                        peerState.remoteDescriptionSet = true;
+
+                        // Flush any ICE candidates that arrived before the answer
+                        for (const buffered of peerState.candidateBuffer) {
+                            await pc.addIceCandidate(buffered);
+                        }
+                        peerState.candidateBuffer = [];
+                    }
+                } else if (payload.candidate) {
+                    const candidate = new RTCIceCandidate(payload.candidate);
+                    if (peerState.remoteDescriptionSet) {
+                        await pc.addIceCandidate(candidate);
+                    } else {
+                        // Buffer candidate until remote description is set
+                        peerState.candidateBuffer.push(candidate);
+                    }
+                }
+            } catch (error) {
+                console.error('Signal Error:', error);
+            }
+        }
+
+        // --- Initialization ---
+
+        async function setupLocalMedia() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
                 localVideo.srcObject = localStream;
+                addSystemMessage('Camera & Microphone Ready.');
             } catch (error) {
-                console.error(error);
-                showBanner('Camera or microphone access is blocked. You can still use chat.');
+                showBanner('Camera access denied. Please allow permissions.');
             }
         }
 
         function bindRealtimeChannel() {
-            if (!reverb.key) {
-                showBanner('Missing Reverb key. Check REVERB_APP_KEY in your environment.');
-                return;
-            }
+            if (!reverb.key) return showBanner('Missing Reverb Key');
 
             pusher = new Pusher(reverb.key, {
                 cluster: 'mt1',
@@ -415,200 +448,113 @@
                 channelAuthorization: {
                     endpoint: '/broadcasting/auth',
                     transport: 'ajax',
-                    headers: {
-                        'X-CSRF-TOKEN': meetingConfig.csrf,
-                    },
+                    headers: { 'X-CSRF-TOKEN': meetingConfig.csrf }
                 },
             });
 
             channel = pusher.subscribe(`presence-conference.${conference.id}`);
 
-            channel.bind('pusher:subscription_succeeded', async (presenceMembers) => {
+            channel.bind('pusher:subscription_succeeded', (presenceMembers) => {
+                isSubscribed = true;
                 members.clear();
-
-                presenceMembers.each(async (member) => {
-                    members.set(member.id, member.info);
+                presenceMembers.each(member => {
+                    const uid = (member.info && member.info.id) ? member.info.id : String(member.id);
+                    members.set(uid, member.info);
                 });
-
+                
+                if (!members.has(actor.id)) members.set(actor.id, { name: actor.name, role: actor.role });
                 renderParticipants();
-                addSystemMessage('Connected to live room.');
+                addSystemMessage('Room Connected. Waiting for peers...');
 
-                for (const peerId of members.keys()) {
-                    if (peerId !== actor.id && shouldInitiateWith(peerId)) {
-                        await createOfferFor(peerId);
+                // Run initiation logic
+                setTimeout(() => {
+                    for (const peerId of members.keys()) {
+                        if (peerId !== actor.id && shouldInitiateWith(peerId)) {
+                            initiateConnection(peerId);
+                        }
                     }
-                }
+                }, 1000); // Small delay to ensure stability
             });
 
-            channel.bind('pusher:member_added', async (member) => {
-                members.set(member.id, member.info);
+            channel.bind('pusher:member_added', (member) => {
+                const uid = (member.info && member.info.id) ? member.info.id : String(member.id);
+                members.set(uid, member.info);
                 renderParticipants();
-                addSystemMessage(`${member.info.name} joined the room.`);
-
-                if (member.id !== actor.id && shouldInitiateWith(member.id)) {
-                    await createOfferFor(member.id);
+                addSystemMessage(`${member.info.name} joined.`);
+                if (uid !== actor.id && shouldInitiateWith(uid)) {
+                    initiateConnection(uid);
                 }
             });
 
             channel.bind('pusher:member_removed', (member) => {
-                members.delete(member.id);
+                const uid = (member.info && member.info.id) ? member.info.id : String(member.id);
+                members.delete(uid);
                 renderParticipants();
-                removePeer(member.id);
-                addSystemMessage(`${member.info.name} left the room.`);
+                removePeer(uid);
+                addSystemMessage(`${member.info.name} left.`);
             });
 
-            channel.bind('client-signal', async (payload) => {
-                try {
-                    await handleSignal(payload);
-                } catch (error) {
-                    console.error('Signal error:', error);
-                }
-            });
-
+            channel.bind('client-signal', handleSignal);
             channel.bind('client-chat', (payload) => {
-                if (payload.from === actor.id) {
-                    return;
-                }
-                addChatMessage(payload, false);
+                if (payload.from !== actor.id) addChatMessage(payload, false);
             });
-
             channel.bind('client-meeting-ended', () => {
-                if (actor.role === 'student') {
-                    alert('The teacher ended this meeting.');
-                    window.location.href = meetingConfig.backUrl;
-                }
+                if (actor.role === 'student') window.location.href = meetingConfig.backUrl;
             });
         }
 
-        chatForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-
+        // --- Event Listeners ---
+        
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
             const message = chatInput.value.trim();
-            if (!message || !channel) {
-                return;
-            }
-
-            const payload = {
-                from: actor.id,
-                name: actor.name,
-                role: actor.role,
-                message,
-                at: new Date().toISOString(),
-            };
-
-            channel.trigger('client-chat', payload);
+            if (!message) return;
+            const payload = { from: actor.id, name: actor.name, role: actor.role, message };
+            triggerChannelEvent('client-chat', payload);
             addChatMessage(payload, true);
             chatInput.value = '';
         });
 
         toggleAudioBtn.addEventListener('click', () => {
-            if (!localStream) {
-                showBanner('Microphone is not available.');
-                return;
+            if (localStream) {
+                const track = localStream.getAudioTracks()[0];
+                track.enabled = !track.enabled;
+                toggleAudioBtn.innerHTML = track.enabled ? '<i class="fa-solid fa-microphone mr-1"></i>Mic On' : '<i class="fa-solid fa-microphone-slash mr-1"></i>Mic Off';
+                toggleAudioBtn.classList.toggle('bg-rose-700', !track.enabled);
             }
-
-            const audioTracks = localStream.getAudioTracks();
-            if (!audioTracks.length) {
-                showBanner('Microphone track not found.');
-                return;
-            }
-
-            const enabled = !audioTracks[0].enabled;
-            audioTracks.forEach(track => {
-                track.enabled = enabled;
-            });
-
-            toggleAudioBtn.innerHTML = enabled
-                ? '<i class="fa-solid fa-microphone mr-1"></i>Mic On'
-                : '<i class="fa-solid fa-microphone-slash mr-1"></i>Mic Off';
-            toggleAudioBtn.classList.toggle('bg-rose-700', !enabled);
         });
 
         toggleVideoBtn.addEventListener('click', () => {
-            if (!localStream) {
-                showBanner('Camera is not available.');
-                return;
+            if (localStream) {
+                const track = localStream.getVideoTracks()[0];
+                track.enabled = !track.enabled;
+                toggleVideoBtn.innerHTML = track.enabled ? '<i class="fa-solid fa-video mr-1"></i>Cam On' : '<i class="fa-solid fa-video-slash mr-1"></i>Cam Off';
+                toggleVideoBtn.classList.toggle('bg-rose-700', !track.enabled);
             }
-
-            const videoTracks = localStream.getVideoTracks();
-            if (!videoTracks.length) {
-                showBanner('Camera track not found.');
-                return;
-            }
-
-            const enabled = !videoTracks[0].enabled;
-            videoTracks.forEach(track => {
-                track.enabled = enabled;
-            });
-
-            toggleVideoBtn.innerHTML = enabled
-                ? '<i class="fa-solid fa-video mr-1"></i>Cam On'
-                : '<i class="fa-solid fa-video-slash mr-1"></i>Cam Off';
-            toggleVideoBtn.classList.toggle('bg-rose-700', !enabled);
         });
 
         if (copyLinkBtn) {
-            copyLinkBtn.addEventListener('click', async () => {
-                try {
-                    await navigator.clipboard.writeText(meetingConfig.joinLink);
-                    addSystemMessage('Join link copied.');
-                } catch (error) {
-                    console.error(error);
-                    showBanner('Unable to copy link. Copy it manually from browser URL.');
-                }
-            });
+            copyLinkBtn.onclick = () => {
+                navigator.clipboard.writeText(meetingConfig.joinLink);
+                addSystemMessage('Link Copied!');
+            };
         }
 
         if (endMeetingBtn) {
-            endMeetingBtn.addEventListener('click', async () => {
-                const confirmed = confirm('End this meeting for all students?');
-                if (!confirmed) {
-                    return;
-                }
-
-                try {
-                    if (channel) {
-                        channel.trigger('client-meeting-ended', {
-                            from: actor.id,
-                            at: new Date().toISOString(),
-                        });
-                    }
-
-                    await fetch(meetingConfig.endMeetingUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': meetingConfig.csrf,
-                            'Accept': 'application/json',
-                        },
+            endMeetingBtn.onclick = async () => {
+                if(confirm('End Meeting?')) {
+                    triggerChannelEvent('client-meeting-ended', { from: actor.id });
+                    await fetch(meetingConfig.endMeetingUrl, { 
+                        method: 'POST', 
+                        headers: { 'X-CSRF-TOKEN': meetingConfig.csrf } 
                     });
-
                     window.location.href = meetingConfig.backUrl;
-                } catch (error) {
-                    console.error(error);
-                    showBanner('Unable to end the meeting right now.');
                 }
-            });
+            };
         }
 
-        window.addEventListener('beforeunload', () => {
-            peers.forEach((entry) => entry.pc.close());
-            peers.clear();
-
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
-
-            if (pusher) {
-                pusher.disconnect();
-            }
-        });
-
         (async () => {
-            if (!meetingConfig.isActive) {
-                showBanner('This meeting has already ended.');
-                return;
-            }
-
+            if (!meetingConfig.isActive) return showBanner('Meeting Ended');
             await setupLocalMedia();
             bindRealtimeChannel();
         })();

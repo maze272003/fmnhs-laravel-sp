@@ -110,10 +110,85 @@ class ConferenceAccessController extends Controller
                 : route('student.dashboard'),
             'reverbConfig' => [
                 'key' => config('broadcasting.connections.reverb.key'),
-                'host' => config('broadcasting.connections.reverb.options.host') ?: request()->getHost(),
-                'port' => (int) (config('broadcasting.connections.reverb.options.port') ?: 8080),
-                'scheme' => config('broadcasting.connections.reverb.options.scheme', 'http'),
+                'host' => $this->resolveRealtimeHost(),
+                'port' => $this->resolveRealtimePort(),
+                'scheme' => $this->resolveRealtimeScheme(),
+                'authEndpoint' => '/broadcasting/auth',
+                'iceServers' => $this->resolveIceServers(),
             ],
         ]);
+    }
+
+    private function resolveRealtimeHost(): string
+    {
+        $configured = (string) (config('broadcasting.connections.reverb.options.host') ?? '');
+        $requestHost = request()->getHost();
+        $localHosts = ['localhost', '127.0.0.1', '::1'];
+
+        if ($configured === '') {
+            return $requestHost;
+        }
+
+        if (! in_array($requestHost, $localHosts, true) && in_array($configured, $localHosts, true)) {
+            return $requestHost;
+        }
+
+        return $configured;
+    }
+
+    private function resolveRealtimeScheme(): string
+    {
+        $configured = (string) (config('broadcasting.connections.reverb.options.scheme') ?? '');
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        return request()->isSecure() ? 'https' : 'http';
+    }
+
+    private function resolveRealtimePort(): int
+    {
+        $configured = (int) (config('broadcasting.connections.reverb.options.port') ?? 0);
+        if ($configured > 0) {
+            return $configured;
+        }
+
+        return $this->resolveRealtimeScheme() === 'https' ? 443 : 80;
+    }
+
+    private function resolveIceServers(): array
+    {
+        $defaultServers = [
+            [
+                'urls' => [
+                    'stun:stun.l.google.com:19302',
+                    'stun:stun1.l.google.com:19302',
+                ],
+            ],
+        ];
+
+        $raw = trim((string) env('WEBRTC_ICE_SERVERS', ''));
+        if ($raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded) && ! empty($decoded)) {
+                $defaultServers = $decoded;
+            }
+        }
+
+        $turnUrl = trim((string) env('WEBRTC_TURN_URL', ''));
+        if ($turnUrl !== '') {
+            $turn = ['urls' => [$turnUrl]];
+
+            $turnUser = env('WEBRTC_TURN_USERNAME');
+            $turnPass = env('WEBRTC_TURN_CREDENTIAL');
+            if ($turnUser !== null && $turnPass !== null && $turnUser !== '' && $turnPass !== '') {
+                $turn['username'] = (string) $turnUser;
+                $turn['credential'] = (string) $turnPass;
+            }
+
+            $defaultServers[] = $turn;
+        }
+
+        return $defaultServers;
     }
 }

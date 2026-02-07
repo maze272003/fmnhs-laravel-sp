@@ -1,7 +1,8 @@
 <?php
 
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\VideoConference;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
@@ -15,23 +16,21 @@ Broadcast::channel('conference.{conferenceId}', function ($user, int $conference
         return false;
     }
 
-    $teacher = Auth::guard('teacher')->user();
-    if ($teacher && (int) $teacher->id === (int) $conference->teacher_id) {
+    if ($user instanceof Teacher && (int) $user->id === (int) $conference->teacher_id) {
         return [
-            'id' => 'teacher-'.$teacher->id,
-            'name' => trim($teacher->first_name.' '.$teacher->last_name),
+            'id' => 'teacher-'.$user->id,
+            'name' => trim($user->first_name.' '.$user->last_name),
             'role' => 'teacher',
         ];
     }
 
-    $student = Auth::guard('student')->user();
-    if ($student && $conference->canStudentJoin($student)) {
+    if ($user instanceof Student && $conference->canStudentJoin($user)) {
         return [
-            'id' => 'student-'.$student->id,
-            'name' => trim($student->first_name.' '.$student->last_name),
+            'id' => 'student-'.$user->id,
+            'name' => trim($user->first_name.' '.$user->last_name),
             'role' => 'student',
         ];
     }
 
     return false;
-}, ['guards' => ['teacher', 'student']]);
+});
