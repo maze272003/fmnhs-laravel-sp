@@ -75,24 +75,28 @@ class AdminStudentController extends Controller
      * Update the specified student.
      */
     public function update(Request $request, $id)
-    {
-        $student = $this->students->findOrFail((int) $id);
+{
+    // 1. Find the student first
+    $student = $this->students->findOrFail((int) $id);
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email,' . $student->id,
-            'section_id' => 'required|exists:sections,id',
-            'enrollment_type' => 'required|in:Regular,Transferee',
-            'new_password' => 'nullable|min:6',
-            'school_year_id' => 'sometimes|exists:school_year_configs,id',
-        ]);
+    // 2. Validate - Notice the unique email rule ignores the current user's ID
+    $validated = $request->validate([
+        'first_name'      => 'required|string|max:255',
+        'last_name'       => 'required|string|max:255',
+        'email'           => 'required|email|unique:students,email,' . $student->id,
+        'section_id'      => 'required|exists:sections,id',
+        'enrollment_type' => 'required|in:Regular,Transferee',
+        'new_password'    => 'nullable|min:6', // Optional password update
+        'school_year_id'  => 'required|exists:school_year_configs,id',
+    ]);
 
-        $admin = Auth::guard('admin')->user();
-        $this->studentLifecycle->update($student, $validated, $admin);
+    $admin = Auth::guard('admin')->user();
+    
+    // 3. The Service handles the password hashing and Audit Logging
+    $this->studentLifecycle->update($student, $validated, $admin);
 
-        return redirect()->back()->with('success', 'Student record updated!');
-    }
+    return redirect()->route('admin.students.index')->with('success', 'Student record updated!');
+}
 
     /**
      * Promote students (Grade Up) or Graduate them (Alumni).
