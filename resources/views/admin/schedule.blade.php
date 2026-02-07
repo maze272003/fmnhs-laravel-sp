@@ -27,15 +27,26 @@
                 </div>
             </div>
             @include('components.admin.header_details')
-            {{-- <div class="hidden sm:block">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    SY 2025-2026 | Normalized
-                </span>
-            </div> --}}
         </header>
 
         <main class="flex-1 p-6 lg:p-10">
             
+            {{-- Success Message --}}
+            @if(session('success'))
+                <script>Swal.fire({icon: 'success', title: 'Success', text: "{{ session('success') }}", timer: 2000, showConfirmButton: false});</script>
+            @endif
+
+            {{-- Error Messages --}}
+            @if ($errors->any())
+                <div class="bg-rose-50 text-rose-600 p-4 rounded-2xl mb-6 border border-rose-100 text-sm font-bold">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="mb-10">
                 <h1 class="text-3xl font-black text-slate-900 tracking-tight">Class Scheduling</h1>
                 <p class="text-slate-500 font-medium">Assign subjects and faculty to specific sections in the database.</p>
@@ -43,6 +54,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
+                {{-- LEFT COLUMN: FORM --}}
                 <div class="lg:col-span-4">
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 sticky top-28 transition-all">
                         <div class="flex items-center gap-2 mb-8">
@@ -53,58 +65,103 @@
                         <form action="{{ route('admin.schedules.store') }}" method="POST" class="space-y-5">
                             @csrf
                             
+                            {{-- Section --}}
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Target Section</label>
                                 <select name="section_id" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
                                     <option value="">-- Select Section --</option>
                                     @foreach($sections as $sec)
-                                        <option value="{{ $sec->id }}">Grade {{ $sec->grade_level }} - {{ $sec->name }}</option>
+                                        <option value="{{ $sec->id }}" {{ old('section_id') == $sec->id ? 'selected' : '' }}>
+                                            Grade {{ $sec->grade_level }} - {{ $sec->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
 
+                            {{-- Subject --}}
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Course Subject</label>
                                 <select name="subject_id" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
                                     <option value="">-- Select Subject --</option>
                                     @foreach($subjects as $sub)
-                                        <option value="{{ $sub->id }}">{{ $sub->code }} — {{ $sub->name }}</option>
+                                        <option value="{{ $sub->id }}" {{ old('subject_id') == $sub->id ? 'selected' : '' }}>
+                                            {{ $sub->code }} — {{ $sub->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
 
+                            {{-- Teacher --}}
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Faculty Member</label>
                                 <select name="teacher_id" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
                                     <option value="">-- Select Teacher --</option>
                                     @foreach($teachers as $t)
-                                        <option value="{{ $t->id }}">{{ $t->last_name }}, {{ $t->first_name }}</option>
+                                        <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>
+                                            {{ $t->last_name }}, {{ $t->first_name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
+                                {{-- Day --}}
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Day(s)</label>
                                     <select name="day" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
-                                        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-                                        <option>Thursday</option><option>Friday</option><option>MWF</option><option>TTH</option>
+                                        <option {{ old('day') == 'Monday' ? 'selected' : '' }}>Monday</option>
+                                        <option {{ old('day') == 'Tuesday' ? 'selected' : '' }}>Tuesday</option>
+                                        <option {{ old('day') == 'Wednesday' ? 'selected' : '' }}>Wednesday</option>
+                                        <option {{ old('day') == 'Thursday' ? 'selected' : '' }}>Thursday</option>
+                                        <option {{ old('day') == 'Friday' ? 'selected' : '' }}>Friday</option>
+                                        <option {{ old('day') == 'MWF' ? 'selected' : '' }}>MWF</option>
+                                        <option {{ old('day') == 'TTH' ? 'selected' : '' }}>TTH</option>
                                     </select>
                                 </div>
+                                
+                                {{-- ROOM DROPDOWN WITH INDICATOR --}}
                                 <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Room No.</label>
-                                    <input type="text" name="room" placeholder="e.g. 102" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-sm">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Room</label>
+                                    <div class="relative">
+                                        <select name="room" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-sm cursor-pointer appearance-none">
+                                            <option value="">-- Select --</option>
+                                            @foreach($rooms as $room)
+                                                <option value="{{ $room->name }}" 
+                                                    {{-- Disable if not available --}}
+                                                    {{ !$room->is_available ? 'disabled' : '' }}
+                                                    
+                                                    {{-- Keep selected on validation error --}}
+                                                    {{ old('room') == $room->name ? 'selected' : '' }}
+
+                                                    {{-- Style the dropdown item --}}
+                                                    class="{{ !$room->is_available ? 'text-rose-500 font-bold bg-rose-50' : 'text-slate-700' }}"
+                                                >
+                                                    {{ $room->name }} 
+                                                    {{ $room->building ? "({$room->building})" : '' }}
+                                                    
+                                                    {{-- VISUAL INDICATOR --}}
+                                                    @if(!$room->is_available)
+                                                         — 🔴 Occupied
+                                                    @endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        {{-- Dropdown Arrow Icon --}}
+                                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Time In</label>
-                                    <input type="time" name="start_time" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
+                                    <input type="time" name="start_time" value="{{ old('start_time') }}" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Time Out</label>
-                                    <input type="time" name="end_time" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
+                                    <input type="time" name="end_time" value="{{ old('end_time') }}" required class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none">
                                 </div>
                             </div>
 
@@ -116,6 +173,7 @@
                     </div>
                 </div>
 
+                {{-- RIGHT COLUMN: TABLE --}}
                 <div class="lg:col-span-8">
                     <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
                         <div class="overflow-x-auto">
