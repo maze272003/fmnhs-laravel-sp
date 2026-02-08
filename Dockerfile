@@ -1,4 +1,4 @@
-# Stage 1: Build the frontend (Vite)
+# Stage 1: Build the Frontend (Vite/Node)
 FROM node:20-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./
@@ -6,12 +6,14 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Stage 2: App and PHP setup
+# Stage 2: Build the Backend (PHP/Laravel)
 FROM php:8.3-fpm-alpine
 
-# Install system dependencies and PHP extensions
+# Install system dependencies
+# We add 'supervisor' for process management and 'linux-headers' for pcntl extension
 RUN apk add --no-cache \
     nginx \
+    supervisor \
     wget \
     curl \
     libpng-dev \
@@ -20,9 +22,12 @@ RUN apk add --no-cache \
     unzip \
     git \
     oniguruma-dev \
-    mariadb-client
+    mariadb-client \
+    linux-headers
 
-RUN docker-php-ext-install pdo_mysql mbstring bcmath gd
+# Install PHP extensions
+# 'pcntl' is REQUIRED for WebSocket servers to run correctly
+RUN docker-php-ext-install pdo_mysql mbstring bcmath gd pcntl opcache
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -31,26 +36,31 @@ WORKDIR /var/www/html
 
 # Copy application code
 COPY . .
-# Copy built assets from Stage 1
+
+# Copy built frontend assets from Stage 1
 COPY --from=build-stage /app/public/build ./public/build
 
-# Install PHP dependencies
+# Install PHP dependencies (Production mode)
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# Setup permissions
-# Mahalaga ito para hindi mag-fail ang storage:link at file uploads 
+# Setup Permissions
+# Ensures Laravel can write to logs and storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Copy Nginx configuration
+# Copy Configuration Files
+# 1. Copy your Nginx config (Ensure this file exists in your project at .docker/nginx.conf)
 COPY .docker/nginx.conf /etc/nginx/nginx.conf
 
-EXPOSE 80
+# 2. Copy the Supervisor config (The file below)
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# --- STARTUP COMMANDS ---
-# 1. migrate:fresh --seed (Warning: Rebuilds the DB)
-# 2. storage:link (Creates the symlink) 
-# 3. Starts PHP-FPM and Nginx
-CMD sh -c "php artisan migrate:fresh --seed --force && \
-           php artisan storage:link && \
-           php-fpm -D && \
-           nginx -g 'daemon off;'"
+# Set Environment Variables for the WebSocket Server
+ENV CONFERENCE_SIGNALING_BIND_HOST=0.0.0.0
+ENV CONFERENCE_SIGNALING_PORT=6001
+
+# Expose ports: 80 (Web) and 6001 (WebSocket)
+EXPOSE 80 6001
+
+# Start Supervisor
+# This will run Nginx, PHP-FPM, and your WebSocket server simultaneously
+CMD ["/bin/sh", "-c", "php artisan storage:link && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
