@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\VideoConference;
+use App\Support\ConferenceSignalingToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -108,24 +109,37 @@ class ConferenceAccessController extends Controller
             'backUrl' => $actorRole === 'teacher'
                 ? route('teacher.conferences.index')
                 : route('student.dashboard'),
-            'reverbConfig' => [
-                'key' => config('broadcasting.connections.reverb.key'),
-                'host' => $this->resolveRealtimeHost(),
-                'port' => $this->resolveRealtimePort(),
-                'scheme' => $this->resolveRealtimeScheme(),
-                'authEndpoint' => '/broadcasting/auth',
+            'signalingConfig' => [
+                'url' => $this->buildSignalingUrl(),
+                'roomId' => "conference-{$conference->id}",
+                'token' => ConferenceSignalingToken::issue([
+                    'conferenceId' => (int) $conference->id,
+                    'actorId' => (string) $actorId,
+                    'actorName' => (string) ($actorName ?: ucfirst($actorRole)),
+                    'actorRole' => (string) $actorRole,
+                ]),
                 'iceServers' => $this->resolveIceServers(),
             ],
         ]);
     }
 
-    private function resolveRealtimeHost(): string
+    private function buildSignalingUrl(): string
     {
-        $configured = (string) (config('broadcasting.connections.reverb.options.host') ?? '');
-        $requestHost = request()->getHost();
-        $localHosts = ['localhost', '127.0.0.1', '::1'];
+        $host = $this->resolveSignalingHost();
+        $port = $this->resolveSignalingPort();
+        $scheme = $this->resolveSignalingScheme();
+        $path = $this->resolveSignalingPath();
 
-        if ($configured === '') {
+        return "{$scheme}://{$host}:{$port}{$path}";
+    }
+
+    private function resolveSignalingHost(): string
+    {
+        $configured = trim((string) config('conference_signaling.server.host', ''));
+        $requestHost = (string) request()->getHost();
+        $localHosts = ['localhost', '127.0.0.1', '::1', '[::1]'];
+
+        if ($configured === '' || $configured === '0.0.0.0') {
             return $requestHost;
         }
 
@@ -136,24 +150,35 @@ class ConferenceAccessController extends Controller
         return $configured;
     }
 
-    private function resolveRealtimeScheme(): string
+    private function resolveSignalingScheme(): string
     {
-        $configured = (string) (config('broadcasting.connections.reverb.options.scheme') ?? '');
-        if ($configured !== '') {
+        $configured = strtolower(trim((string) config('conference_signaling.server.scheme', '')));
+        if (in_array($configured, ['ws', 'wss'], true)) {
             return $configured;
         }
 
-        return request()->isSecure() ? 'https' : 'http';
+        return request()->isSecure() ? 'wss' : 'ws';
     }
 
-    private function resolveRealtimePort(): int
+    private function resolveSignalingPort(): int
     {
-        $configured = (int) (config('broadcasting.connections.reverb.options.port') ?? 0);
+        $configured = (int) config('conference_signaling.server.port', 6001);
         if ($configured > 0) {
             return $configured;
         }
 
-        return $this->resolveRealtimeScheme() === 'https' ? 443 : 80;
+        return $this->resolveSignalingScheme() === 'wss' ? 443 : 80;
+    }
+
+    private function resolveSignalingPath(): string
+    {
+        $path = trim((string) config('conference_signaling.server.path', '/ws/conference'));
+
+        if ($path === '') {
+            return '/';
+        }
+
+        return str_starts_with($path, '/') ? $path : '/'.$path;
     }
 
     private function resolveIceServers(): array

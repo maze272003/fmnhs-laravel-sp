@@ -2,17 +2,17 @@
 
 namespace App\Providers;
 
-use App\Repositories\Contracts\ScheduleRepositoryInterface;
-use App\Repositories\Contracts\SchoolYearRepositoryInterface;
-use App\Repositories\Contracts\StudentRepositoryInterface;
-use App\Repositories\Contracts\GradeRepositoryInterface;
 use App\Repositories\Contracts\AdminDashboardRepositoryInterface;
 use App\Repositories\Contracts\AnnouncementRepositoryInterface;
 use App\Repositories\Contracts\AssignmentRepositoryInterface;
 use App\Repositories\Contracts\AttendanceRepositoryInterface;
 use App\Repositories\Contracts\AuditTrailRepositoryInterface;
 use App\Repositories\Contracts\ClassroomAttendanceRepositoryInterface;
+use App\Repositories\Contracts\GradeRepositoryInterface;
 use App\Repositories\Contracts\RoomRepositoryInterface;
+use App\Repositories\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Contracts\SchoolYearRepositoryInterface;
+use App\Repositories\Contracts\StudentRepositoryInterface;
 use App\Repositories\Contracts\SubjectRepositoryInterface;
 use App\Repositories\Contracts\TeacherRepositoryInterface;
 use App\Repositories\Eloquent\AdminDashboardRepository;
@@ -28,9 +28,9 @@ use App\Repositories\Eloquent\SchoolYearRepository;
 use App\Repositories\Eloquent\StudentRepository;
 use App\Repositories\Eloquent\SubjectRepository;
 use App\Repositories\Eloquent\TeacherRepository;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL; // <--- ADD THIS LINE HERE
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if($this->app->environment('production')) {
+        if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
 

@@ -7,7 +7,6 @@
     <title>{{ $conference->title }} | Live Room</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -147,7 +146,7 @@
     <script>
         const conference = @json($conferenceData);
         const actor = @json($actorData);
-        const reverb = @json($reverbConfig);
+        const signaling = @json($signalingConfig);
         const meetingConfig = @json($meetingData);
 
         // --- DOM Elements ---
@@ -176,9 +175,11 @@
         const peers = new Map();
         const members = new Map();
         let localStream = null;
-        let pusher = null;
-        let channel = null;
-        let isSubscribed = false;
+        let ws = null;
+        let reconnectTimer = null;
+        let reconnectAttempts = 0;
+        let hasJoinedRoom = false;
+        let isShuttingDown = false;
 
         // --- UI Helpers ---
         function showBanner(message) {
@@ -267,13 +268,28 @@
             if (tile) tile.remove();
         }
 
-        function triggerChannelEvent(eventName, payload) {
-            if (!channel || !isSubscribed) return;
-            try {
-                channel.trigger(eventName, payload);
-            } catch (error) {
-                console.error(`Failed to trigger ${eventName}:`, error);
-            }
+        function sendWsMessage(payload) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+            ws.send(JSON.stringify(payload));
+            return true;
+        }
+
+        function queueReconnect() {
+            if (isShuttingDown || reconnectTimer) return;
+
+            const delay = Math.min(6000, 1000 * (2 ** reconnectAttempts));
+            reconnectAttempts += 1;
+
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
+                connectWebSocket();
+            }, delay);
+        }
+
+        function serializeDescription(description) {
+            if (!description) return null;
+            if (typeof description.toJSON === 'function') return description.toJSON();
+            return { type: description.type, sdp: description.sdp };
         }
 
         // --- WebRTC Core ---
@@ -284,8 +300,8 @@
             addSystemMessage(`Setting up video with ${members.get(peerId)?.name || peerId}...`);
 
             const pc = new RTCPeerConnection({
-                iceServers: (reverb.iceServers && reverb.iceServers.length)
-                    ? reverb.iceServers
+                iceServers: (signaling.iceServers && signaling.iceServers.length)
+                    ? signaling.iceServers
                     : [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' }
@@ -298,10 +314,10 @@
 
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
-                    triggerChannelEvent('client-signal', {
-                        from: actor.id,
+                    sendWsMessage({
+                        type: 'ice-candidate',
                         to: peerId,
-                        candidate: event.candidate,
+                        payload: event.candidate.toJSON ? event.candidate.toJSON() : event.candidate,
                     });
                 }
             };
@@ -344,14 +360,16 @@
 
         async function initiateConnection(peerId) {
             const { pc } = ensurePeer(peerId);
+            if (pc.signalingState !== 'stable') return;
+
             addSystemMessage(`Calling ${members.get(peerId)?.name}...`);
             try {
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
-                triggerChannelEvent('client-signal', {
-                    from: actor.id,
+                sendWsMessage({
+                    type: 'offer',
                     to: peerId,
-                    description: pc.localDescription,
+                    payload: serializeDescription(pc.localDescription),
                 });
             } catch (err) {
                 console.error('Offer Error:', err);
@@ -368,52 +386,54 @@
              });
         }
 
-        async function handleSignal(payload) {
-            if (!payload || payload.from === actor.id) return;
-            if (payload.to && payload.to !== actor.id) return;
+        async function handleSignal(type, message) {
+            if (!message || !message.from || message.from.id === actor.id) return;
 
-            const peerId = payload.from;
+            const peerId = message.from.id;
+            members.set(peerId, message.from);
             const peerState = ensurePeer(peerId);
             const { pc } = peerState;
 
             try {
-                if (payload.description) {
-                    const desc = new RTCSessionDescription(payload.description);
-                    if (desc.type === 'offer') {
-                        addSystemMessage(`Incoming call from ${members.get(peerId)?.name}`);
-                        await pc.setRemoteDescription(desc);
-                        peerState.remoteDescriptionSet = true;
+                if (type === 'offer') {
+                    const description = message.payload || null;
+                    if (!description) return;
 
-                        // Flush any ICE candidates that arrived before the offer
-                        for (const buffered of peerState.candidateBuffer) {
-                            await pc.addIceCandidate(buffered);
-                        }
-                        peerState.candidateBuffer = [];
+                    addSystemMessage(`Incoming call from ${members.get(peerId)?.name || peerId}`);
+                    await pc.setRemoteDescription(new RTCSessionDescription(description));
+                    peerState.remoteDescriptionSet = true;
 
-                        const answer = await pc.createAnswer();
-                        await pc.setLocalDescription(answer);
-                        triggerChannelEvent('client-signal', {
-                            from: actor.id,
-                            to: peerId,
-                            description: pc.localDescription,
-                        });
-                    } else if (desc.type === 'answer') {
-                        addSystemMessage(`Call accepted by ${members.get(peerId)?.name}`);
-                        await pc.setRemoteDescription(desc);
-                        peerState.remoteDescriptionSet = true;
-
-                        // Flush any ICE candidates that arrived before the answer
-                        for (const buffered of peerState.candidateBuffer) {
-                            await pc.addIceCandidate(buffered);
-                        }
-                        peerState.candidateBuffer = [];
+                    for (const buffered of peerState.candidateBuffer) {
+                        await pc.addIceCandidate(buffered);
                     }
-                } else if (payload.candidate) {
-                    const candidate = new RTCIceCandidate(payload.candidate);
-                    if (peerState.remoteDescriptionSet) {
+                    peerState.candidateBuffer = [];
+
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+
+                    sendWsMessage({
+                        type: 'answer',
+                        to: peerId,
+                        payload: serializeDescription(pc.localDescription),
+                    });
+                } else if (type === 'answer') {
+                    const description = message.payload || null;
+                    if (!description) return;
+
+                    addSystemMessage(`Call accepted by ${members.get(peerId)?.name || peerId}`);
+                    await pc.setRemoteDescription(new RTCSessionDescription(description));
+                    peerState.remoteDescriptionSet = true;
+
+                    for (const buffered of peerState.candidateBuffer) {
+                        await pc.addIceCandidate(buffered);
+                    }
+                    peerState.candidateBuffer = [];
+                } else if (type === 'ice-candidate') {
+                    if (!message.payload) return;
+                    const candidate = new RTCIceCandidate(message.payload);
+                    if (peerState.remoteDescriptionSet || pc.remoteDescription) {
                         await pc.addIceCandidate(candidate);
                     } else {
-                        // Buffer candidate until remote description is set
                         peerState.candidateBuffer.push(candidate);
                     }
                 }
@@ -429,78 +449,150 @@
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
                 localVideo.srcObject = localStream;
                 addSystemMessage('Camera & Microphone Ready.');
+                return true;
             } catch (error) {
                 showBanner('Camera access denied. Please allow permissions.');
+                return false;
             }
         }
 
-        function bindRealtimeChannel() {
-            if (!reverb.key) return showBanner('Missing Reverb Key');
+        function connectWebSocket() {
+            if (!signaling.url) {
+                showBanner('Missing signaling server URL.');
+                return;
+            }
 
-            pusher = new Pusher(reverb.key, {
-                cluster: 'mt1',
-                wsHost: reverb.host,
-                wsPort: Number(reverb.port),
-                wssPort: Number(reverb.port),
-                forceTLS: reverb.scheme === 'https',
-                enabledTransports: ['ws', 'wss'],
-                disableStats: true,
-                channelAuthorization: {
-                    endpoint: '/broadcasting/auth',
-                    transport: 'ajax',
-                    headers: { 'X-CSRF-TOKEN': meetingConfig.csrf }
-                },
-            });
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                return;
+            }
 
-            channel = pusher.subscribe(`presence-conference.${conference.id}`);
+            ws = new WebSocket(signaling.url);
 
-            channel.bind('pusher:subscription_succeeded', (presenceMembers) => {
-                isSubscribed = true;
-                members.clear();
-                presenceMembers.each(member => {
-                    const uid = (member.info && member.info.id) ? member.info.id : String(member.id);
-                    members.set(uid, member.info);
+            ws.onopen = () => {
+                reconnectAttempts = 0;
+                hasJoinedRoom = false;
+                addSystemMessage('Signaling connected.');
+
+                sendWsMessage({
+                    type: 'join',
+                    roomId: signaling.roomId,
+                    token: signaling.token,
                 });
-                
-                if (!members.has(actor.id)) members.set(actor.id, { name: actor.name, role: actor.role });
-                renderParticipants();
-                addSystemMessage('Room Connected. Waiting for peers...');
+            };
 
-                // Run initiation logic
-                setTimeout(() => {
-                    for (const peerId of members.keys()) {
-                        if (peerId !== actor.id && shouldInitiateWith(peerId)) {
-                            initiateConnection(peerId);
-                        }
-                    }
-                }, 1000); // Small delay to ensure stability
-            });
-
-            channel.bind('pusher:member_added', (member) => {
-                const uid = (member.info && member.info.id) ? member.info.id : String(member.id);
-                members.set(uid, member.info);
+            ws.onclose = () => {
+                if (isShuttingDown) return;
+                hasJoinedRoom = false;
+                peers.forEach((peerState, peerId) => removePeer(peerId));
+                members.clear();
+                members.set(actor.id, { id: actor.id, name: actor.name, role: actor.role });
                 renderParticipants();
-                addSystemMessage(`${member.info.name} joined.`);
-                if (uid !== actor.id && shouldInitiateWith(uid)) {
-                    initiateConnection(uid);
+                addSystemMessage('Signaling disconnected. Reconnecting...');
+                queueReconnect();
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket Error:', error);
+            };
+
+            ws.onmessage = async (event) => {
+                let message = null;
+                try {
+                    message = JSON.parse(event.data);
+                } catch {
+                    return;
                 }
-            });
 
-            channel.bind('pusher:member_removed', (member) => {
-                const uid = (member.info && member.info.id) ? member.info.id : String(member.id);
-                members.delete(uid);
-                renderParticipants();
-                removePeer(uid);
-                addSystemMessage(`${member.info.name} left.`);
-            });
+                if (!message || !message.type) return;
 
-            channel.bind('client-signal', handleSignal);
-            channel.bind('client-chat', (payload) => {
-                if (payload.from !== actor.id) addChatMessage(payload, false);
-            });
-            channel.bind('client-meeting-ended', () => {
-                if (actor.role === 'student') window.location.href = meetingConfig.backUrl;
-            });
+                if (message.type === 'joined') {
+                    hasJoinedRoom = true;
+                    members.clear();
+
+                    const participants = Array.isArray(message.participants) ? message.participants : [];
+                    participants.forEach((participant) => {
+                        if (!participant || !participant.id) return;
+                        members.set(participant.id, participant);
+                    });
+
+                    if (!members.has(actor.id)) {
+                        members.set(actor.id, { id: actor.id, name: actor.name, role: actor.role });
+                    }
+
+                    renderParticipants();
+                    addSystemMessage('Room connected. Waiting for peers...');
+
+                    setTimeout(() => {
+                        members.forEach((_info, peerId) => {
+                            if (peerId !== actor.id && shouldInitiateWith(peerId)) {
+                                initiateConnection(peerId);
+                            }
+                        });
+                    }, 500);
+
+                    return;
+                }
+
+                if (message.type === 'peer-joined') {
+                    if (!message.participant?.id) return;
+
+                    const participant = message.participant;
+                    members.set(participant.id, participant);
+                    renderParticipants();
+                    addSystemMessage(`${participant.name || participant.id} joined.`);
+
+                    if (participant.id !== actor.id && shouldInitiateWith(participant.id)) {
+                        initiateConnection(participant.id);
+                    }
+
+                    return;
+                }
+
+                if (message.type === 'peer-left') {
+                    if (!message.participant?.id) return;
+
+                    const participant = message.participant;
+                    members.delete(participant.id);
+                    removePeer(participant.id);
+                    renderParticipants();
+                    addSystemMessage(`${participant.name || participant.id} left.`);
+
+                    return;
+                }
+
+                if (message.type === 'offer' || message.type === 'answer' || message.type === 'ice-candidate') {
+                    await handleSignal(message.type, message);
+                    return;
+                }
+
+                if (message.type === 'chat') {
+                    if (message.from?.id !== actor.id) {
+                        addChatMessage({
+                            name: message.from?.name || 'Unknown',
+                            role: message.from?.role || 'participant',
+                            message: message.message || '',
+                        }, false);
+                    }
+                    return;
+                }
+
+                if (message.type === 'meeting-ended') {
+                    if (actor.role === 'student') {
+                        window.location.href = meetingConfig.backUrl;
+                    }
+                    return;
+                }
+
+                if (message.type === 'error') {
+                    showBanner(message.message || 'Realtime signaling error.');
+                    addSystemMessage(`Signaling error: ${message.message || message.code || 'unknown'}`);
+                    return;
+                }
+
+                if (message.type === 'system' && message.event === 'connection-replaced') {
+                    addSystemMessage('Another session connected with the same account.');
+                }
+            };
         }
 
         // --- Event Listeners ---
@@ -509,9 +601,15 @@
             e.preventDefault();
             const message = chatInput.value.trim();
             if (!message) return;
-            const payload = { from: actor.id, name: actor.name, role: actor.role, message };
-            triggerChannelEvent('client-chat', payload);
-            addChatMessage(payload, true);
+            if (!hasJoinedRoom) return;
+
+            sendWsMessage({
+                type: 'chat',
+                roomId: signaling.roomId,
+                message,
+            });
+
+            addChatMessage({ name: actor.name, role: actor.role, message }, true);
             chatInput.value = '';
         });
 
@@ -543,7 +641,7 @@
         if (endMeetingBtn) {
             endMeetingBtn.onclick = async () => {
                 if(confirm('End Meeting?')) {
-                    triggerChannelEvent('client-meeting-ended', { from: actor.id });
+                    sendWsMessage({ type: 'meeting-ended' });
                     await fetch(meetingConfig.endMeetingUrl, { 
                         method: 'POST', 
                         headers: { 'X-CSRF-TOKEN': meetingConfig.csrf } 
@@ -553,10 +651,27 @@
             };
         }
 
+        window.addEventListener('beforeunload', () => {
+            isShuttingDown = true;
+
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+
+            peers.forEach((state) => state.pc.close());
+            peers.clear();
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+            }
+        });
+
         (async () => {
             if (!meetingConfig.isActive) return showBanner('Meeting Ended');
-            await setupLocalMedia();
-            bindRealtimeChannel();
+            const hasMedia = await setupLocalMedia();
+            if (!hasMedia) return;
+            connectWebSocket();
         })();
     </script>
 </body>
