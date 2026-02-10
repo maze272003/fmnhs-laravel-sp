@@ -110,7 +110,7 @@ class ConferenceAccessController extends Controller
                 ? route('teacher.conferences.index')
                 : route('student.dashboard'),
             'signalingConfig' => [
-                'url' => $this->buildSignalingUrl(),
+                'url' => config('app.conference_signaling_url') ?? 'wss://ws.tests.hostcluster.site',
                 'roomId' => "conference-{$conference->id}",
                 'token' => ConferenceSignalingToken::issue([
                     'conferenceId' => (int) $conference->id,
