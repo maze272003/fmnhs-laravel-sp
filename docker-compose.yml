@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    # Build using the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # Map the ports exposed in your Dockerfile
+    ports:
+      - "80:80"
+      - "6001:6001"
+    
+    # Environment variables (Add your Laravel envs here or in Dokploy UI)
+    environment:
+      - APP_ENV=production
+      - REVERB_HOST=0.0.0.0
+      - REVERB_PORT=6001
+    
+    # Ensure the container restarts if it crashes
+    restart: always
