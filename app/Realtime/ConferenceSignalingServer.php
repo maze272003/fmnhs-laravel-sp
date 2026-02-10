@@ -76,6 +76,14 @@ class ConferenceSignalingServer
             'offer', 'answer', 'ice-candidate' => $this->forwardToPeer($connection, $message, $type),
             'chat' => $this->broadcastChat($connection, $message),
             'meeting-ended' => $this->broadcastMeetingEnded($connection),
+            'raise-hand' => $this->broadcastRaiseHand($connection, $message),
+            'emoji-reaction' => $this->broadcastEmojiReaction($connection, $message),
+            'mute-participant' => $this->handleMuteParticipant($connection, $message),
+            'unmute-participant' => $this->handleUnmuteParticipant($connection, $message),
+            'disable-cam-participant' => $this->handleDisableCamParticipant($connection, $message),
+            'enable-cam-participant' => $this->handleEnableCamParticipant($connection, $message),
+            'screen-share-started' => $this->broadcastScreenShareEvent($connection, 'screen-share-started'),
+            'screen-share-stopped' => $this->broadcastScreenShareEvent($connection, 'screen-share-stopped'),
             default => $this->sendError($connection, 'unsupported-type', "Unsupported message type [{$type}]."),
         };
     }
@@ -263,6 +271,169 @@ class ConferenceSignalingServer
             ],
             $connection
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $message
+     */
+    private function broadcastRaiseHand(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) {
+            return;
+        }
+
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') {
+            return;
+        }
+
+        $raised = (bool) ($message['raised'] ?? true);
+
+        $this->broadcastToRoom($roomId, [
+            'type' => 'raise-hand',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'raised' => $raised,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $message
+     */
+    private function broadcastEmojiReaction(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) {
+            return;
+        }
+
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') {
+            return;
+        }
+
+        $emoji = trim((string) ($message['emoji'] ?? ''));
+        if ($emoji === '') {
+            return;
+        }
+
+        // Limit emoji to a reasonable length (single emoji)
+        $emoji = mb_substr($emoji, 0, 4);
+
+        $this->broadcastToRoom($roomId, [
+            'type' => 'emoji-reaction',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'emoji' => $emoji,
+        ]);
+    }
+
+    /**
+     * Teacher-only: instruct a participant to mute their microphone.
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function handleMuteParticipant(ConnectionInterface $connection, array $message): void
+    {
+        $this->sendTeacherCommand($connection, $message, 'force-mute');
+    }
+
+    /**
+     * Teacher-only: instruct a participant to unmute their microphone.
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function handleUnmuteParticipant(ConnectionInterface $connection, array $message): void
+    {
+        $this->sendTeacherCommand($connection, $message, 'force-unmute');
+    }
+
+    /**
+     * Teacher-only: instruct a participant to disable their camera.
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function handleDisableCamParticipant(ConnectionInterface $connection, array $message): void
+    {
+        $this->sendTeacherCommand($connection, $message, 'force-cam-off');
+    }
+
+    /**
+     * Teacher-only: instruct a participant to enable their camera.
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function handleEnableCamParticipant(ConnectionInterface $connection, array $message): void
+    {
+        $this->sendTeacherCommand($connection, $message, 'force-cam-on');
+    }
+
+    /**
+     * Common helper to send teacher-initiated commands to a specific participant.
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function sendTeacherCommand(ConnectionInterface $connection, array $message, string $commandType): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) {
+            return;
+        }
+
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can use moderator controls.');
+
+            return;
+        }
+
+        $roomId = (string) ($state['roomId'] ?? '');
+        $targetId = trim((string) ($message['targetId'] ?? ''));
+
+        if ($roomId === '' || $targetId === '' || ! isset($this->rooms[$roomId][$targetId])) {
+            $this->sendError($connection, 'peer-not-found', "Target participant [{$targetId}] is not in this room.");
+
+            return;
+        }
+
+        $targetConnection = $this->rooms[$roomId][$targetId];
+
+        $this->send($targetConnection, [
+            'type' => $commandType,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+        ]);
+
+        // Also broadcast to the room so the teacher UI updates
+        $this->broadcastToRoom($roomId, [
+            'type' => 'participant-control',
+            'roomId' => $roomId,
+            'action' => $commandType,
+            'targetId' => $targetId,
+            'from' => $this->participantFromState($state),
+        ]);
+    }
+
+    /**
+     * Broadcast screen share start/stop events.
+     */
+    private function broadcastScreenShareEvent(ConnectionInterface $connection, string $eventType): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) {
+            return;
+        }
+
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') {
+            return;
+        }
+
+        $this->broadcastToRoom($roomId, [
+            'type' => $eventType,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+        ]);
     }
 
     private function onClose(ConnectionInterface $connection): void
