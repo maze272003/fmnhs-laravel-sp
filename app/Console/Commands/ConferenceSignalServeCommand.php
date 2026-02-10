@@ -18,15 +18,24 @@ class ConferenceSignalServeCommand extends Command
 
     public function handle(ConferenceSignalingServer $signalingServer): int
     {
-        $host = trim((string) ($this->option('host') ?: config('conference_signaling.server.bind_host', '127.0.0.1')));
+        $host = trim((string) ($this->option('host') ?: config('conference_signaling.server.bind_host', '0.0.0.0')));
         $port = (int) ($this->option('port') ?: config('conference_signaling.server.port', 6001));
         $parentPid = (int) ($this->option('parent-pid') ?: 0);
 
         if ($host === '' || $port < 1 || $port > 65535) {
             $this->error('Invalid signaling host or port.');
-
             return self::FAILURE;
         }
+
+        // --- CRITICAL FIX START ---
+        // Workerman expects command line arguments like "start".
+        // Since we are inside Artisan, we must manually set this so Workerman knows what to do.
+        global $argv;
+        $argv = [
+            'artisan', // The script name (doesn't matter much)
+            'start'    // The command Workerman expects
+        ];
+        // --- CRITICAL FIX END ---
 
         $worker = $signalingServer->buildWorker($host, $port);
         $this->info("Conference signaling server listening on ws://{$host}:{$port}");
@@ -37,14 +46,9 @@ class ConferenceSignalServeCommand extends Command
                 'port' => $port,
                 'parent_pid' => $parentPid > 0 ? $parentPid : null,
             ]);
-
-            if ($parentPid > 0) {
-                Timer::add(1.5, function () use ($parentPid): void {
-                    if (! self::isProcessAlive($parentPid)) {
-                        Worker::stopAll();
-                    }
-                });
-            }
+            
+            // Note: In Docker/Supervisor, we usually don't need the parent PID check 
+            // because Supervisor manages the process life cycle.
         };
 
         $worker->onWorkerStop = function () use ($host, $port): void {
@@ -54,6 +58,7 @@ class ConferenceSignalServeCommand extends Command
             ]);
         };
 
+        // This will now block and run forever, keeping the server alive
         Worker::runAll();
 
         return self::SUCCESS;
