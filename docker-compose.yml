@@ -6,14 +6,22 @@ services:
       context: .
       dockerfile: Dockerfile
     
+    # Keep your ports
     ports:
-      # CHANGED: Map host port 8056 to container port 80
-      # This prevents the conflict with Dokploy/Traefik
-      - "8056:80" 
+      - "8001:80"
       - "6001:6001"
     
-    restart: always
+    # CRITICAL: Connect to the existing Dokploy network
+    networks:
+      - dokploy-network
 
     environment:
       APP_ENV: production
       APP_DEBUG: false
+    
+    restart: always
+
+# Define the network so Docker knows it already exists
+networks:
+  dokploy-network:
+    external: true
