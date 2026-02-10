@@ -62,33 +62,18 @@
         </li>
 
         <li>
+            <a href="{{ route('teacher.conferences.index') }}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-emerald-50">
+                <i class="fa-solid fa-video nav-icon w-6 text-center text-slate-400 group-hover:text-emerald-600 transition-colors"></i>
+                <span class="nav-text ml-3 font-semibold text-slate-600 group-hover:text-emerald-700 md:hidden lg:block">Live Class</span>
+            </a>
+        </li>
+
+        <li>
             <a href="{{ route('teacher.announcements.index')}}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-emerald-50">
                 <i class="fa-solid fa-bullhorn nav-icon w-6 text-center text-slate-400 group-hover:text-emerald-600 transition-colors"></i>
                 <span class="nav-text ml-3 font-semibold text-slate-600 group-hover:text-emerald-700 md:hidden lg:block">Announcement</span>
             </a>
         </li>
-
-       <li class="relative">
-    <div
-        class="nav-link flex items-center px-3 py-3 rounded-xl 
-               cursor-not-allowed opacity-60 select-none"
-    >
-        <i class="fa-solid fa-video nav-icon w-6 text-center text-slate-400"></i>
-
-        <span class="nav-text ml-3 font-semibold text-slate-500 md:hidden lg:block">
-            Live Class
-        </span>
-
-        <!-- Coming Soon badge -->
-        <span
-            class="ml-auto text-[10px] font-semibold px-2 py-1 rounded-full 
-                   bg-amber-100 text-amber-700"
-        >
-            Coming Soon
-        </span>
-    </div>
-</li>
-
     </ul>
 
     <ul class="mt-auto pt-4 border-t border-gray-100 space-y-1">
