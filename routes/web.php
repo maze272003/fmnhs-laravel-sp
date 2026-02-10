@@ -7,6 +7,10 @@ use App\Http\Controllers\Admin\AdminTeacherController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConferenceAccessController;
+use App\Http\Controllers\ConferencePlaybackController;
+use App\Http\Controllers\Api\ConferenceApiController;
+use App\Http\Controllers\Api\ConferenceRecordingController;
+use App\Http\Controllers\Api\ConferenceNotificationController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Teacher\TeacherController;
@@ -42,6 +46,32 @@ Route::post('/conference/join/{conference}', [ConferenceAccessController::class,
 // Shared Room Route (teacher or student session)
 Route::middleware(['auth:teacher,student'])->group(function () {
     Route::get('/conference/{conference}/room', [ConferenceAccessController::class, 'room'])->name('conference.room');
+
+    // Conference API — Chat, Participants, Events
+    Route::post('/conference/{conference}/messages', [ConferenceApiController::class, 'storeMessage'])->name('conference.messages.store');
+    Route::post('/conference/{conference}/files', [ConferenceApiController::class, 'uploadFile'])->name('conference.files.upload');
+    Route::get('/conference/{conference}/messages', [ConferenceApiController::class, 'getMessages'])->name('conference.messages.index');
+    Route::get('/conference/{conference}/participants', [ConferenceApiController::class, 'getParticipants'])->name('conference.participants.index');
+    Route::post('/conference/{conference}/events', [ConferenceApiController::class, 'logEvent'])->name('conference.events.store');
+    Route::post('/conference/{conference}/join-log', [ConferenceApiController::class, 'recordJoin'])->name('conference.join.log');
+    Route::post('/conference/{conference}/leave-log', [ConferenceApiController::class, 'recordLeave'])->name('conference.leave.log');
+    Route::get('/conference/{conference}/summary', [ConferenceApiController::class, 'getSummary'])->name('conference.summary');
+    Route::get('/conference/{conference}/timeline', [ConferenceApiController::class, 'getTimeline'])->name('conference.timeline');
+
+    // Conference Recordings
+    Route::get('/conference/{conference}/recordings', [ConferenceRecordingController::class, 'index'])->name('conference.recordings.index');
+    Route::post('/conference/{conference}/recordings', [ConferenceRecordingController::class, 'store'])->name('conference.recordings.store');
+    Route::get('/conference/{conference}/recordings/{recording}', [ConferenceRecordingController::class, 'show'])->name('conference.recordings.show');
+    Route::put('/conference/{conference}/recordings/{recording}/chapters', [ConferenceRecordingController::class, 'updateChapters'])->name('conference.recordings.chapters');
+    Route::get('/conference/{conference}/recordings/{recording}/transcript', [ConferenceRecordingController::class, 'transcript'])->name('conference.recording.transcript');
+    Route::delete('/conference/{conference}/recordings/{recording}', [ConferenceRecordingController::class, 'destroy'])->name('conference.recordings.destroy');
+
+    // Conference Playback
+    Route::get('/conference/{conference}/playback/{recording}', [ConferencePlaybackController::class, 'show'])->name('conference.playback');
+
+    // Conference Notifications
+    Route::get('/conference/notifications', [ConferenceNotificationController::class, 'index'])->name('conference.notifications.index');
+    Route::post('/conference/notifications/read', [ConferenceNotificationController::class, 'markRead'])->name('conference.notifications.read');
 });
 
 // Student Protected Routes

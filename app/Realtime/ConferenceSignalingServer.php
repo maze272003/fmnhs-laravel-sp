@@ -84,6 +84,23 @@ class ConferenceSignalingServer
             'enable-cam-participant' => $this->handleEnableCamParticipant($connection, $message),
             'screen-share-started' => $this->broadcastScreenShareEvent($connection, 'screen-share-started'),
             'screen-share-stopped' => $this->broadcastScreenShareEvent($connection, 'screen-share-stopped'),
+            'push-to-talk' => $this->broadcastPushToTalk($connection, $message),
+            'annotation' => $this->broadcastAnnotation($connection, $message),
+            'laser-pointer' => $this->broadcastLaserPointer($connection, $message),
+            'remote-control-request' => $this->handleRemoteControlRequest($connection, $message),
+            'remote-control-response' => $this->handleRemoteControlResponse($connection, $message),
+            'remote-control-action' => $this->forwardRemoteControlAction($connection, $message),
+            'remote-control-stop' => $this->broadcastRemoteControlStop($connection),
+            'presentation-mode' => $this->broadcastPresentationMode($connection, $message),
+            'recording-started' => $this->broadcastRecordingEvent($connection, 'recording-started'),
+            'recording-stopped' => $this->broadcastRecordingEvent($connection, 'recording-stopped'),
+            'video-freeze-detected' => $this->handleVideoFreezeDetected($connection, $message),
+            'network-quality' => $this->handleNetworkQuality($connection, $message),
+            'attention-check' => $this->broadcastAttentionCheck($connection, $message),
+            'silent-join' => $this->handleSilentJoinToggle($connection, $message),
+            'kick-participant' => $this->handleKickParticipant($connection, $message),
+            'mute-all' => $this->handleMuteAll($connection),
+            'file-shared' => $this->broadcastFileShared($connection, $message),
             default => $this->sendError($connection, 'unsupported-type', "Unsupported message type [{$type}]."),
         };
     }
@@ -433,6 +450,304 @@ class ConferenceSignalingServer
             'type' => $eventType,
             'roomId' => $roomId,
             'from' => $this->participantFromState($state),
+        ]);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function broadcastPushToTalk(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $active = (bool) ($message['active'] ?? false);
+        $this->broadcastToRoom($roomId, [
+            'type' => 'push-to-talk',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'active' => $active,
+        ], $connection);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function broadcastAnnotation(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $data = $message['data'] ?? null;
+        if (! is_array($data)) return;
+        $this->broadcastToRoom($roomId, [
+            'type' => 'annotation',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'data' => $data,
+        ], $connection);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function broadcastLaserPointer(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => 'laser-pointer',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'x' => (float) ($message['x'] ?? 0),
+            'y' => (float) ($message['y'] ?? 0),
+            'visible' => (bool) ($message['visible'] ?? true),
+        ], $connection);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function handleRemoteControlRequest(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'student') {
+            $this->sendError($connection, 'forbidden', 'Only students can request remote control.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        // Forward to teacher(s) in the room
+        foreach ($this->rooms[$roomId] ?? [] as $peerId => $peerConn) {
+            $peerState = $this->connections[$peerConn->id] ?? null;
+            if (is_array($peerState) && ($peerState['role'] ?? '') === 'teacher') {
+                $this->send($peerConn, [
+                    'type' => 'remote-control-request',
+                    'roomId' => $roomId,
+                    'from' => $this->participantFromState($state),
+                ]);
+            }
+        }
+    }
+
+    /** @param array<string, mixed> $message */
+    private function handleRemoteControlResponse(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can approve remote control.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        $targetId = trim((string) ($message['targetId'] ?? ''));
+        $approved = (bool) ($message['approved'] ?? false);
+        if ($roomId === '' || $targetId === '' || ! isset($this->rooms[$roomId][$targetId])) return;
+        $this->send($this->rooms[$roomId][$targetId], [
+            'type' => 'remote-control-response',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'approved' => $approved,
+        ]);
+        if ($approved) {
+            $this->broadcastToRoom($roomId, [
+                'type' => 'remote-control-granted',
+                'roomId' => $roomId,
+                'targetId' => $targetId,
+                'from' => $this->participantFromState($state),
+            ]);
+        }
+    }
+
+    /** @param array<string, mixed> $message */
+    private function forwardRemoteControlAction(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        $targetId = trim((string) ($message['targetId'] ?? ''));
+        if ($roomId === '' || $targetId === '' || ! isset($this->rooms[$roomId][$targetId])) return;
+        $this->send($this->rooms[$roomId][$targetId], [
+            'type' => 'remote-control-action',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'action' => $message['action'] ?? null,
+        ]);
+    }
+
+    private function broadcastRemoteControlStop(ConnectionInterface $connection): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => 'remote-control-stop',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+        ]);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function broadcastPresentationMode(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can control presentation mode.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => 'presentation-mode',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'active' => (bool) ($message['active'] ?? false),
+            'slide' => (int) ($message['slide'] ?? 0),
+        ]);
+    }
+
+    private function broadcastRecordingEvent(ConnectionInterface $connection, string $eventType): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can control recording.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $eventType,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+        ]);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function handleVideoFreezeDetected(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        // Notify teacher about frozen video
+        foreach ($this->rooms[$roomId] ?? [] as $peerId => $peerConn) {
+            $peerState = $this->connections[$peerConn->id] ?? null;
+            if (is_array($peerState) && ($peerState['role'] ?? '') === 'teacher') {
+                $this->send($peerConn, [
+                    'type' => 'video-freeze-alert',
+                    'roomId' => $roomId,
+                    'from' => $this->participantFromState($state),
+                    'peerId' => trim((string) ($message['peerId'] ?? '')),
+                ]);
+            }
+        }
+    }
+
+    /** @param array<string, mixed> $message */
+    private function handleNetworkQuality(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        // Only forward to teacher for monitoring
+        foreach ($this->rooms[$roomId] ?? [] as $peerId => $peerConn) {
+            $peerState = $this->connections[$peerConn->id] ?? null;
+            if (is_array($peerState) && ($peerState['role'] ?? '') === 'teacher' && $peerConn !== $connection) {
+                $this->send($peerConn, [
+                    'type' => 'network-quality-report',
+                    'roomId' => $roomId,
+                    'from' => $this->participantFromState($state),
+                    'quality' => $message['quality'] ?? 'unknown',
+                    'stats' => $message['stats'] ?? null,
+                ]);
+            }
+        }
+    }
+
+    /** @param array<string, mixed> $message */
+    private function broadcastAttentionCheck(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can send attention checks.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => 'attention-check',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'message' => mb_substr(trim((string) ($message['message'] ?? 'Are you paying attention?')), 0, 200),
+        ], $connection);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function handleSilentJoinToggle(ConnectionInterface $connection, array $message): void
+    {
+        // Silent join: don't broadcast join notification
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        // Store silent preference on connection state
+        $this->connections[$connection->id]['silent'] = (bool) ($message['enabled'] ?? false);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function handleKickParticipant(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can kick participants.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        $targetId = trim((string) ($message['targetId'] ?? ''));
+        if ($roomId === '' || $targetId === '' || ! isset($this->rooms[$roomId][$targetId])) return;
+        $targetConn = $this->rooms[$roomId][$targetId];
+        $this->send($targetConn, [
+            'type' => 'kicked',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'reason' => mb_substr(trim((string) ($message['reason'] ?? '')), 0, 200),
+        ]);
+        $targetConn->close();
+    }
+
+    private function handleMuteAll(ConnectionInterface $connection): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can mute all.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => 'force-mute-all',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+        ], $connection);
+    }
+
+    /** @param array<string, mixed> $message */
+    private function broadcastFileShared(ConnectionInterface $connection, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => 'file-shared',
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'fileName' => mb_substr(trim((string) ($message['fileName'] ?? '')), 0, 255),
+            'fileUrl' => trim((string) ($message['fileUrl'] ?? '')),
+            'fileMime' => trim((string) ($message['fileMime'] ?? '')),
+            'fileSize' => (int) ($message['fileSize'] ?? 0),
         ]);
     }
 
