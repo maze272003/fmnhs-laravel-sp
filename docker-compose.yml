@@ -2,21 +2,18 @@ version: '3.8'
 
 services:
   app:
-    # Build using the Dockerfile in the current directory
     build:
       context: .
       dockerfile: Dockerfile
     
-    # Map the ports exposed in your Dockerfile
     ports:
-      - "80:80"
+      # CHANGED: Map host port 8056 to container port 80
+      # This prevents the conflict with Dokploy/Traefik
+      - "8056:80" 
       - "6001:6001"
     
-    # Environment variables (Add your Laravel envs here or in Dokploy UI)
-    environment:
-      - APP_ENV=production
-      - REVERB_HOST=0.0.0.0
-      - REVERB_PORT=6001
-    
-    # Ensure the container restarts if it crashes
     restart: always
+
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
