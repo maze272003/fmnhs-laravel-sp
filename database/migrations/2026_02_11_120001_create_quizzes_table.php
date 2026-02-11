@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('quizzes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('conference_id')->nullable()->constrained('video_conferences')->cascadeOnDelete();
+            $table->foreignId('conference_id')->nullable()->constrained('video_conferences')->nullOnDelete();
             $table->foreignId('teacher_id')->constrained('teachers')->cascadeOnDelete();
             $table->string('title');
             $table->text('description')->nullable();

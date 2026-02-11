@@ -174,7 +174,7 @@ class GamificationService
         $percentage = $maxScore > 0 ? ($score / $maxScore) * 100 : 0;
         
         // Base points
-        $points = (int) ($percentage / 10); // 10 points per 10%
+        $points = (int) ($percentage / 10); // 1 point per 10%
         
         // Bonus for perfect score
         if ($percentage >= 100) {

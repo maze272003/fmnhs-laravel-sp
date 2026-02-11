@@ -109,12 +109,18 @@ class QuizApiController extends Controller
             'type' => ['required', 'in:multiple_choice,true_false,poll'],
             'options' => ['required', 'array', 'min:2'],
             'options.*' => ['required', 'string'],
-            'correct_answers' => ['nullable', 'array'],
+            'correct_answers' => ['nullable', 'array', 'required_unless:type,poll'],
             'correct_answers.*' => ['integer'],
-            'points' => ['integer', 'min:1'],
+            'points' => ['integer', 'min:0'],
             'time_limit' => ['nullable', 'integer', 'min:10'],
             'explanation' => ['nullable', 'string'],
         ]);
+
+        // Ensure poll questions don't have correct answers
+        if ($validated['type'] === 'poll') {
+            $validated['correct_answers'] = null;
+            $validated['points'] = 0;
+        }
 
         $question = $this->quizService->addQuestion($quiz, $validated);
 
