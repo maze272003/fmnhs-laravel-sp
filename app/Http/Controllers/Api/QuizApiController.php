@@ -49,7 +49,7 @@ class QuizApiController extends Controller
             'passing_score' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
-        $teacher = Auth::user()->teacher;
+        $teacher = Auth::user(); // Teacher is the authenticated model itself
         $validated['teacher_id'] = $teacher->id;
 
         $quiz = $this->quizService->createQuiz($validated);
@@ -152,7 +152,7 @@ class QuizApiController extends Controller
             'time_taken' => ['nullable', 'integer'],
         ]);
 
-        $student = Auth::user()->student;
+        $student = Auth::user(); // Student is the authenticated model itself
 
         $response = $this->quizService->submitResponse(
             $quiz,
@@ -180,7 +180,7 @@ class QuizApiController extends Controller
      */
     public function results(Quiz $quiz): JsonResponse
     {
-        $student = Auth::user()->student;
+        $student = Auth::user(); // Student is the authenticated model itself
         $results = $this->quizService->getStudentResults($quiz, $student);
 
         return response()->json($results);
