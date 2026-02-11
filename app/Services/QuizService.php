@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class QuizService
 {
+    public function __construct(
+        private readonly GamificationService $gamificationService
+    ) {}
+
     /**
      * Create a new quiz.
      */
@@ -75,7 +79,7 @@ class QuizService
         }
 
         // Update or create response
-        return QuizResponse::updateOrCreate(
+        $response = QuizResponse::updateOrCreate(
             [
                 'question_id' => $question->id,
                 'student_id' => $student->id,
@@ -88,6 +92,11 @@ class QuizService
                 'time_taken' => $timeTaken,
             ]
         );
+
+        // Award gamification points if quiz is completed
+        $this->checkQuizCompletion($quiz, $student);
+
+        return $response;
     }
 
     /**
@@ -198,5 +207,32 @@ class QuizService
             'option_counts' => $optionCounts,
             'correct_percentage' => $responses->where('is_correct', true)->count() / max($responses->count(), 1) * 100,
         ];
+    }
+
+    /**
+     * Check if student has completed the quiz and award points.
+     */
+    protected function checkQuizCompletion(Quiz $quiz, Student $student): void
+    {
+        $totalQuestions = $quiz->questions()->count();
+        $answeredQuestions = QuizResponse::where('quiz_id', $quiz->id)
+            ->where('student_id', $student->id)
+            ->count();
+
+        // If all questions answered, award points
+        if ($totalQuestions > 0 && $answeredQuestions >= $totalQuestions) {
+            $totalScore = QuizResponse::where('quiz_id', $quiz->id)
+                ->where('student_id', $student->id)
+                ->sum('points_earned');
+
+            $maxScore = $quiz->questions()->sum('points');
+
+            $this->gamificationService->awardQuizPoints(
+                $student,
+                $quiz->id,
+                $totalScore,
+                $maxScore
+            );
+        }
     }
 }

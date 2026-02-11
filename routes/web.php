@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ConferenceApiController;
 use App\Http\Controllers\Api\ConferenceRecordingController;
 use App\Http\Controllers\Api\ConferenceNotificationController;
 use App\Http\Controllers\Api\QuizApiController;
+use App\Http\Controllers\Api\GamificationApiController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Teacher\TeacherController;
@@ -115,6 +116,13 @@ Route::middleware(['auth:teacher,student'])->group(function () {
         Route::get('/quizzes/{quiz}/results', [QuizApiController::class, 'results']);
         Route::get('/quizzes/{quiz}/statistics', [QuizApiController::class, 'statistics']);
         Route::get('/questions/{question}/results', [QuizApiController::class, 'questionResults']);
+
+        // Gamification API
+        Route::get('/gamification/summary', [GamificationApiController::class, 'summary']);
+        Route::get('/gamification/leaderboard', [GamificationApiController::class, 'leaderboard']);
+        Route::get('/gamification/badges', [GamificationApiController::class, 'badges']);
+        Route::get('/gamification/my-badges', [GamificationApiController::class, 'studentBadges']);
+        Route::get('/gamification/points-history', [GamificationApiController::class, 'pointsHistory']);
     });
 });
 
