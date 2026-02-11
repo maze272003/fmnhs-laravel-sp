@@ -438,7 +438,10 @@
     @vite('resources/js/conference/index.js')
 
     <script type="module">
-        import { ConferenceApp } from '/build/resources/js/conference/app.js';
+        const { ConferenceApp } = window;
+        if (!ConferenceApp) {
+            throw new Error('Conference bundle failed to load. Ensure Vite assets are built and deployed.');
+        }
 
         // ========== CONFIG ==========
         const conference = window.__CONFERENCE__;
