@@ -40,7 +40,12 @@ class ConferenceRecording extends Model
             return null;
         }
 
-        return \Illuminate\Support\Facades\Storage::disk($this->disk)
-            ->temporaryUrl($this->file_path, now()->addHour());
+        try {
+            return \Illuminate\Support\Facades\Storage::disk($this->disk)
+                ->temporaryUrl($this->file_path, now()->addHour());
+        } catch (\RuntimeException) {
+            // Fallback for disks that don't support temporary URLs (e.g. local)
+            return \Illuminate\Support\Facades\Storage::disk($this->disk)->url($this->file_path);
+        }
     }
 }

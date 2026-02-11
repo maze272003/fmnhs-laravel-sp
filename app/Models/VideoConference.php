@@ -122,3 +122,5 @@ class VideoConference extends Model
             ->whereNotNull('joined_at')
             ->whereNull('left_at')
             ->count();
+    }
+}

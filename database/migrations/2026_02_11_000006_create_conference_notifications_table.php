@@ -22,8 +22,8 @@ return new class extends Migration
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
 
-            $table->index(['recipient_type', 'recipient_id', 'is_read']);
-            $table->index(['conference_id', 'type']);
+            $table->index(['recipient_type', 'recipient_id', 'is_read'], 'conf_notif_recipient_read_idx');
+            $table->index(['conference_id', 'type'], 'conf_notif_conference_type_idx');
         });
     }
 

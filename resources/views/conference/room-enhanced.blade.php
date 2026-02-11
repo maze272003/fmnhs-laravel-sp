@@ -427,14 +427,24 @@
         ];
     @endphp
 
+    {{-- Pass config data to window for the Vite-bundled module --}}
+    <script>
+        window.__CONFERENCE__ = @json($conferenceData);
+        window.__ACTOR__ = @json($actorData);
+        window.__SIGNALING__ = @json($signalingConfig);
+        window.__MEETING__ = @json($meetingData);
+    </script>
+
+    @vite('resources/js/conference/index.js')
+
     <script type="module">
-        import { ConferenceApp } from '/resources/js/conference/app.js';
+        import { ConferenceApp } from '/build/resources/js/conference/app.js';
 
         // ========== CONFIG ==========
-        const conference = @json($conferenceData);
-        const actor = @json($actorData);
-        const signalingConfig = @json($signalingConfig);
-        const meetingConfig = @json($meetingData);
+        const conference = window.__CONFERENCE__;
+        const actor = window.__ACTOR__;
+        const signalingConfig = window.__SIGNALING__;
+        const meetingConfig = window.__MEETING__;
 
         // ========== DOM ==========
         const $ = (sel) => document.querySelector(sel);

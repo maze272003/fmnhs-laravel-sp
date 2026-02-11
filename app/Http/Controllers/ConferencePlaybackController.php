@@ -26,7 +26,7 @@ class ConferencePlaybackController extends Controller
         if ($teacher && (int) $conference->teacher_id === (int) $teacher->id) {
             $authorized = true;
         }
-        if ($student && ! $recording->restricted) {
+        if ($student && ! $recording->restricted && $conference->canStudentJoin($student)) {
             $authorized = true;
         }
 

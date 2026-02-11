@@ -58,8 +58,16 @@ class ConferenceRecordingController extends Controller
     {
         $this->authorizeAccess($conference);
 
-        $recordings = $conference->recordings()
-            ->where('status', 'ready')
+        $student = Auth::guard('student')->user();
+
+        $query = $conference->recordings()->where('status', 'ready');
+
+        // Students can only see non-restricted recordings
+        if ($student) {
+            $query->where('restricted', false);
+        }
+
+        $recordings = $query
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (ConferenceRecording $r) => [
@@ -153,8 +161,8 @@ class ConferenceRecordingController extends Controller
         }
 
         if ($student && $conference->canStudentJoin($student)) {
-            $recording = $conference->recordings()->where('restricted', true)->exists();
-            // Students can still see non-restricted recordings
+            // Students are authorized but can only see non-restricted recordings
+            // (filtering handled at query level in each method)
             return;
         }
 
