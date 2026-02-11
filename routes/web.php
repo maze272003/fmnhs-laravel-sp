@@ -11,6 +11,8 @@ use App\Http\Controllers\ConferencePlaybackController;
 use App\Http\Controllers\Api\ConferenceApiController;
 use App\Http\Controllers\Api\ConferenceRecordingController;
 use App\Http\Controllers\Api\ConferenceNotificationController;
+use App\Http\Controllers\Api\QuizApiController;
+use App\Http\Controllers\Api\GamificationApiController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Teacher\TeacherController;
@@ -99,6 +101,28 @@ Route::middleware(['auth:teacher,student'])->group(function () {
 
         Route::get('/conference/notifications', [ConferenceNotificationController::class, 'index']);
         Route::post('/conference/notifications/read', [ConferenceNotificationController::class, 'markRead']);
+
+        // Quiz API
+        Route::get('/conference/{conference}/quizzes', [QuizApiController::class, 'index']);
+        Route::post('/quizzes', [QuizApiController::class, 'store']);
+        Route::get('/quizzes/{quiz}', [QuizApiController::class, 'show']);
+        Route::put('/quizzes/{quiz}', [QuizApiController::class, 'update']);
+        Route::delete('/quizzes/{quiz}', [QuizApiController::class, 'destroy']);
+        Route::post('/quizzes/{quiz}/questions', [QuizApiController::class, 'addQuestion']);
+        Route::post('/quizzes/{quiz}/start', [QuizApiController::class, 'start']);
+        Route::post('/quizzes/{quiz}/end', [QuizApiController::class, 'end']);
+        Route::post('/quizzes/{quiz}/questions/{question}/respond', [QuizApiController::class, 'submitResponse']);
+        Route::get('/quizzes/{quiz}/leaderboard', [QuizApiController::class, 'leaderboard']);
+        Route::get('/quizzes/{quiz}/results', [QuizApiController::class, 'results']);
+        Route::get('/quizzes/{quiz}/statistics', [QuizApiController::class, 'statistics']);
+        Route::get('/questions/{question}/results', [QuizApiController::class, 'questionResults']);
+
+        // Gamification API
+        Route::get('/gamification/summary', [GamificationApiController::class, 'summary']);
+        Route::get('/gamification/leaderboard', [GamificationApiController::class, 'leaderboard']);
+        Route::get('/gamification/badges', [GamificationApiController::class, 'badges']);
+        Route::get('/gamification/my-badges', [GamificationApiController::class, 'studentBadges']);
+        Route::get('/gamification/points-history', [GamificationApiController::class, 'pointsHistory']);
     });
 });
 

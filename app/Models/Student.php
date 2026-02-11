@@ -82,6 +82,30 @@ class Student extends Authenticatable
         return $this->hasMany(Attendance::class);
     }
 
+    public function points()
+    {
+        return $this->hasMany(StudentPoint::class);
+    }
+
+    public function badges()
+    {
+        return $this->belongsToMany(Badge::class, 'student_badges')
+            ->withPivot('earned_at', 'note')
+            ->withTimestamps();
+    }
+
+    public function achievements()
+    {
+        return $this->belongsToMany(Achievement::class, 'student_achievements')
+            ->withPivot('completed_at', 'completion_count', 'completion_data')
+            ->withTimestamps();
+    }
+
+    public function getTotalPointsAttribute(): int
+    {
+        return $this->points()->sum('points');
+    }
+
     public function setSchoolYearAttribute(?string $schoolYear): void
     {
         if (!$schoolYear) {
