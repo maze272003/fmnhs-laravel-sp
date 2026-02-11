@@ -98,7 +98,7 @@ class ConferenceAccessController extends Controller
             $conference->update(['started_at' => now()]);
         }
 
-        return view('conference.room-enhanced', [
+        return view('conference.room-v2', [
             'conference' => $conference,
             'actorRole' => $actorRole,
             'actorId' => $actorId,
