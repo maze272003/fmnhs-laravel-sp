@@ -9,8 +9,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        :root { --brand-color: {{ $conference->branding_color ?? '#059669' }}; }
+        :root {
+            --brand-color: {{ $conference->branding_color ?? '#059669' }};
+            --panel-border: rgba(71, 85, 105, 0.48);
+            --spring-ease: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        html, body { height: 100%; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background:
+                radial-gradient(65rem 50rem at 12% -20%, rgba(16, 185, 129, 0.14), transparent 60%),
+                radial-gradient(48rem 40rem at 100% 0%, rgba(59, 130, 246, 0.13), transparent 58%),
+                #020617;
+        }
+        #conference-root { min-height: 100dvh; }
+        .panel {
+            background: linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.86));
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 20px 45px rgba(2, 6, 23, 0.35), inset 0 1px 0 rgba(148, 163, 184, 0.07);
+            backdrop-filter: blur(10px);
+        }
+        .physics-card {
+            transform: translate3d(0, 0, 0);
+            transition: transform 280ms var(--spring-ease), box-shadow 280ms var(--spring-ease);
+            will-change: transform;
+        }
+        .physics-card:hover {
+            box-shadow: 0 24px 55px rgba(2, 6, 23, 0.45), inset 0 1px 0 rgba(148, 163, 184, 0.11);
+        }
+
+        .meeting-grid { min-height: calc(100dvh - 9rem); }
+        .meeting-sidebar { min-height: 0; }
+        .header-shell { align-items: flex-start; }
+        .header-actions { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; justify-content: flex-end; }
 
         /* Scrollbar */
         .scroll-thin::-webkit-scrollbar { width: 5px; }
@@ -54,8 +86,35 @@
         .pip-overlay { position: absolute; top: 8px; right: 8px; z-index: 20; }
 
         /* Toolbar responsive */
-        .toolbar-btn { @apply px-2.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-200; }
-        .toolbar-btn:hover { transform: translateY(-1px); }
+        .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            min-width: 2.35rem;
+            min-height: 2.35rem;
+            padding: 0.5rem 0.65rem;
+            border-radius: 0.82rem;
+            font-size: 0.67rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            line-height: 1;
+            transition: transform 220ms var(--spring-ease), background-color 180ms ease, box-shadow 220ms ease;
+            will-change: transform;
+            white-space: nowrap;
+        }
+        .toolbar-btn i { width: 1rem; text-align: center; font-size: 0.9rem; }
+        .toolbar-btn:hover { transform: translateY(-1px) scale(1.015); }
+        .toolbar-btn:active { transform: translateY(0) scale(0.965); }
+        .toolbar-btn:focus-visible { outline: 2px solid rgba(16, 185, 129, 0.7); outline-offset: 2px; }
+        .toolbar-track {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
 
         /* Attention check modal */
         .attention-modal { position: fixed; inset: 0; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); }
@@ -70,12 +129,69 @@
         /* Video tile */
         .video-tile { position: relative; border-radius: 16px; overflow: hidden; min-height: 200px; background: #0f172a; }
         .video-tile video { position: absolute; inset: 0; width: 100%; height: 100%; object-cover; background: #000; }
-        .video-tile .tile-label { position: absolute; bottom: 8px; left: 8px; padding: 4px 10px; border-radius: 8px; background: rgba(0,0,0,0.7); font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+        .video-tile .tile-label {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            max-width: calc(100% - 18px);
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(5px);
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .video-tile .tile-label > span:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         .video-tile .tile-controls { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
         .video-tile:hover .tile-controls { opacity: 1; }
+        #video-grid { grid-auto-rows: minmax(190px, 1fr); }
 
         /* Notification bell badge */
         .notif-badge { position: absolute; top: -2px; right: -2px; width: 16px; height: 16px; border-radius: 50%; background: #ef4444; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+
+        @media (max-width: 1279px) {
+            .meeting-grid { min-height: calc(100dvh - 9rem); height: auto; }
+            .meeting-sidebar { max-height: 42dvh; }
+            .header-shell { gap: 0.65rem; }
+            .header-actions { justify-content: flex-start; width: 100%; }
+        }
+        @media (max-width: 1023px) {
+            .toolbar-track {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 0.15rem;
+                scrollbar-width: thin;
+            }
+            .toolbar-track .toolbar-btn,
+            .toolbar-track > .relative {
+                flex: 0 0 auto;
+            }
+        }
+        @media (max-width: 767px) {
+            .video-tile { min-height: 170px; }
+            #video-grid { grid-auto-rows: minmax(170px, 1fr); }
+        }
+        @media (hover: none), (pointer: coarse) {
+            .video-tile .tile-controls { opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .physics-card,
+            .toolbar-btn,
+            .video-tile,
+            .emoji-float,
+            .hand-raised,
+            .rec-pulse {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
     </style>
     <script>
         tailwind.config = {
@@ -88,7 +204,7 @@
     <div id="conference-root" class="min-h-screen flex flex-col">
         {{-- ==================== HEADER ==================== --}}
         <header class="px-3 md:px-5 py-3 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
-            <div class="flex items-center justify-between gap-3">
+            <div class="header-shell flex flex-col md:flex-row md:items-center justify-between gap-3">
                 {{-- Left: Title & status --}}
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 flex-wrap">
@@ -115,7 +231,7 @@
                 </div>
 
                 {{-- Right: Actions --}}
-                <div class="flex items-center gap-1.5 flex-shrink-0">
+                <div class="header-actions flex-shrink-0">
                     {{-- Notification bell --}}
                     <button id="notif-btn" type="button" class="relative toolbar-btn bg-slate-700 hover:bg-slate-600" title="Notifications">
                         <i class="fa-solid fa-bell"></i>
@@ -152,10 +268,10 @@
 
         {{-- ==================== MAIN ==================== --}}
         <main class="flex-1 p-2 md:p-4 overflow-hidden">
-            <div class="grid grid-cols-1 xl:grid-cols-[1fr_20rem] gap-3 h-[calc(100vh-130px)]">
+            <div class="meeting-grid grid grid-cols-1 xl:grid-cols-[1fr_20rem] gap-3">
 
                 {{-- ========== VIDEO STAGE ========== --}}
-                <section class="panel bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+                <section id="stage-panel" class="panel physics-card rounded-2xl flex flex-col overflow-hidden">
                     {{-- Toolbar --}}
                     <div class="p-3 border-b border-slate-800 flex items-center justify-between flex-wrap gap-1.5">
                         <div class="flex items-center gap-2">
@@ -169,7 +285,7 @@
                                 <div class="audio-bar w-1 bg-emerald-400 rounded-full" style="height:50%"></div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 flex-wrap">
+                        <div class="toolbar-track">
                             {{-- Mic --}}
                             <button id="toggle-audio-btn" type="button" class="toolbar-btn bg-slate-700 hover:bg-slate-600" title="Toggle Mic (M)">
                                 <i class="fa-solid fa-microphone"></i><span class="hidden md:inline ml-1">Mic</span>
@@ -191,7 +307,7 @@
                                 <button id="emoji-btn" type="button" class="toolbar-btn bg-pink-600 hover:bg-pink-700" title="React">
                                     <i class="fa-solid fa-face-smile"></i>
                                 </button>
-                                <div id="emoji-picker" class="hidden absolute bottom-full mb-2 right-0 bg-slate-800 border border-slate-700 rounded-xl p-2 shadow-2xl z-50 min-w-[200px]">
+                                <div id="emoji-picker" class="hidden absolute top-full mt-2 right-0 bg-slate-800 border border-slate-700 rounded-xl p-2 shadow-2xl z-50 min-w-[200px]">
                                     <div class="grid grid-cols-5 gap-1" id="emoji-grid"></div>
                                 </div>
                             </div>
@@ -224,7 +340,7 @@
                                 <button id="quality-btn" type="button" class="toolbar-btn bg-slate-700 hover:bg-slate-600" title="Video Quality">
                                     <i class="fa-solid fa-sliders"></i>
                                 </button>
-                                <div id="quality-menu" class="hidden absolute bottom-full mb-2 right-0 bg-slate-800 border border-slate-700 rounded-xl p-2 shadow-2xl z-50 min-w-[140px]">
+                                <div id="quality-menu" class="hidden absolute top-full mt-2 right-0 bg-slate-800 border border-slate-700 rounded-xl p-2 shadow-2xl z-50 min-w-[140px]">
                                     <button data-quality="high" class="quality-opt w-full text-left px-3 py-1.5 rounded-lg hover:bg-slate-700 text-xs font-bold">1080p 60fps</button>
                                     <button data-quality="medium" class="quality-opt w-full text-left px-3 py-1.5 rounded-lg hover:bg-slate-700 text-xs font-bold">720p 30fps</button>
                                     <button data-quality="low" class="quality-opt w-full text-left px-3 py-1.5 rounded-lg hover:bg-slate-700 text-xs font-bold">480p 15fps</button>
@@ -257,14 +373,14 @@
                     </div>
 
                     {{-- Video Grid --}}
-                    <div id="video-stage" class="flex-1 p-3 overflow-auto">
-                        <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 h-full">
+                    <div id="video-stage" class="flex-1 p-2 sm:p-3 overflow-auto">
+                        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-3 min-h-full">
                             {{-- Local tile --}}
-                            <div id="local-tile" class="video-tile border border-emerald-500/30">
+                            <div id="local-tile" class="video-tile physics-card border border-emerald-500/30">
                                 <video id="local-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover bg-black"></video>
                                 <div class="tile-label">
                                     <span>You ({{ ucfirst($actorRole) }})</span>
-                                    <span id="local-hand-icon" class="hidden hand-raised text-amber-400">✋</span>
+                                    <span id="local-hand-icon" class="hidden hand-raised text-amber-400">&#9995;</span>
                                 </div>
                                 <div class="tile-controls">
                                     <button id="local-pip-btn" class="px-1.5 py-0.5 rounded bg-black/60 hover:bg-black/80 text-[10px]" title="PiP">
@@ -273,7 +389,7 @@
                                 </div>
                             </div>
                             {{-- Screen share tile (hidden) --}}
-                            <div id="screen-share-tile" class="hidden video-tile border-2 border-indigo-500/50 screen-share-active col-span-full relative">
+                            <div id="screen-share-tile" class="hidden video-tile physics-card border-2 border-indigo-500/50 screen-share-active col-span-full relative">
                                 <video id="screen-share-video" autoplay playsinline class="absolute inset-0 w-full h-full object-contain bg-black"></video>
                                 <div class="tile-label bg-indigo-600/80">
                                     <i class="fa-solid fa-display mr-1"></i><span id="screen-share-label">Screen Share</span>
@@ -288,7 +404,7 @@
                 </section>
 
                 {{-- ========== SIDEBAR ========== --}}
-                <aside class="panel bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+                <aside id="sidebar-panel" class="meeting-sidebar panel physics-card rounded-2xl flex flex-col overflow-hidden">
                     {{-- Tab switcher --}}
                     <div class="flex border-b border-slate-800">
                         <button class="sidebar-tab flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider text-center transition-colors text-emerald-300 border-b-2 border-emerald-400" data-tab="chat">
@@ -305,13 +421,13 @@
                     {{-- Chat Panel --}}
                     <div id="tab-chat" class="flex-1 flex flex-col min-h-0">
                         <div id="chat-log" class="flex-1 p-3 space-y-2 overflow-y-auto scroll-thin"></div>
-                        <form id="chat-form" class="p-3 border-t border-slate-800 flex gap-2">
+                        <form id="chat-form" class="p-3 border-t border-slate-800 flex flex-wrap sm:flex-nowrap gap-2">
                             <label class="cursor-pointer px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
                                 <i class="fa-solid fa-paperclip"></i>
                                 <input type="file" id="file-upload" class="hidden" accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
                             </label>
                             <input id="chat-input" type="text" maxlength="2000" required placeholder="Send a message..."
-                                class="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm text-slate-100 focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 outline-none placeholder-slate-500">
+                                class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm text-slate-100 focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 outline-none placeholder-slate-500">
                             <button type="submit" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black text-xs uppercase tracking-wide transition-colors">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </button>
@@ -326,7 +442,7 @@
                     {{-- Files Panel --}}
                     <div id="tab-files" class="hidden flex-1 p-3 overflow-y-auto scroll-thin">
                         <div id="files-list" class="space-y-2">
-                            <p class="text-xs text-slate-500 text-center py-4">No files shared yet</p>
+                            <p class="no-files text-xs text-slate-500 text-center py-4">No files shared yet</p>
                         </div>
                     </div>
                 </aside>
@@ -454,6 +570,8 @@
         const $$ = (sel) => document.querySelectorAll(sel);
 
         const dom = {
+            stagePanel: $('#stage-panel'),
+            sidebarPanel: $('#sidebar-panel'),
             localVideo: $('#local-video'),
             videoGrid: $('#video-grid'),
             videoStage: $('#video-stage'),
@@ -506,10 +624,17 @@
             annotationCanvas: $('#annotation-canvas'),
             laserDot: $('#laser-dot'),
             filesList: $('#files-list'),
+            noiseToggle: $('#noise-toggle'),
+            pttSettingsToggle: $('#ptt-settings-toggle'),
+            soundToggle: $('#sound-toggle'),
+            silentJoinToggle: $('#silent-join-toggle'),
+            audioInputSelect: $('#audio-input-select'),
+            videoInputSelect: $('#video-input-select'),
+            audioOutputSelect: $('#audio-output-select'),
         };
 
         // ========== EMOJIS ==========
-        const emojis = ['👍', '👏', '❤️', '😂', '🎉', '🔥', '😮', '😢', '💯', '✅', '❌', '🤔', '👋', '⭐', '💪'];
+        const emojis = ['\u{1F44D}', '\u{1F44F}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F389}', '\u{1F525}', '\u{1F62E}', '\u{1F622}', '\u{1F4AF}', '\u{2705}', '\u{274C}', '\u{1F914}', '\u{1F44B}', '\u{2B50}', '\u{1F4AA}'];
         emojis.forEach(emoji => {
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -620,7 +745,7 @@
         function createRemoteTile(peerId, label) {
             const tile = document.createElement('div');
             tile.id = `tile-${peerId}`;
-            tile.className = 'video-tile border border-slate-700';
+            tile.className = 'video-tile physics-card border border-slate-700';
             const video = document.createElement('video');
             video.id = `video-${peerId}`;
             video.autoplay = true;
@@ -628,7 +753,7 @@
             video.className = 'absolute inset-0 w-full h-full object-cover bg-black';
             const caption = document.createElement('div');
             caption.className = 'tile-label';
-            caption.innerHTML = `<span>${label}</span><span id="hand-${peerId}" class="hidden hand-raised text-amber-400">✋</span>`;
+            caption.innerHTML = `<span>${label}</span><span id="hand-${peerId}" class="hidden hand-raised text-amber-400">&#9995;</span>`;
             const controls = document.createElement('div');
             controls.className = 'tile-controls';
             controls.innerHTML = `<button class="pip-tile-btn px-1.5 py-0.5 rounded bg-black/60 hover:bg-black/80 text-[10px]" data-peer="${peerId}" title="PiP"><i class="fa-solid fa-clone"></i></button>`;
@@ -636,6 +761,7 @@
             tile.appendChild(caption);
             tile.appendChild(controls);
             dom.videoGrid.appendChild(tile);
+            registerPhysicsSurface(tile, 2.6);
             return video;
         }
 
@@ -656,7 +782,7 @@
                 if (raisedHands.has(id)) {
                     const hand = document.createElement('span');
                     hand.className = 'hand-raised text-amber-400 text-sm';
-                    hand.textContent = '✋';
+                    hand.textContent = '\u270B';
                     nameRow.appendChild(hand);
                 }
                 const role = document.createElement('p');
@@ -667,7 +793,7 @@
                 row.appendChild(left);
 
                 const right = document.createElement('div');
-                right.className = 'flex items-center gap-1 flex-shrink-0';
+                right.className = 'flex items-center gap-1 flex-shrink-0 flex-wrap justify-end';
 
                 if (actor.role === 'teacher' && id !== actor.id) {
                     // Moderator controls
@@ -697,6 +823,81 @@
                 dom.participantsList.appendChild(row);
             });
             dom.participantsCount.textContent = String(members.size || 1);
+        }
+
+        // ========== PHYSICS UI ==========
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+        const physicsCleanups = [];
+
+        function registerPhysicsSurface(el, strength = 4) {
+            if (!el || prefersReducedMotion || isCoarsePointer || el.dataset.physicsBound === '1') return;
+            el.dataset.physicsBound = '1';
+
+            let targetX = 0;
+            let targetY = 0;
+            let x = 0;
+            let y = 0;
+            let vx = 0;
+            let vy = 0;
+            let raf = null;
+            const stiffness = 0.13;
+            const damping = 0.78;
+
+            const animate = () => {
+                const dx = targetX - x;
+                const dy = targetY - y;
+                vx = (vx + (dx * stiffness)) * damping;
+                vy = (vy + (dy * stiffness)) * damping;
+                x += vx;
+                y += vy;
+                el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
+
+                if (Math.abs(dx) < 0.06 && Math.abs(dy) < 0.06 && Math.abs(vx) < 0.06 && Math.abs(vy) < 0.06) {
+                    raf = null;
+                    if (targetX === 0 && targetY === 0) {
+                        el.style.transform = 'translate3d(0, 0, 0)';
+                    }
+                    return;
+                }
+                raf = requestAnimationFrame(animate);
+            };
+
+            const wake = () => {
+                if (!raf) raf = requestAnimationFrame(animate);
+            };
+
+            const onMove = (e) => {
+                const rect = el.getBoundingClientRect();
+                const px = (e.clientX - rect.left) / rect.width - 0.5;
+                const py = (e.clientY - rect.top) / rect.height - 0.5;
+                targetX = px * strength;
+                targetY = py * strength;
+                wake();
+            };
+
+            const onLeave = () => {
+                targetX = 0;
+                targetY = 0;
+                wake();
+            };
+
+            el.addEventListener('mousemove', onMove);
+            el.addEventListener('mouseleave', onLeave);
+
+            physicsCleanups.push(() => {
+                el.removeEventListener('mousemove', onMove);
+                el.removeEventListener('mouseleave', onLeave);
+                if (raf) cancelAnimationFrame(raf);
+                el.style.transform = '';
+            });
+        }
+
+        function initPhysicsUI() {
+            registerPhysicsSurface(dom.stagePanel, 3.8);
+            registerPhysicsSurface(dom.sidebarPanel, 2.9);
+            registerPhysicsSurface(document.getElementById('local-tile'), 2.6);
+            registerPhysicsSurface(dom.screenShareTile, 2.1);
         }
 
         // ========== MEETING TIMER ==========
@@ -870,11 +1071,35 @@
                 onFileShared: addFileMessage,
                 onNetworkQualityReport: (from, quality) => {
                     if (quality === 'poor') {
-                        addSystemMessage(`⚠️ ${from.name} has poor network quality`);
+                        addSystemMessage(`Warning: ${from.name} has poor network quality`);
                     }
                 },
             },
         });
+
+        initPhysicsUI();
+
+        function setToggleState(toggle, enabled) {
+            if (!toggle) return;
+            const knob = toggle.querySelector('span');
+            toggle.dataset.enabled = enabled ? '1' : '0';
+            toggle.classList.toggle('bg-emerald-500', enabled);
+            toggle.classList.toggle('bg-slate-600', !enabled);
+            if (knob) {
+                knob.classList.toggle('left-5', enabled);
+                knob.classList.toggle('left-0.5', !enabled);
+            }
+        }
+
+        function setPttState(enabled, notify = false) {
+            app.enablePushToTalk(enabled);
+            dom.pttBtn.classList.toggle('bg-amber-600', enabled);
+            dom.pttBtn.classList.toggle('bg-slate-700', !enabled);
+            setToggleState(dom.pttSettingsToggle, enabled);
+            if (notify) {
+                addSystemMessage(enabled ? 'Push-to-talk enabled. Hold SPACE to talk.' : 'Push-to-talk disabled.');
+            }
+        }
 
         // ========== EVENT WIRING ==========
         dom.toggleAudioBtn.addEventListener('click', () => app.toggleAudio());
@@ -885,8 +1110,8 @@
 
         dom.emojiBtn.addEventListener('click', (e) => { e.stopPropagation(); dom.emojiPicker.classList.toggle('hidden'); });
         document.addEventListener('click', (e) => {
-            if (!dom.emojiPicker.contains(e.target) && e.target !== dom.emojiBtn) dom.emojiPicker.classList.add('hidden');
-            if (!dom.qualityMenu.contains(e.target) && e.target !== dom.qualityBtn) dom.qualityMenu.classList.add('hidden');
+            if (!dom.emojiPicker.contains(e.target) && !e.target.closest('#emoji-btn')) dom.emojiPicker.classList.add('hidden');
+            if (!dom.qualityMenu.contains(e.target) && !e.target.closest('#quality-btn')) dom.qualityMenu.classList.add('hidden');
         });
 
         dom.chatForm.addEventListener('submit', (e) => {
@@ -934,11 +1159,7 @@
 
         // PTT
         dom.pttBtn.addEventListener('click', () => {
-            const isPTT = !app.media.isPushToTalk;
-            app.enablePushToTalk(isPTT);
-            dom.pttBtn.classList.toggle('bg-amber-600', isPTT);
-            dom.pttBtn.classList.toggle('bg-slate-700', !isPTT);
-            addSystemMessage(isPTT ? 'Push-to-talk enabled. Hold SPACE to talk.' : 'Push-to-talk disabled.');
+            setPttState(!app.media.isPushToTalk, true);
         });
 
         // PiP
@@ -956,6 +1177,39 @@
         dom.settingsBtn.addEventListener('click', () => dom.settingsModal.classList.remove('hidden'));
         dom.closeSettings.addEventListener('click', () => dom.settingsModal.classList.add('hidden'));
         dom.settingsModal.addEventListener('click', (e) => { if (e.target === dom.settingsModal) dom.settingsModal.classList.add('hidden'); });
+        setToggleState(dom.noiseToggle, true);
+        setPttState(app.media.isPushToTalk, false);
+        setToggleState(dom.soundToggle, app.notifications.soundEnabled);
+        setToggleState(dom.silentJoinToggle, app.notifications.silentJoin);
+
+        dom.noiseToggle?.addEventListener('click', async () => {
+            const enabled = dom.noiseToggle.dataset.enabled !== '1';
+            setToggleState(dom.noiseToggle, enabled);
+            app.media.isNoiseSuppression = enabled;
+            try {
+                const track = app.media.localStream?.getAudioTracks?.()[0];
+                if (track) {
+                    await track.applyConstraints({ noiseSuppression: enabled });
+                }
+            } catch {}
+            addSystemMessage(`Noise suppression ${enabled ? 'enabled' : 'disabled'}.`);
+        });
+
+        dom.pttSettingsToggle?.addEventListener('click', () => {
+            setPttState(!app.media.isPushToTalk, true);
+        });
+
+        dom.soundToggle?.addEventListener('click', () => {
+            const enabled = app.notifications.toggleSound();
+            setToggleState(dom.soundToggle, enabled);
+            addSystemMessage(`Notification sounds ${enabled ? 'enabled' : 'disabled'}.`);
+        });
+
+        dom.silentJoinToggle?.addEventListener('click', () => {
+            const enabled = app.notifications.toggleSilentJoin();
+            setToggleState(dom.silentJoinToggle, enabled);
+            addSystemMessage(enabled ? 'Silent join mode enabled.' : 'Silent join mode disabled.');
+        });
 
         // Sidebar tabs
         document.querySelectorAll('.sidebar-tab').forEach(tab => {
@@ -1051,22 +1305,98 @@
 
         // Populate device selects
         async function populateDevices() {
+            if (!dom.audioInputSelect || !dom.videoInputSelect || !dom.audioOutputSelect) return;
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const audioInputs = devices.filter(d => d.kind === 'audioinput');
                 const videoInputs = devices.filter(d => d.kind === 'videoinput');
                 const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
 
-                const audioSelect = document.getElementById('audio-input-select');
-                const videoSelect = document.getElementById('video-input-select');
-                const outputSelect = document.getElementById('audio-output-select');
+                dom.audioInputSelect.innerHTML = '';
+                dom.videoInputSelect.innerHTML = '';
+                dom.audioOutputSelect.innerHTML = '';
 
-                audioInputs.forEach((d, i) => audioSelect.add(new Option(d.label || `Mic ${i+1}`, d.deviceId)));
-                videoInputs.forEach((d, i) => videoSelect.add(new Option(d.label || `Camera ${i+1}`, d.deviceId)));
-                audioOutputs.forEach((d, i) => outputSelect.add(new Option(d.label || `Speaker ${i+1}`, d.deviceId)));
+                audioInputs.forEach((d, i) => dom.audioInputSelect.add(new Option(d.label || `Mic ${i + 1}`, d.deviceId)));
+                videoInputs.forEach((d, i) => dom.videoInputSelect.add(new Option(d.label || `Camera ${i + 1}`, d.deviceId)));
+                audioOutputs.forEach((d, i) => dom.audioOutputSelect.add(new Option(d.label || `Speaker ${i + 1}`, d.deviceId)));
             } catch {}
         }
+
+        async function switchInputDevice(kind, deviceId) {
+            if (!deviceId) return;
+            const constraints = kind === 'audioinput'
+                ? { audio: { deviceId: { exact: deviceId } }, video: false }
+                : { video: { deviceId: { exact: deviceId } }, audio: false };
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const newTrack = kind === 'audioinput' ? stream.getAudioTracks()[0] : stream.getVideoTracks()[0];
+                const localStream = app.media.localStream;
+                if (!newTrack || !localStream) {
+                    stream.getTracks().forEach(t => t.stop());
+                    return;
+                }
+
+                const oldTrack = kind === 'audioinput'
+                    ? localStream.getAudioTracks()[0]
+                    : localStream.getVideoTracks()[0];
+
+                if (oldTrack) {
+                    localStream.removeTrack(oldTrack);
+                    oldTrack.stop();
+                }
+
+                newTrack.enabled = kind === 'audioinput'
+                    ? app.media.isAudioEnabled
+                    : app.media.isVideoEnabled;
+                localStream.addTrack(newTrack);
+
+                app.peers.peers.forEach(({ pc }) => {
+                    const sender = pc.getSenders().find(s => s.track && s.track.kind === newTrack.kind);
+                    sender?.replaceTrack(newTrack).catch(() => {});
+                });
+
+                if (kind === 'videoinput') {
+                    dom.localVideo.srcObject = localStream;
+                    dom.localVideo.play().catch(() => {});
+                }
+
+                stream.getTracks().forEach(track => {
+                    if (track !== newTrack) track.stop();
+                });
+
+                addSystemMessage(`${kind === 'audioinput' ? 'Microphone' : 'Camera'} switched.`);
+            } catch (error) {
+                addSystemMessage(`Unable to switch ${kind === 'audioinput' ? 'microphone' : 'camera'}.`);
+            }
+        }
+
+        async function switchAudioOutput(deviceId) {
+            if (!deviceId) return;
+            const videos = [dom.localVideo, dom.screenShareVideo, ...document.querySelectorAll('#video-grid video')];
+            let supported = false;
+
+            for (const video of videos) {
+                if (video && typeof video.setSinkId === 'function') {
+                    supported = true;
+                    try {
+                        await video.setSinkId(deviceId);
+                    } catch {}
+                }
+            }
+
+            if (!supported) {
+                addSystemMessage('Audio output switching is not supported by this browser.');
+                return;
+            }
+
+            addSystemMessage('Audio output device switched.');
+        }
+
         populateDevices();
+        dom.audioInputSelect?.addEventListener('change', (e) => switchInputDevice('audioinput', e.target.value));
+        dom.videoInputSelect?.addEventListener('change', (e) => switchInputDevice('videoinput', e.target.value));
+        dom.audioOutputSelect?.addEventListener('change', (e) => switchAudioOutput(e.target.value));
 
         // PiP for remote tiles
         dom.videoGrid.addEventListener('click', (e) => {
@@ -1078,7 +1408,10 @@
         });
 
         // Cleanup
-        window.addEventListener('beforeunload', () => app.destroy());
+        window.addEventListener('beforeunload', () => {
+            physicsCleanups.forEach(fn => fn());
+            app.destroy();
+        });
 
         // Network quality reporting (every 30s)
         setInterval(() => app.sendNetworkQuality(), 30000);
