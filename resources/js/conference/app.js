@@ -61,7 +61,7 @@ export class ConferenceApp {
         this.recording = new RecordingManager({
             conferenceSlug: this.conference.slug,
             csrfToken: this.meetingConfig.csrf,
-            uploadUrl: `/api/conference/${this.conference.slug}/recordings`,
+            uploadUrl: `/conference/${this.conference.slug}/recordings`,
             onRecordingStopped: (blob) => this.ui.onRecordingStopped?.(blob),
         });
 
@@ -683,7 +683,7 @@ export class ConferenceApp {
     // Server persistence
     async recordJoinToServer() {
         try {
-            await fetch(`/api/conference/${this.conference.slug}/join`, {
+            await fetch(`/conference/${this.conference.slug}/join-log`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -702,7 +702,7 @@ export class ConferenceApp {
 
     async recordLeaveToServer() {
         try {
-            await fetch(`/api/conference/${this.conference.slug}/leave`, {
+            await fetch(`/conference/${this.conference.slug}/leave-log`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': this.meetingConfig.csrf,

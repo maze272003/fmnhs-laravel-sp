@@ -140,7 +140,7 @@ export class NotificationManager {
      */
     async fetchUnread() {
         try {
-            const response = await fetch(`${this.baseUrl}/api/conference/notifications`, {
+            const response = await fetch(`${this.baseUrl}/conference/notifications`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': this.csrfToken,
@@ -156,7 +156,7 @@ export class NotificationManager {
      */
     async markRead(ids) {
         try {
-            await fetch(`${this.baseUrl}/api/conference/notifications/read`, {
+            await fetch(`${this.baseUrl}/conference/notifications/read`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

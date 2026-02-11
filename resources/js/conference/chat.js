@@ -16,7 +16,7 @@ export class ChatManager {
      */
     async saveMessage(content) {
         try {
-            const response = await fetch(`${this.baseUrl}/api/conference/${this.conferenceSlug}/messages`, {
+            const response = await fetch(`${this.baseUrl}/conference/${this.conferenceSlug}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export class ChatManager {
         formData.append('file', file);
 
         try {
-            const response = await fetch(`${this.baseUrl}/api/conference/${this.conferenceSlug}/files`, {
+            const response = await fetch(`${this.baseUrl}/conference/${this.conferenceSlug}/files`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': this.csrfToken,
@@ -66,7 +66,7 @@ export class ChatManager {
      */
     async loadHistory() {
         try {
-            const response = await fetch(`${this.baseUrl}/api/conference/${this.conferenceSlug}/messages`, {
+            const response = await fetch(`${this.baseUrl}/conference/${this.conferenceSlug}/messages`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': this.csrfToken,
