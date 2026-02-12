@@ -638,10 +638,6 @@
         .light-mode .chat-bubble--mine { color: #fff; }
     </style>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
-        };
         /* Fix 100vh on mobile browsers */
         function setVH() { document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`); }
         setVH(); window.addEventListener('resize', setVH);
