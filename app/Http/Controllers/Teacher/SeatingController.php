@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Room;
 use App\Models\SeatingArrangement;
+use App\Models\Section;
 use App\Services\SeatingOptimizationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,16 +38,15 @@ class SeatingController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
             'section_id' => ['required', 'exists:sections,id'],
             'room_id' => ['nullable', 'exists:rooms,id'],
-            'layout' => ['nullable', 'array'],
         ]);
 
-        $validated['teacher_id'] = Auth::guard('teacher')->id();
-
         try {
-            $arrangement = $this->seatingService->createArrangement($validated);
+            $section = Section::findOrFail($validated['section_id']);
+            $room = ! empty($validated['room_id']) ? Room::find($validated['room_id']) : null;
+
+            $arrangement = $this->seatingService->createArrangement($section, $room);
 
             return redirect()
                 ->route('teacher.seating.show', $arrangement)
@@ -73,7 +74,7 @@ class SeatingController extends Controller
     public function optimize(SeatingArrangement $arrangement): RedirectResponse
     {
         try {
-            $this->seatingService->optimize($arrangement);
+            $this->seatingService->optimizeSeating($arrangement);
 
             return redirect()
                 ->route('teacher.seating.show', $arrangement)

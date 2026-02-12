@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Portfolio;
 use App\Models\PortfolioItem;
+use App\Models\Student;
 use App\Services\PortfolioService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PortfolioApiController extends Controller
 {
@@ -34,16 +36,11 @@ class PortfolioApiController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'type' => ['required', 'string'],
-            'file' => ['nullable', 'file', 'max:20480'],
             'url' => ['nullable', 'url'],
         ]);
 
         try {
-            $item = $this->portfolioService->addItem(
-                $portfolio,
-                $validated,
-                $request->file('file')
-            );
+            $item = $this->portfolioService->addItem($portfolio, $validated);
 
             return response()->json($item, 201);
         } catch (\Exception $e) {
@@ -76,8 +73,10 @@ class PortfolioApiController extends Controller
             'type' => ['nullable', 'string', 'max:100'],
         ]);
 
+        $student = Student::findOrFail(Auth::id());
+
         try {
-            $reflection = $this->portfolioService->addReflection($validated);
+            $reflection = $this->portfolioService->addReflection($student, $validated);
 
             return response()->json($reflection, 201);
         } catch (\Exception $e) {
@@ -88,19 +87,12 @@ class PortfolioApiController extends Controller
     /**
      * Export a portfolio.
      */
-    public function export(Request $request, Portfolio $portfolio): JsonResponse
+    public function export(Portfolio $portfolio): JsonResponse
     {
-        $validated = $request->validate([
-            'format' => ['sometimes', 'string', 'in:pdf,html,json'],
-        ]);
-
         try {
-            $result = $this->portfolioService->exportPortfolio(
-                $portfolio,
-                $validated['format'] ?? 'pdf'
-            );
+            $path = $this->portfolioService->exportPDF($portfolio);
 
-            return response()->json($result);
+            return response()->json(['path' => $path]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

@@ -22,13 +22,26 @@ class CaptionApiController extends Controller
     {
         $validated = $request->validate([
             'text' => ['required', 'string'],
-            'speaker' => ['nullable', 'string', 'max:255'],
             'language' => ['sometimes', 'string', 'max:10'],
-            'timestamp' => ['nullable', 'numeric'],
+            'speaker_type' => ['nullable', 'string'],
+            'speaker_id' => ['nullable', 'integer'],
         ]);
 
         try {
-            $caption = $this->captionService->storeCaption($conference, $validated);
+            $speaker = null;
+            if (! empty($validated['speaker_type']) && ! empty($validated['speaker_id'])) {
+                $speaker = [
+                    'type' => $validated['speaker_type'],
+                    'id' => $validated['speaker_id'],
+                ];
+            }
+
+            $caption = $this->captionService->addCaption(
+                $conference,
+                $validated['text'],
+                $validated['language'] ?? 'en',
+                $speaker
+            );
 
             return response()->json($caption, 201);
         } catch (\Exception $e) {
@@ -39,11 +52,10 @@ class CaptionApiController extends Controller
     /**
      * List captions for a conference.
      */
-    public function index(VideoConference $conference): JsonResponse
+    public function index(Request $request, VideoConference $conference): JsonResponse
     {
-        $captions = Caption::where('conference_id', $conference->id)
-            ->orderBy('created_at')
-            ->get();
+        $language = $request->query('language', 'en');
+        $captions = $this->captionService->getCaptions($conference, $language);
 
         return response()->json($captions);
     }

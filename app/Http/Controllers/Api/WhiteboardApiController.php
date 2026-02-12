@@ -22,11 +22,11 @@ class WhiteboardApiController extends Controller
     public function store(Request $request, VideoConference $conference): JsonResponse
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
         ]);
 
         try {
-            $whiteboard = $this->whiteboardService->createWhiteboard($conference, $validated);
+            $whiteboard = $this->whiteboardService->create($conference, $validated);
 
             return response()->json($whiteboard, 201);
         } catch (\Exception $e) {
@@ -71,7 +71,7 @@ class WhiteboardApiController extends Controller
     public function removeElement(Whiteboard $whiteboard, WhiteboardElement $element): JsonResponse
     {
         try {
-            $this->whiteboardService->removeElement($whiteboard, $element);
+            $this->whiteboardService->removeElement($element);
 
             return response()->json(['message' => 'Element removed.']);
         } catch (\Exception $e) {
@@ -98,15 +98,8 @@ class WhiteboardApiController extends Controller
      */
     public function export(Request $request, Whiteboard $whiteboard): JsonResponse
     {
-        $validated = $request->validate([
-            'format' => ['sometimes', 'string', 'in:png,pdf,svg'],
-        ]);
-
         try {
-            $result = $this->whiteboardService->exportWhiteboard(
-                $whiteboard,
-                $validated['format'] ?? 'png'
-            );
+            $result = $this->whiteboardService->exportAsImage($whiteboard);
 
             return response()->json($result);
         } catch (\Exception $e) {

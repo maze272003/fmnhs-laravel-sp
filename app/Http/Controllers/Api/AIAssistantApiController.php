@@ -22,13 +22,15 @@ class AIAssistantApiController extends Controller
     {
         $validated = $request->validate([
             'subject' => ['nullable', 'string', 'max:255'],
-            'context' => ['nullable', 'string'],
         ]);
 
         $user = Auth::user();
 
         try {
-            $conversation = $this->aiService->startConversation($user, $validated);
+            $conversation = $this->aiService->createConversation(
+                $user,
+                $validated['subject'] ?? null
+            );
 
             return response()->json($conversation, 201);
         } catch (\Exception $e) {

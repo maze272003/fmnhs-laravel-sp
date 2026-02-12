@@ -20,9 +20,10 @@ class AdminWorkloadController extends Controller
      */
     public function index(): View
     {
-        $workloads = $this->workloadService->getOverview();
+        $distribution = $this->workloadService->getWorkloadDistribution();
+        $overloaded = $this->workloadService->identifyOverloadedTeachers();
 
-        return view('admin.workload.index', compact('workloads'));
+        return view('admin.workload.index', compact('distribution', 'overloaded'));
     }
 
     /**
@@ -30,9 +31,9 @@ class AdminWorkloadController extends Controller
      */
     public function teacherDetail(Teacher $teacher): View
     {
-        $detail = $this->workloadService->getTeacherDetail($teacher);
+        $metrics = $this->workloadService->getWorkloadMetrics($teacher);
 
-        return view('admin.workload.teacher-detail', compact('teacher', 'detail'));
+        return view('admin.workload.teacher-detail', compact('teacher', 'metrics'));
     }
 
     /**
@@ -41,12 +42,11 @@ class AdminWorkloadController extends Controller
     public function export(Request $request): BinaryFileResponse
     {
         $validated = $request->validate([
-            'format' => ['sometimes', 'string', 'in:csv,xlsx,pdf'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'teacher_id' => ['required', 'exists:teachers,id'],
         ]);
 
-        $path = $this->workloadService->exportReport($validated);
+        $teacher = Teacher::findOrFail($validated['teacher_id']);
+        $path = $this->workloadService->generateWorkloadReport($teacher);
 
         return response()->download($path);
     }

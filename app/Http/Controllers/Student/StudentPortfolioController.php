@@ -60,17 +60,12 @@ class StudentPortfolioController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'type' => ['required', 'string'],
-            'file' => ['nullable', 'file', 'max:20480'],
         ]);
 
         $portfolio = Portfolio::findOrFail($validated['portfolio_id']);
 
         try {
-            $this->portfolioService->addItem(
-                $portfolio,
-                $validated,
-                $request->file('file')
-            );
+            $this->portfolioService->addItem($portfolio, $validated);
 
             return redirect()
                 ->route('student.portfolios.show', $portfolio)

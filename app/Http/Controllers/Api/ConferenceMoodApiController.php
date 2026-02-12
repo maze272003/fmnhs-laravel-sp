@@ -18,17 +18,18 @@ class ConferenceMoodApiController extends Controller
     public function store(Request $request, VideoConference $conference): JsonResponse
     {
         $validated = $request->validate([
-            'mood' => ['required', 'string', 'in:happy,neutral,confused,bored,excited'],
-            'comment' => ['nullable', 'string', 'max:500'],
+            'mood_type' => ['required', 'string'],
+            'value' => ['required', 'numeric'],
         ]);
 
         try {
+            $student = Auth::user();
+
             $mood = ConferenceMood::create([
                 'conference_id' => $conference->id,
-                'user_id' => Auth::id(),
-                'user_type' => get_class(Auth::user()),
-                'mood' => $validated['mood'],
-                'comment' => $validated['comment'] ?? null,
+                'student_id' => $student->id,
+                'mood_type' => $validated['mood_type'],
+                'value' => $validated['value'],
             ]);
 
             return response()->json($mood, 201);
@@ -55,8 +56,8 @@ class ConferenceMoodApiController extends Controller
     public function aggregate(VideoConference $conference): JsonResponse
     {
         $aggregate = ConferenceMood::where('conference_id', $conference->id)
-            ->select('mood', DB::raw('count(*) as count'))
-            ->groupBy('mood')
+            ->select('mood_type', DB::raw('count(*) as count'), DB::raw('avg(value) as avg_value'))
+            ->groupBy('mood_type')
             ->get();
 
         $total = $aggregate->sum('count');

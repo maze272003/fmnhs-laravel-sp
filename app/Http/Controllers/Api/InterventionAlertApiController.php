@@ -43,13 +43,10 @@ class InterventionAlertApiController extends Controller
      */
     public function resolve(Request $request, InterventionAlert $alert): JsonResponse
     {
-        $validated = $request->validate([
-            'resolution_notes' => ['nullable', 'string'],
-            'action_taken' => ['nullable', 'string', 'max:255'],
-        ]);
+        $resolver = Auth::user();
 
         try {
-            $alert = $this->atRiskService->resolveAlert($alert, $validated);
+            $alert = $this->atRiskService->resolveAlert($alert, $resolver);
 
             return response()->json($alert);
         } catch (\Exception $e) {
@@ -63,7 +60,7 @@ class InterventionAlertApiController extends Controller
     public function statistics(): JsonResponse
     {
         try {
-            $stats = $this->atRiskService->getStatistics();
+            $stats = $this->atRiskService->getAlertStatistics();
 
             return response()->json($stats);
         } catch (\Exception $e) {

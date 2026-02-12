@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProgressReport;
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Services\ReportGenerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,16 +39,18 @@ class ProgressReportController extends Controller
     public function generate(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'student_id' => ['nullable', 'exists:students,id'],
-            'section_id' => ['nullable', 'exists:sections,id'],
-            'type' => ['required', 'string', 'in:individual,class,summary'],
-            'period' => ['required', 'string'],
+            'student_id' => ['required', 'exists:students,id'],
+            'period_start' => ['required', 'date'],
+            'period_end' => ['required', 'date', 'after_or_equal:period_start'],
         ]);
 
-        $validated['teacher_id'] = Auth::guard('teacher')->id();
-
         try {
-            $report = $this->reportService->generate($validated);
+            $student = Student::findOrFail($validated['student_id']);
+            $report = $this->reportService->generateProgressReport(
+                $student,
+                $validated['period_start'],
+                $validated['period_end']
+            );
 
             return redirect()
                 ->route('teacher.reports.preview', $report)
@@ -72,7 +76,7 @@ class ProgressReportController extends Controller
     public function download(ProgressReport $report): BinaryFileResponse|RedirectResponse
     {
         try {
-            $path = $this->reportService->download($report);
+            $path = $this->reportService->generatePDF($report);
 
             return response()->download($path);
         } catch (\Exception $e) {
@@ -88,15 +92,12 @@ class ProgressReportController extends Controller
     public function schedule(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'section_id' => ['required', 'exists:sections,id'],
             'frequency' => ['required', 'string', 'in:weekly,monthly,quarterly'],
-            'type' => ['required', 'string', 'in:individual,class,summary'],
         ]);
 
-        $validated['teacher_id'] = Auth::guard('teacher')->id();
-
         try {
-            $this->reportService->scheduleReport($validated);
+            $teacher = Teacher::findOrFail(Auth::guard('teacher')->id());
+            $this->reportService->scheduleReports($teacher, $validated['frequency']);
 
             return redirect()
                 ->route('teacher.reports.index')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BreakoutRoom;
+use App\Models\Student;
 use App\Models\VideoConference;
 use App\Services\BreakoutRoomService;
 use Illuminate\Http\JsonResponse;
@@ -30,19 +31,23 @@ class BreakoutRoomApiController extends Controller
     }
 
     /**
-     * Create a new breakout room.
+     * Create breakout rooms for a conference.
      */
     public function store(Request $request, VideoConference $conference): JsonResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'max_participants' => ['nullable', 'integer', 'min:1'],
+            'count' => ['required', 'integer', 'min:1', 'max:20'],
+            'settings' => ['nullable', 'array'],
         ]);
 
         try {
-            $room = $this->breakoutRoomService->createRoom($conference, $validated);
+            $rooms = $this->breakoutRoomService->createRooms(
+                $conference,
+                $validated['count'],
+                $validated['settings'] ?? []
+            );
 
-            return response()->json($room, 201);
+            return response()->json($rooms, 201);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
@@ -59,7 +64,11 @@ class BreakoutRoomApiController extends Controller
         ]);
 
         try {
-            $room = $this->breakoutRoomService->assignStudents($room, $validated['student_ids']);
+            $participants = [];
+            foreach ($validated['student_ids'] as $studentId) {
+                $student = Student::findOrFail($studentId);
+                $participants[] = $this->breakoutRoomService->assignStudent($room, $student);
+            }
 
             return response()->json($room->load('participants'));
         } catch (\Exception $e) {
@@ -72,10 +81,10 @@ class BreakoutRoomApiController extends Controller
      */
     public function join(BreakoutRoom $room): JsonResponse
     {
-        $user = Auth::user();
+        $student = Auth::user();
 
         try {
-            $this->breakoutRoomService->joinRoom($room, $user);
+            $participant = $this->breakoutRoomService->assignStudent($room, $student);
 
             return response()->json(['message' => 'Joined breakout room successfully.']);
         } catch (\Exception $e) {
@@ -88,10 +97,10 @@ class BreakoutRoomApiController extends Controller
      */
     public function leave(BreakoutRoom $room): JsonResponse
     {
-        $user = Auth::user();
+        $student = Auth::user();
 
         try {
-            $this->breakoutRoomService->leaveRoom($room, $user);
+            $this->breakoutRoomService->removeStudent($room, $student);
 
             return response()->json(['message' => 'Left breakout room successfully.']);
         } catch (\Exception $e) {
@@ -109,9 +118,9 @@ class BreakoutRoomApiController extends Controller
         ]);
 
         try {
-            $this->breakoutRoomService->broadcast($conference, $validated['message']);
+            $result = $this->breakoutRoomService->broadcastToAll($conference, $validated['message']);
 
-            return response()->json(['message' => 'Broadcast sent successfully.']);
+            return response()->json(['message' => 'Broadcast sent successfully.', 'result' => $result]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

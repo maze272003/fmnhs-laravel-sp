@@ -32,15 +32,13 @@ class BulkActionController extends Controller
     public function processGradeEntry(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'section_id' => ['required', 'exists:sections,id'],
-            'subject_id' => ['required', 'exists:subjects,id'],
             'grades' => ['required', 'array'],
             'grades.*.student_id' => ['required', 'exists:students,id'],
             'grades.*.score' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 
         try {
-            $this->bulkActionService->processGradeEntry($validated);
+            $this->bulkActionService->bulkGradeEntry($validated['grades']);
 
             return redirect()
                 ->back()
@@ -66,7 +64,6 @@ class BulkActionController extends Controller
     public function sendBulkEmail(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'recipient_type' => ['required', 'string', 'in:students,parents,section'],
             'recipient_ids' => ['required', 'array'],
             'recipient_ids.*' => ['integer'],
             'subject' => ['required', 'string', 'max:255'],
@@ -74,7 +71,11 @@ class BulkActionController extends Controller
         ]);
 
         try {
-            $this->bulkActionService->sendBulkEmail($validated);
+            $this->bulkActionService->bulkEmail(
+                $validated['recipient_ids'],
+                $validated['subject'],
+                $validated['body']
+            );
 
             return redirect()
                 ->back()
@@ -105,7 +106,7 @@ class BulkActionController extends Controller
         ]);
 
         try {
-            $result = $this->bulkActionService->processImport(
+            $result = $this->bulkActionService->importFromCSV(
                 $request->file('file'),
                 $request->input('type')
             );
@@ -128,11 +129,15 @@ class BulkActionController extends Controller
         $validated = $request->validate([
             'type' => ['required', 'string', 'in:grades,attendance,students'],
             'section_id' => ['nullable', 'exists:sections,id'],
-            'format' => ['sometimes', 'string', 'in:csv,xlsx'],
         ]);
 
+        $filters = [];
+        if (! empty($validated['section_id'])) {
+            $filters['section_id'] = $validated['section_id'];
+        }
+
         try {
-            $path = $this->bulkActionService->processExport($validated);
+            $path = $this->bulkActionService->exportToCSV($validated['type'], $filters);
 
             return response()->download($path);
         } catch (\Exception $e) {

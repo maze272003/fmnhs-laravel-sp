@@ -18,7 +18,7 @@ class ForumApiController extends Controller
     {
         $perPage = min($request->query('per_page', 20), 100);
 
-        $threads = ForumThread::with('user')
+        $threads = ForumThread::with('author')
             ->withCount('posts')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
@@ -34,7 +34,7 @@ class ForumApiController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
-            'category' => ['nullable', 'string', 'max:100'],
+            'subject_id' => ['nullable', 'exists:subjects,id'],
         ]);
 
         $user = Auth::user();
@@ -42,9 +42,9 @@ class ForumApiController extends Controller
         $thread = ForumThread::create([
             'title' => $validated['title'],
             'body' => $validated['body'],
-            'category' => $validated['category'] ?? null,
-            'user_id' => $user->id,
-            'user_type' => get_class($user),
+            'subject_id' => $validated['subject_id'] ?? null,
+            'author_id' => $user->id,
+            'author_type' => get_class($user),
         ]);
 
         return response()->json($thread, 201);
@@ -76,8 +76,8 @@ class ForumApiController extends Controller
         $post = ForumPost::create([
             'thread_id' => $thread->id,
             'body' => $validated['body'],
-            'user_id' => $user->id,
-            'user_type' => get_class($user),
+            'author_id' => $user->id,
+            'author_type' => get_class($user),
         ]);
 
         return response()->json($post, 201);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Game;
+use App\Models\Student;
 use App\Services\GameEngineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,16 +22,22 @@ class GameApiController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string'],
-            'conference_id' => ['nullable', 'exists:video_conferences,id'],
             'settings' => ['nullable', 'array'],
+            'conference_id' => ['nullable', 'exists:video_conferences,id'],
         ]);
 
-        $validated['teacher_id'] = Auth::id();
-
         try {
-            $game = $this->gameEngineService->createGame($validated);
+            $conference = null;
+            if (! empty($validated['conference_id'])) {
+                $conference = \App\Models\VideoConference::find($validated['conference_id']);
+            }
+
+            $game = $this->gameEngineService->createGame(
+                $validated['type'],
+                $validated['settings'] ?? [],
+                $conference
+            );
 
             return response()->json($game, 201);
         } catch (\Exception $e) {
@@ -71,10 +78,10 @@ class GameApiController extends Controller
      */
     public function join(Game $game): JsonResponse
     {
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
 
         try {
-            $session = $this->gameEngineService->joinGame($game, $user);
+            $session = $this->gameEngineService->joinGame($game, $student);
 
             return response()->json($session, 201);
         } catch (\Exception $e) {
@@ -93,10 +100,10 @@ class GameApiController extends Controller
             'time_taken' => ['nullable', 'integer'],
         ]);
 
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
 
         try {
-            $result = $this->gameEngineService->submitAnswer($game, $user, $validated);
+            $result = $this->gameEngineService->submitAnswer($game, $student, $validated);
 
             return response()->json($result);
         } catch (\Exception $e) {

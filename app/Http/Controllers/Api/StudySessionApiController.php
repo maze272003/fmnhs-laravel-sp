@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Student;
 use App\Models\StudyGoal;
 use App\Models\StudySession;
+use App\Models\Subject;
 use App\Services\StudyTrackingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,14 +24,19 @@ class StudySessionApiController extends Controller
     public function start(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'subject' => ['nullable', 'string', 'max:255'],
-            'goal_id' => ['nullable', 'exists:study_goals,id'],
+            'type' => ['sometimes', 'string'],
+            'subject_id' => ['nullable', 'exists:subjects,id'],
         ]);
 
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
+        $subject = ! empty($validated['subject_id']) ? Subject::find($validated['subject_id']) : null;
 
         try {
-            $session = $this->studyTrackingService->startSession($user, $validated);
+            $session = $this->studyTrackingService->startSession(
+                $student,
+                $validated['type'] ?? 'pomodoro',
+                $subject
+            );
 
             return response()->json($session, 201);
         } catch (\Exception $e) {
@@ -54,12 +61,13 @@ class StudySessionApiController extends Controller
     /**
      * Get study statistics.
      */
-    public function stats(): JsonResponse
+    public function stats(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
+        $period = $request->query('period', 'weekly');
 
         try {
-            $stats = $this->studyTrackingService->getStats($user);
+            $stats = $this->studyTrackingService->getStudyStats($student, $period);
 
             return response()->json($stats);
         } catch (\Exception $e) {
@@ -72,11 +80,9 @@ class StudySessionApiController extends Controller
      */
     public function goals(): JsonResponse
     {
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
 
-        $goals = StudyGoal::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $goals = $this->studyTrackingService->getStudyGoals($student);
 
         return response()->json($goals);
     }
@@ -88,15 +94,15 @@ class StudySessionApiController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'target_hours' => ['nullable', 'numeric', 'min:0.5'],
-            'target_date' => ['nullable', 'date', 'after:today'],
+            'target_minutes' => ['nullable', 'integer', 'min:1'],
+            'period' => ['nullable', 'string'],
+            'due_date' => ['nullable', 'date', 'after:today'],
         ]);
 
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
 
         try {
-            $goal = $this->studyTrackingService->createGoal($user, $validated);
+            $goal = $this->studyTrackingService->createGoal($student, $validated);
 
             return response()->json($goal, 201);
         } catch (\Exception $e) {
@@ -107,18 +113,10 @@ class StudySessionApiController extends Controller
     /**
      * Update a study goal.
      */
-    public function updateGoal(Request $request, StudyGoal $goal): JsonResponse
+    public function updateGoal(StudyGoal $goal): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'target_hours' => ['nullable', 'numeric', 'min:0.5'],
-            'target_date' => ['nullable', 'date'],
-            'status' => ['sometimes', 'string', 'in:active,completed,abandoned'],
-        ]);
-
         try {
-            $goal = $this->studyTrackingService->updateGoal($goal, $validated);
+            $goal = $this->studyTrackingService->updateGoalProgress($goal);
 
             return response()->json($goal);
         } catch (\Exception $e) {

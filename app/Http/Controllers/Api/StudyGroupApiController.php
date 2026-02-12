@@ -65,8 +65,10 @@ class StudyGroupApiController extends Controller
         try {
             $member = StudyGroupMember::firstOrCreate([
                 'study_group_id' => $group->id,
-                'user_id' => $user->id,
-                'user_type' => get_class($user),
+                'student_id' => $user->id,
+            ], [
+                'role' => 'member',
+                'joined_at' => now(),
             ]);
 
             return response()->json($member, 201);
@@ -83,8 +85,7 @@ class StudyGroupApiController extends Controller
         $user = Auth::user();
 
         StudyGroupMember::where('study_group_id', $group->id)
-            ->where('user_id', $user->id)
-            ->where('user_type', get_class($user))
+            ->where('student_id', $user->id)
             ->delete();
 
         return response()->json(['message' => 'Left study group successfully.']);

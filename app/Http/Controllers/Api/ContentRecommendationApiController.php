@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\RecommendedContent;
+use App\Models\Student;
 use App\Services\ContentRecommendationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,10 +21,10 @@ class ContentRecommendationApiController extends Controller
      */
     public function index(): JsonResponse
     {
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
 
         try {
-            $recommendations = $this->recommendationService->getRecommendations($user);
+            $recommendations = $this->recommendationService->getRecommendations($student);
 
             return response()->json($recommendations);
         } catch (\Exception $e) {
@@ -37,13 +38,11 @@ class ContentRecommendationApiController extends Controller
     public function feedback(Request $request, RecommendedContent $recommendation): JsonResponse
     {
         $validated = $request->validate([
-            'rating' => ['required', 'integer', 'min:1', 'max:5'],
-            'helpful' => ['nullable', 'boolean'],
-            'comment' => ['nullable', 'string', 'max:500'],
+            'feedback' => ['required', 'string', 'in:helpful,not_helpful,skipped'],
         ]);
 
         try {
-            $this->recommendationService->recordFeedback($recommendation, $validated);
+            $this->recommendationService->recordFeedback($recommendation, $validated['feedback']);
 
             return response()->json(['message' => 'Feedback recorded.']);
         } catch (\Exception $e) {

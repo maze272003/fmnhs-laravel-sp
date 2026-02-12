@@ -22,8 +22,8 @@ class StudentStudyController extends Controller
     public function index(): View
     {
         $student = Auth::guard('student')->user();
-        $stats = $this->studyTrackingService->getStats($student);
-        $goals = StudyGoal::where('user_id', $student->id)
+        $stats = $this->studyTrackingService->getStudyStats($student);
+        $goals = StudyGoal::where('student_id', $student->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -45,7 +45,7 @@ class StudentStudyController extends Controller
     {
         $student = Auth::guard('student')->user();
 
-        $goals = StudyGoal::where('user_id', $student->id)
+        $goals = StudyGoal::where('student_id', $student->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -59,9 +59,9 @@ class StudentStudyController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'target_hours' => ['nullable', 'numeric', 'min:0.5'],
-            'target_date' => ['nullable', 'date', 'after:today'],
+            'target_minutes' => ['nullable', 'integer', 'min:1'],
+            'period' => ['nullable', 'string'],
+            'due_date' => ['nullable', 'date', 'after:today'],
         ]);
 
         $student = Auth::guard('student')->user();

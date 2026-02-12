@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Presentation;
 use App\Models\Slide;
+use App\Models\Student;
 use App\Services\PresentationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,10 +28,8 @@ class PresentationApiController extends Controller
             'conference_id' => ['nullable', 'exists:video_conferences,id'],
         ]);
 
-        $validated['teacher_id'] = Auth::id();
-
         try {
-            $presentation = $this->presentationService->createPresentation($validated);
+            $presentation = $this->presentationService->create($validated);
 
             return response()->json($presentation, 201);
         } catch (\Exception $e) {
@@ -44,15 +43,18 @@ class PresentationApiController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'max:51200'], // 50MB max
-            'title' => ['nullable', 'string', 'max:255'],
+            'file' => ['required', 'file', 'max:51200'],
         ]);
 
+        $conference = null;
+        if ($request->has('conference_id')) {
+            $conference = \App\Models\VideoConference::find($request->input('conference_id'));
+        }
+
         try {
-            $presentation = $this->presentationService->uploadPresentation(
+            $presentation = $this->presentationService->upload(
                 $request->file('file'),
-                Auth::id(),
-                $request->input('title')
+                $conference
             );
 
             return response()->json($presentation, 201);
@@ -76,7 +78,7 @@ class PresentationApiController extends Controller
      */
     public function slides(Presentation $presentation): JsonResponse
     {
-        $slides = $presentation->slides()->orderBy('order')->get();
+        $slides = $this->presentationService->getSlides($presentation->id);
 
         return response()->json($slides);
     }
@@ -84,18 +86,12 @@ class PresentationApiController extends Controller
     /**
      * Track a slide view.
      */
-    public function trackView(Request $request, Slide $slide): JsonResponse
+    public function trackView(Slide $slide): JsonResponse
     {
-        $validated = $request->validate([
-            'duration' => ['nullable', 'integer', 'min:0'],
-        ]);
+        $student = Student::findOrFail(Auth::id());
 
         try {
-            $this->presentationService->trackSlideView(
-                $slide,
-                Auth::id(),
-                $validated['duration'] ?? null
-            );
+            $this->presentationService->trackSlideView($slide, $student);
 
             return response()->json(['message' => 'View tracked.']);
         } catch (\Exception $e) {
@@ -109,13 +105,16 @@ class PresentationApiController extends Controller
     public function syncSlide(Request $request, Presentation $presentation): JsonResponse
     {
         $validated = $request->validate([
-            'slide_index' => ['required', 'integer', 'min:0'],
+            'slide_number' => ['required', 'integer', 'min:1'],
         ]);
 
         try {
-            $this->presentationService->syncSlide($presentation, $validated['slide_index']);
+            $result = $this->presentationService->syncSlideChange(
+                (string) $presentation->id,
+                $validated['slide_number']
+            );
 
-            return response()->json(['message' => 'Slide synced.']);
+            return response()->json($result);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
@@ -127,7 +126,9 @@ class PresentationApiController extends Controller
     public function analytics(Presentation $presentation): JsonResponse
     {
         try {
-            $analytics = $this->presentationService->getAnalytics($presentation);
+            $analytics = $this->presentationService->getEngagementAnalytics(
+                (string) $presentation->id
+            );
 
             return response()->json($analytics);
         } catch (\Exception $e) {

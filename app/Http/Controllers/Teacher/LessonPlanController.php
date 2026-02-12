@@ -56,7 +56,7 @@ class LessonPlanController extends Controller
 
         $validated['teacher_id'] = Auth::guard('teacher')->id();
 
-        $this->lessonPlanningService->createLessonPlan($validated);
+        $this->lessonPlanningService->create($validated);
 
         return redirect()
             ->route('teacher.lesson-plans.index')
@@ -95,7 +95,7 @@ class LessonPlanController extends Controller
             'assessment' => ['nullable', 'string'],
         ]);
 
-        $this->lessonPlanningService->updateLessonPlan($lessonPlan, $validated);
+        $lessonPlan->update($validated);
 
         return redirect()
             ->route('teacher.lesson-plans.show', $lessonPlan)
@@ -107,7 +107,7 @@ class LessonPlanController extends Controller
      */
     public function destroy(LessonPlan $lessonPlan): RedirectResponse
     {
-        $this->lessonPlanningService->deleteLessonPlan($lessonPlan);
+        $lessonPlan->delete();
 
         return redirect()
             ->route('teacher.lesson-plans.index')
@@ -122,14 +122,19 @@ class LessonPlanController extends Controller
         $validated = $request->validate([
             'topic' => ['required', 'string', 'max:255'],
             'subject' => ['required', 'string', 'max:255'],
-            'grade_level' => ['required', 'string'],
-            'duration' => ['nullable', 'integer', 'min:1'],
+            'grade_level' => ['nullable', 'integer'],
         ]);
 
-        $validated['teacher_id'] = Auth::guard('teacher')->id();
-
         try {
-            $lessonPlan = $this->lessonPlanningService->generateWithAI($validated);
+            $aiData = $this->lessonPlanningService->generateWithAI(
+                $validated['subject'],
+                $validated['topic'],
+                $validated['grade_level'] ?? null
+            );
+
+            $lessonPlan = $this->lessonPlanningService->create(array_merge($aiData, [
+                'teacher_id' => Auth::guard('teacher')->id(),
+            ]));
 
             return redirect()
                 ->route('teacher.lesson-plans.show', $lessonPlan)

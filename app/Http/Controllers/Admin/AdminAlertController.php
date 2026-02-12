@@ -7,6 +7,7 @@ use App\Models\InterventionAlert;
 use App\Services\AtRiskDetectionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class AdminAlertController extends Controller
@@ -42,12 +43,9 @@ class AdminAlertController extends Controller
      */
     public function resolve(Request $request, InterventionAlert $alert): RedirectResponse
     {
-        $validated = $request->validate([
-            'resolution_notes' => ['nullable', 'string'],
-            'action_taken' => ['nullable', 'string', 'max:255'],
-        ]);
+        $resolver = Auth::guard('admin')->user();
 
-        $this->atRiskService->resolveAlert($alert, $validated);
+        $this->atRiskService->resolveAlert($alert, $resolver);
 
         return redirect()
             ->route('admin.alerts.show', $alert)
@@ -55,12 +53,12 @@ class AdminAlertController extends Controller
     }
 
     /**
-     * Alert settings page.
+     * Alert statistics page.
      */
     public function settings(): View
     {
-        $settings = $this->atRiskService->getSettings();
+        $statistics = $this->atRiskService->getAlertStatistics();
 
-        return view('admin.alerts.settings', compact('settings'));
+        return view('admin.alerts.settings', compact('statistics'));
     }
 }

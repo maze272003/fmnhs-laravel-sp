@@ -15,8 +15,7 @@ class AdminParentController extends Controller
      */
     public function index(): View
     {
-        $parents = ParentModel::orderBy('last_name')
-            ->orderBy('first_name')
+        $parents = ParentModel::orderBy('name')
             ->paginate(20);
 
         return view('admin.parents.index', compact('parents'));
@@ -36,8 +35,7 @@ class AdminParentController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:parents,email'],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -76,8 +74,7 @@ class AdminParentController extends Controller
     public function update(Request $request, ParentModel $parent): RedirectResponse
     {
         $validated = $request->validate([
-            'first_name' => ['sometimes', 'string', 'max:255'],
-            'last_name' => ['sometimes', 'string', 'max:255'],
+            'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'email', 'unique:parents,email,'.$parent->id],
             'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],

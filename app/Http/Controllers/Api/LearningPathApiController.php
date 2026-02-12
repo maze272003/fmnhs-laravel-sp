@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\LearningPath;
+use App\Models\Student;
 use App\Services\AdaptiveLearningService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,10 +46,8 @@ class LearningPathApiController extends Controller
         ]);
 
         try {
-            $progress = $this->adaptiveLearningService->assignPath(
-                $path,
-                $validated['student_id']
-            );
+            $student = Student::findOrFail($validated['student_id']);
+            $progress = $this->adaptiveLearningService->assignPath($student, $path);
 
             return response()->json($progress, 201);
         } catch (\Exception $e) {
@@ -61,10 +60,10 @@ class LearningPathApiController extends Controller
      */
     public function progress(LearningPath $path): JsonResponse
     {
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
 
         try {
-            $progress = $this->adaptiveLearningService->getProgress($path, $user);
+            $progress = $this->adaptiveLearningService->getProgress($student, $path);
 
             return response()->json($progress);
         } catch (\Exception $e) {
@@ -77,10 +76,10 @@ class LearningPathApiController extends Controller
      */
     public function recommend(LearningPath $path): JsonResponse
     {
-        $user = Auth::user();
+        $student = Student::findOrFail(Auth::id());
 
         try {
-            $recommendations = $this->adaptiveLearningService->recommend($path, $user);
+            $recommendations = $this->adaptiveLearningService->getRecommendations($student);
 
             return response()->json($recommendations);
         } catch (\Exception $e) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\LearningPath;
+use App\Models\StudentPathProgress;
 use App\Services\AdaptiveLearningService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -22,7 +23,9 @@ class StudentLearningPathController extends Controller
         $student = Auth::guard('student')->user();
 
         $paths = LearningPath::orderBy('title')->get();
-        $activePaths = $this->adaptiveLearningService->getStudentPaths($student);
+        $activePaths = StudentPathProgress::where('student_id', $student->id)
+            ->with('learningPath')
+            ->get();
 
         return view('student.learning-paths.index', compact('paths', 'activePaths'));
     }
@@ -43,7 +46,7 @@ class StudentLearningPathController extends Controller
     public function progress(LearningPath $path): View
     {
         $student = Auth::guard('student')->user();
-        $progress = $this->adaptiveLearningService->getProgress($path, $student);
+        $progress = $this->adaptiveLearningService->getProgress($student, $path);
 
         return view('student.learning-paths.progress', compact('path', 'progress'));
     }

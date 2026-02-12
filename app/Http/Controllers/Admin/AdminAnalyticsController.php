@@ -21,9 +21,7 @@ class AdminAnalyticsController extends Controller
      */
     public function index(): View
     {
-        $overview = $this->analyticsService->getOverview();
-
-        return view('admin.analytics.index', compact('overview'));
+        return view('admin.analytics.index');
     }
 
     /**
