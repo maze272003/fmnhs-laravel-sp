@@ -43,30 +43,112 @@ export class MediaManager {
      * Initialize local media (camera + mic).
      */
     async setupLocalMedia(audioOnly = false) {
-        this.isAudioOnly = audioOnly;
-        const preset = this.qualityPresets[this.currentQuality];
+        const mediaDevices = navigator?.mediaDevices;
+        if (!mediaDevices?.getUserMedia) {
+            const error = new Error('Media devices API is not available in this browser context.');
+            error.name = 'NotSupportedError';
+            throw error;
+        }
 
-        const constraints = {
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: this.isNoiseSuppression,
-                autoGainControl: true,
-            },
-            video: audioOnly ? false : {
-                width: { ideal: preset.width },
-                height: { ideal: preset.height },
-                frameRate: { ideal: preset.frameRate },
-                facingMode: 'user',
-            },
+        const preset = this.qualityPresets[this.currentQuality] || this.qualityPresets.high;
+        const modes = audioOnly ? ['audio'] : ['audio-video', 'audio', 'video'];
+        const failures = [];
+
+        for (const mode of modes) {
+            try {
+                const constraints = this.buildMediaConstraints(mode, preset);
+                const stream = await mediaDevices.getUserMedia(constraints);
+                this.applyLocalStream(stream);
+                return this.localStream;
+            } catch (error) {
+                failures.push({ mode, error });
+            }
+        }
+
+        const finalError = failures[failures.length - 1]?.error || new Error('Unable to access media devices.');
+        if (failures.length > 0) {
+            const summary = failures
+                .map(({ mode, error }) => `${mode}:${error?.name || 'Error'}`)
+                .join(', ');
+            console.warn(`[Media] getUserMedia failed (${summary})`);
+        }
+        throw finalError;
+    }
+
+    /**
+     * Create constraints for the given acquisition mode.
+     */
+    buildMediaConstraints(mode, preset) {
+        const audioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: this.isNoiseSuppression,
+            autoGainControl: true,
+        };
+        const videoConstraints = {
+            width: { ideal: preset.width },
+            height: { ideal: preset.height },
+            frameRate: { ideal: preset.frameRate },
+            facingMode: 'user',
         };
 
-        try {
-            this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-            this.setupAudioAnalysis();
-            return this.localStream;
-        } catch (error) {
-            console.error('[Media] getUserMedia error:', error);
-            throw error;
+        if (mode === 'audio') {
+            return { audio: audioConstraints, video: false };
+        }
+
+        if (mode === 'video') {
+            return { audio: false, video: videoConstraints };
+        }
+
+        return { audio: audioConstraints, video: videoConstraints };
+    }
+
+    /**
+     * Apply a newly acquired local stream and sync internal state.
+     */
+    applyLocalStream(stream) {
+        if (this.localStream && this.localStream !== stream) {
+            this.localStream.getTracks().forEach(track => track.stop());
+        }
+
+        this.localStream = stream;
+        this.resetAudioAnalysis();
+
+        const audioTrack = this.localStream.getAudioTracks()[0];
+        const videoTrack = this.localStream.getVideoTracks()[0];
+        this.isAudioEnabled = Boolean(audioTrack?.enabled);
+        this.isVideoEnabled = Boolean(videoTrack?.enabled);
+        this.isAudioOnly = !videoTrack;
+
+        this.setupAudioAnalysis();
+    }
+
+    /**
+     * Create and apply an empty stream (watch/listen-only join).
+     */
+    createEmptyLocalStream() {
+        const stream = new MediaStream();
+        this.applyLocalStream(stream);
+        this.isAudioEnabled = false;
+        this.isVideoEnabled = false;
+        this.isAudioOnly = true;
+        return stream;
+    }
+
+    /**
+     * Clear current audio analysis resources.
+     */
+    resetAudioAnalysis() {
+        if (this.audioLevelInterval) {
+            clearInterval(this.audioLevelInterval);
+            this.audioLevelInterval = null;
+        }
+
+        this.analyserNode = null;
+        this.gainNode = null;
+
+        if (this.audioContext) {
+            this.audioContext.close().catch(() => {});
+            this.audioContext = null;
         }
     }
 
@@ -335,7 +417,7 @@ export class MediaManager {
      * Clean up all media resources.
      */
     destroy() {
-        if (this.audioLevelInterval) clearInterval(this.audioLevelInterval);
+        this.resetAudioAnalysis();
         this.freezeDetectionIntervals.forEach(interval => clearInterval(interval));
         this.freezeDetectionIntervals.clear();
 
@@ -346,10 +428,6 @@ export class MediaManager {
         if (this.screenStream) {
             this.screenStream.getTracks().forEach(t => t.stop());
             this.screenStream = null;
-        }
-        if (this.audioContext) {
-            this.audioContext.close().catch(() => {});
-            this.audioContext = null;
         }
     }
 }

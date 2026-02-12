@@ -49,10 +49,22 @@ export class PeerManager {
 
         const pc = new RTCPeerConnection({ iceServers: this.iceServers });
 
-        // Add local tracks
-        if (this.localStream) {
-            this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
+        // Always negotiate audio/video m-lines so receive-only and late device attach keep working.
+        const localAudioTrack = this.localStream?.getAudioTracks?.()[0] || null;
+        const localVideoTrack = this.localStream?.getVideoTracks?.()[0] || null;
+
+        if (localAudioTrack && this.localStream) {
+            pc.addTrack(localAudioTrack, this.localStream);
+        } else {
+            pc.addTransceiver('audio', { direction: 'sendrecv' });
         }
+
+        if (localVideoTrack && this.localStream) {
+            pc.addTrack(localVideoTrack, this.localStream);
+        } else {
+            pc.addTransceiver('video', { direction: 'sendrecv' });
+        }
+
         if (this.screenStream) {
             this.screenStream.getTracks().forEach(track => pc.addTrack(track, this.screenStream));
         }

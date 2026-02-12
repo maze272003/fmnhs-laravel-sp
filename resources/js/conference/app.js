@@ -90,22 +90,38 @@ export class ConferenceApp {
             return;
         }
 
-        // Setup local media
+        // Setup local media with fallback to a no-media join.
+        let stream = null;
+        let startupMediaError = null;
         try {
-            const stream = await this.media.setupLocalMedia();
-            this.peers.setLocalStream(stream);
-            this.ui.onLocalStream?.(stream);
+            stream = await this.media.setupLocalMedia();
+        } catch (error) {
+            startupMediaError = error;
+            stream = this.media.createEmptyLocalStream();
+        }
+
+        this.peers.setLocalStream(stream);
+        this.ui.onLocalStream?.(stream);
+
+        const hasAudio = stream.getAudioTracks().length > 0;
+        const hasVideo = stream.getVideoTracks().length > 0;
+        this.ui.onMediaStateChanged?.('audio', hasAudio ? this.media.isAudioEnabled : false);
+        this.ui.onMediaStateChanged?.('video', hasVideo ? this.media.isVideoEnabled : false);
+
+        if (startupMediaError) {
+            this.ui.onBanner?.(this.getMediaStartupMessage(startupMediaError));
+            this.ui.onSystemMessage?.('Joined without local camera/microphone.');
+        } else if (hasAudio && hasVideo) {
             this.ui.onSystemMessage?.('Camera & Microphone Ready.');
-        } catch {
-            this.ui.onBanner?.('Camera access denied. Audio-only mode.');
-            try {
-                const stream = await this.media.setupLocalMedia(true);
-                this.peers.setLocalStream(stream);
-                this.ui.onLocalStream?.(stream);
-            } catch {
-                this.ui.onBanner?.('No media access. Please allow camera/mic permissions.');
-                return;
-            }
+        } else if (hasAudio) {
+            this.ui.onBanner?.('Camera unavailable. Joined with microphone only.');
+            this.ui.onSystemMessage?.('Microphone Ready.');
+        } else if (hasVideo) {
+            this.ui.onBanner?.('Microphone unavailable. Joined with camera only.');
+            this.ui.onSystemMessage?.('Camera Ready.');
+        } else {
+            this.ui.onBanner?.('No camera or microphone detected. Joined without media.');
+            this.ui.onSystemMessage?.('Joined without local camera/microphone.');
         }
 
         // Load chat history
@@ -525,8 +541,30 @@ export class ConferenceApp {
     }
 
     forceReconnect() {
-        const offers = this.peers.forceReconnectAll(this.members);
+        this.peers.forceReconnectAll(this.members).then((offers) => {
+            offers.forEach(({ peerId, payload }) => {
+                this.signaling.send({ type: 'offer', to: peerId, payload });
+            });
+        }).catch((error) => {
+            console.error('[App] Force reconnect failed:', error);
+        });
         this.ui.onSystemMessage?.('Reconnecting to all peers...');
+    }
+
+    getMediaStartupMessage(error) {
+        switch (error?.name) {
+            case 'NotAllowedError':
+            case 'SecurityError':
+                return 'Camera/microphone permission blocked. Joined without media.';
+            case 'NotFoundError':
+            case 'DevicesNotFoundError':
+                return 'No camera or microphone detected. Joined without media.';
+            case 'NotReadableError':
+            case 'AbortError':
+                return 'Camera or microphone is busy in another app. Joined without media.';
+            default:
+                return 'Unable to access camera/microphone. Joined without media.';
+        }
     }
 
     // Teacher controls

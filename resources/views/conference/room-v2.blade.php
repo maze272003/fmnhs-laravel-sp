@@ -1957,7 +1957,8 @@ async function switchDevice(kind, deviceId) {
         newTrack.enabled = isAudio ? app.media.isAudioEnabled : app.media.isVideoEnabled;
         local.addTrack(newTrack);
         app.peers.peers.forEach(({ pc }) => {
-            const sender = pc.getSenders().find(s => s.track?.kind === newTrack.kind);
+            const sender = pc.getSenders().find(s => s.track?.kind === newTrack.kind)
+                || pc.getTransceivers().find(t => t.receiver?.track?.kind === newTrack.kind)?.sender;
             sender?.replaceTrack(newTrack).catch(() => {});
         });
         if (!isAudio) { dom.localVideo.srcObject = local; dom.localVideo.play().catch(() => {}); }
