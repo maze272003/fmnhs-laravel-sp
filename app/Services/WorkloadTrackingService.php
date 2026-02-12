@@ -68,20 +68,25 @@ class WorkloadTrackingService
      */
     public function getWorkloadDistribution(): array
     {
-        $teachers = Teacher::all();
+        $weekStart = now()->startOfWeek();
 
-        $distribution = $teachers->map(function (Teacher $teacher) {
-            $weeklyMinutes = TeacherActivity::where('teacher_id', $teacher->id)
-                ->where('performed_at', '>=', now()->startOfWeek())
-                ->sum('duration_minutes') ?? 0;
+        $weeklyTotals = TeacherActivity::where('performed_at', '>=', $weekStart)
+            ->select('teacher_id', DB::raw('COALESCE(SUM(duration_minutes), 0) as total_minutes'))
+            ->groupBy('teacher_id')
+            ->pluck('total_minutes', 'teacher_id');
 
-            return [
-                'teacher_id' => $teacher->id,
-                'name' => "{$teacher->first_name} {$teacher->last_name}",
-                'weekly_minutes' => $weeklyMinutes,
-                'weekly_hours' => round($weeklyMinutes / 60, 1),
-            ];
-        })->sortByDesc('weekly_minutes')->values();
+        $distribution = Teacher::select('id', 'first_name', 'last_name')
+            ->get()
+            ->map(function (Teacher $teacher) use ($weeklyTotals) {
+                $weeklyMinutes = $weeklyTotals[$teacher->id] ?? 0;
+
+                return [
+                    'teacher_id' => $teacher->id,
+                    'name' => "{$teacher->first_name} {$teacher->last_name}",
+                    'weekly_minutes' => $weeklyMinutes,
+                    'weekly_hours' => round($weeklyMinutes / 60, 1),
+                ];
+            })->sortByDesc('weekly_minutes')->values();
 
         return [
             'average_weekly_hours' => round($distribution->avg('weekly_hours') ?? 0, 1),
@@ -96,26 +101,22 @@ class WorkloadTrackingService
     public function identifyOverloadedTeachers(): Collection
     {
         $threshold = config('services.workload.weekly_hours_threshold', 40);
+        $thresholdMinutes = $threshold * 60;
 
-        $teachers = Teacher::all();
+        return TeacherActivity::where('performed_at', '>=', now()->startOfWeek())
+            ->select('teacher_id', DB::raw('COALESCE(SUM(duration_minutes), 0) as total_minutes'))
+            ->groupBy('teacher_id')
+            ->having('total_minutes', '>', $thresholdMinutes)
+            ->get()
+            ->map(function ($row) {
+                $teacher = Teacher::find($row->teacher_id);
 
-        return $teachers->filter(function (Teacher $teacher) use ($threshold) {
-            $weeklyMinutes = TeacherActivity::where('teacher_id', $teacher->id)
-                ->where('performed_at', '>=', now()->startOfWeek())
-                ->sum('duration_minutes') ?? 0;
-
-            return ($weeklyMinutes / 60) > $threshold;
-        })->map(function (Teacher $teacher) {
-            $weeklyMinutes = TeacherActivity::where('teacher_id', $teacher->id)
-                ->where('performed_at', '>=', now()->startOfWeek())
-                ->sum('duration_minutes') ?? 0;
-
-            return [
-                'teacher_id' => $teacher->id,
-                'name' => "{$teacher->first_name} {$teacher->last_name}",
-                'weekly_hours' => round($weeklyMinutes / 60, 1),
-            ];
-        })->values();
+                return [
+                    'teacher_id' => $row->teacher_id,
+                    'name' => $teacher ? "{$teacher->first_name} {$teacher->last_name}" : 'Unknown',
+                    'weekly_hours' => round($row->total_minutes / 60, 1),
+                ];
+            })->values();
     }
 
     /**

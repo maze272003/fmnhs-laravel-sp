@@ -7,6 +7,7 @@ use App\Models\Seat;
 use App\Models\SeatingArrangement;
 use App\Models\Section;
 use App\Models\Student;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class SeatingOptimizationService
@@ -167,8 +168,14 @@ class SeatingOptimizationService
      */
     protected function balanceStudents($students)
     {
-        // Simple balanced shuffle: interleave by grade performance
-        $sorted = $students->sortBy(fn ($s) => $s->grades()->avg('grade_value') ?? 0);
+        // Pre-load grade averages in a single query to avoid N+1
+        $studentIds = $students->pluck('id');
+        $gradeAverages = \App\Models\Grade::whereIn('student_id', $studentIds)
+            ->select('student_id', DB::raw('AVG(grade_value) as avg_grade'))
+            ->groupBy('student_id')
+            ->pluck('avg_grade', 'student_id');
+
+        $sorted = $students->sortBy(fn ($s) => $gradeAverages[$s->id] ?? 0);
         $high = $sorted->splice($sorted->count() / 2);
         $low = $sorted;
 

@@ -16,31 +16,31 @@ class AtRiskDetectionService
      */
     public function detectAtRiskStudents(): Collection
     {
-        $students = Student::where('enrollment_status', 'enrolled')
-            ->with(['section', 'grades', 'attendances'])
-            ->get();
-
         $atRisk = collect();
 
-        foreach ($students as $student) {
-            $score = $this->calculateRiskScore($student);
+        Student::where('enrollment_status', 'enrolled')
+            ->with(['section', 'grades', 'attendances'])
+            ->chunk(100, function ($students) use ($atRisk) {
+                foreach ($students as $student) {
+                    $score = $this->calculateRiskScore($student);
 
-            if ($score >= 50) {
-                $severity = $score >= 80 ? 'critical' : ($score >= 65 ? 'high' : 'medium');
+                    if ($score >= 50) {
+                        $severity = $score >= 80 ? 'critical' : ($score >= 65 ? 'high' : 'medium');
 
-                $this->createAlert($student, 'auto_detected', $severity, [
-                    'risk_score' => $score,
-                    'detected_at' => now()->toIso8601String(),
-                ]);
+                        $this->createAlert($student, 'auto_detected', $severity, [
+                            'risk_score' => $score,
+                            'detected_at' => now()->toIso8601String(),
+                        ]);
 
-                $atRisk->push([
-                    'student_id' => $student->id,
-                    'name' => "{$student->first_name} {$student->last_name}",
-                    'risk_score' => $score,
-                    'severity' => $severity,
-                ]);
-            }
-        }
+                        $atRisk->push([
+                            'student_id' => $student->id,
+                            'name' => "{$student->first_name} {$student->last_name}",
+                            'risk_score' => $score,
+                            'severity' => $severity,
+                        ]);
+                    }
+                }
+            });
 
         return $atRisk;
     }
