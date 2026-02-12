@@ -415,7 +415,10 @@ export class ConferenceApp {
         if (track.kind === 'video') {
             // Check if this is a screen share (second video stream)
             const existingStream = this.ui.getPeerStream?.(peerId);
-            if (existingStream && existingStream.id !== stream.id) {
+            const existingHasVideo = (existingStream?.getVideoTracks?.().length || 0) > 0;
+            const isDifferentStream = Boolean(existingStream && stream && existingStream.id !== stream.id);
+
+            if (existingHasVideo && isDifferentStream) {
                 this.ui.onSystemMessage?.(`${name} is sharing their screen`);
                 this.ui.onRemoteScreenShare?.(peerId, stream, name);
 
@@ -428,7 +431,7 @@ export class ConferenceApp {
             }
         }
 
-        this.ui.onSystemMessage?.(`Received video stream from ${name}`);
+        this.ui.onSystemMessage?.(`Received ${track.kind} stream from ${name}`);
         this.ui.onRemoteStream?.(peerId, stream, name);
 
         // Start freeze detection
@@ -460,16 +463,54 @@ export class ConferenceApp {
 
     // === User Actions ===
 
-    toggleAudio() {
-        const enabled = this.media.toggleAudio();
+    async toggleAudio() {
+        let enabled = this.media.toggleAudio();
+
+        if (!enabled && !this.media.localStream?.getAudioTracks?.().length) {
+            const recovered = await this.media.ensureAudioTrack();
+            if (!recovered) {
+                this.ui.onBanner?.('Microphone unavailable. Check permissions or device connection.');
+                this.ui.onMediaStateChanged?.('audio', false);
+                return false;
+            }
+            enabled = true;
+            await this.pushRecoveredTrackToPeers('audio');
+            this.ui.onLocalStream?.(this.media.localStream);
+        }
+
         this.ui.onMediaStateChanged?.('audio', enabled);
         return enabled;
     }
 
-    toggleVideo() {
-        const enabled = this.media.toggleVideo();
+    async toggleVideo() {
+        let enabled = this.media.toggleVideo();
+
+        if (!enabled && !this.media.localStream?.getVideoTracks?.().length) {
+            const recovered = await this.media.ensureVideoTrack();
+            if (!recovered) {
+                this.ui.onBanner?.('Camera unavailable. Check permissions or close apps using the camera.');
+                this.ui.onMediaStateChanged?.('video', false);
+                return false;
+            }
+            enabled = true;
+            await this.pushRecoveredTrackToPeers('video');
+            this.ui.onLocalStream?.(this.media.localStream);
+        }
+
         this.ui.onMediaStateChanged?.('video', enabled);
         return enabled;
+    }
+
+    async pushRecoveredTrackToPeers(kind) {
+        const track = kind === 'audio'
+            ? this.media.localStream?.getAudioTracks?.()[0]
+            : this.media.localStream?.getVideoTracks?.()[0];
+        if (!track) return;
+
+        const offers = await this.peers.replaceOutgoingTrackForAll(track);
+        offers.forEach(({ peerId, payload }) => {
+            this.signaling.send({ type: 'offer', to: peerId, payload });
+        });
     }
 
     async toggleScreenShare() {

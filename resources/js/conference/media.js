@@ -79,17 +79,8 @@ export class MediaManager {
      * Create constraints for the given acquisition mode.
      */
     buildMediaConstraints(mode, preset) {
-        const audioConstraints = {
-            echoCancellation: true,
-            noiseSuppression: this.isNoiseSuppression,
-            autoGainControl: true,
-        };
-        const videoConstraints = {
-            width: { ideal: preset.width },
-            height: { ideal: preset.height },
-            frameRate: { ideal: preset.frameRate },
-            facingMode: 'user',
-        };
+        const audioConstraints = this.buildAudioConstraints();
+        const videoConstraints = this.buildVideoConstraints(preset);
 
         if (mode === 'audio') {
             return { audio: audioConstraints, video: false };
@@ -102,6 +93,35 @@ export class MediaManager {
         return { audio: audioConstraints, video: videoConstraints };
     }
 
+    buildAudioConstraints(deviceId = null) {
+        const constraints = {
+            echoCancellation: true,
+            noiseSuppression: this.isNoiseSuppression,
+            autoGainControl: true,
+        };
+
+        if (deviceId) {
+            constraints.deviceId = { exact: deviceId };
+        }
+
+        return constraints;
+    }
+
+    buildVideoConstraints(preset, deviceId = null) {
+        const constraints = {
+            width: { ideal: preset.width },
+            height: { ideal: preset.height },
+            frameRate: { ideal: preset.frameRate },
+            facingMode: 'user',
+        };
+
+        if (deviceId) {
+            constraints.deviceId = { exact: deviceId };
+        }
+
+        return constraints;
+    }
+
     /**
      * Apply a newly acquired local stream and sync internal state.
      */
@@ -112,14 +132,17 @@ export class MediaManager {
 
         this.localStream = stream;
         this.resetAudioAnalysis();
+        this.syncStateFromLocalStream();
 
-        const audioTrack = this.localStream.getAudioTracks()[0];
-        const videoTrack = this.localStream.getVideoTracks()[0];
+        this.setupAudioAnalysis();
+    }
+
+    syncStateFromLocalStream() {
+        const audioTrack = this.localStream?.getAudioTracks?.()[0];
+        const videoTrack = this.localStream?.getVideoTracks?.()[0];
         this.isAudioEnabled = Boolean(audioTrack?.enabled);
         this.isVideoEnabled = Boolean(videoTrack?.enabled);
         this.isAudioOnly = !videoTrack;
-
-        this.setupAudioAnalysis();
     }
 
     /**
@@ -132,6 +155,76 @@ export class MediaManager {
         this.isVideoEnabled = false;
         this.isAudioOnly = true;
         return stream;
+    }
+
+    /**
+     * Ensure an audio track exists in the local stream (used for live recovery).
+     */
+    async ensureAudioTrack(deviceId = null) {
+        return this.ensureTrack('audio', deviceId);
+    }
+
+    /**
+     * Ensure a video track exists in the local stream (used for live recovery).
+     */
+    async ensureVideoTrack(deviceId = null) {
+        return this.ensureTrack('video', deviceId);
+    }
+
+    /**
+     * Ensure a specific track exists, requesting new device access if needed.
+     */
+    async ensureTrack(kind, deviceId = null) {
+        const mediaDevices = navigator?.mediaDevices;
+        if (!mediaDevices?.getUserMedia) return false;
+
+        const isAudio = kind === 'audio';
+        const existing = isAudio
+            ? this.localStream?.getAudioTracks?.()[0]
+            : this.localStream?.getVideoTracks?.()[0];
+
+        if (existing) {
+            existing.enabled = true;
+            if (isAudio) this.isAudioEnabled = true;
+            else this.isVideoEnabled = true;
+            return true;
+        }
+
+        const preset = this.qualityPresets[this.currentQuality] || this.qualityPresets.high;
+        const constraints = isAudio
+            ? { audio: this.buildAudioConstraints(deviceId), video: false }
+            : { audio: false, video: this.buildVideoConstraints(preset, deviceId) };
+
+        try {
+            const capture = await mediaDevices.getUserMedia(constraints);
+            const track = isAudio ? capture.getAudioTracks()[0] : capture.getVideoTracks()[0];
+            if (!track) {
+                capture.getTracks().forEach(t => t.stop());
+                return false;
+            }
+
+            if (!this.localStream) {
+                this.createEmptyLocalStream();
+            }
+
+            track.enabled = true;
+            this.localStream.addTrack(track);
+            this.syncStateFromLocalStream();
+
+            if (isAudio) {
+                this.resetAudioAnalysis();
+                this.setupAudioAnalysis();
+            }
+
+            capture.getTracks().forEach((t) => {
+                if (t !== track) t.stop();
+            });
+
+            return true;
+        } catch (error) {
+            console.warn(`[Media] Failed to recover ${kind} track:`, error?.name || error);
+            return false;
+        }
     }
 
     /**

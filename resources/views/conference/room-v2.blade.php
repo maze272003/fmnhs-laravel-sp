@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#020617">
     <title>{{ $conference->title }} | Live Room</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -1575,6 +1576,10 @@ const app = new ConferenceApp({
             const el = document.getElementById(`video-${peerId}`) || createRemoteTile(peerId, name);
             el.srcObject = stream;
             el.play().catch(() => {});
+            const avatar = document.getElementById(`avatar-${peerId}`);
+            if (avatar) {
+                avatar.classList.toggle('hidden', stream.getVideoTracks().length > 0);
+            }
             peerStreams.set(peerId, stream);
         },
         getPeerStream: (peerId) => peerStreams.get(peerId),

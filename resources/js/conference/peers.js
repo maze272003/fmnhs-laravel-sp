@@ -17,6 +17,7 @@ export class PeerManager {
 
         this.localStream = null;
         this.screenStream = null;
+        this.remoteStreams = new Map(); // peerId -> MediaStream
 
         // Adaptive bitrate
         this.statsIntervals = new Map();
@@ -79,7 +80,8 @@ export class PeerManager {
         // Track received
         pc.ontrack = (event) => {
             if (this.onTrack) {
-                this.onTrack(peerId, event.track, event.streams[0]);
+                const stream = this.resolveRemoteStream(peerId, event);
+                this.onTrack(peerId, event.track, stream);
             }
         };
 
@@ -220,6 +222,46 @@ export class PeerManager {
     }
 
     /**
+     * Replace or attach an outgoing media track for all active peers.
+     * Returns offers for peers that require renegotiation.
+     */
+    async replaceOutgoingTrackForAll(track) {
+        if (!track) return [];
+
+        const offers = [];
+        for (const [peerId, peerState] of this.peers) {
+            const sender = this.findSenderByKind(peerState.pc, track.kind);
+
+            if (sender) {
+                try {
+                    await sender.replaceTrack(track);
+                } catch (e) {
+                    console.error(`[Peers] replaceTrack failed for ${peerId} (${track.kind}):`, e);
+                }
+                continue;
+            }
+
+            if (this.localStream) {
+                peerState.pc.addTrack(track, this.localStream);
+                if (peerState.pc.signalingState === 'stable') {
+                    try {
+                        const offer = await peerState.pc.createOffer();
+                        await peerState.pc.setLocalDescription(offer);
+                        offers.push({
+                            peerId,
+                            payload: this.serializeDescription(peerState.pc.localDescription),
+                        });
+                    } catch (e) {
+                        console.error(`[Peers] Renegotiation failed for ${peerId} (${track.kind}):`, e);
+                    }
+                }
+            }
+        }
+
+        return offers;
+    }
+
+    /**
      * Remove a peer and close its connection.
      */
     removePeer(peerId) {
@@ -228,6 +270,7 @@ export class PeerManager {
             peerState.pc.close();
             this.peers.delete(peerId);
         }
+        this.remoteStreams.delete(peerId);
         this.stopBitrateMonitoring(peerId);
         if (this.onPeerClosed) this.onPeerClosed(peerId);
     }
@@ -324,6 +367,38 @@ export class PeerManager {
     }
 
     /**
+     * Resolve a stable remote stream for incoming tracks.
+     * Some browsers can emit ontrack without event.streams[0] when transceivers
+     * start without a bound sender track; we synthesize a peer stream in that case.
+     */
+    resolveRemoteStream(peerId, event) {
+        const eventStream = event.streams?.[0];
+        if (eventStream) {
+            this.remoteStreams.set(peerId, eventStream);
+            return eventStream;
+        }
+
+        let stream = this.remoteStreams.get(peerId);
+        if (!stream) {
+            stream = new MediaStream();
+            this.remoteStreams.set(peerId, stream);
+        }
+
+        const incomingTrack = event.track;
+        if (incomingTrack && !stream.getTracks().some((t) => t.id === incomingTrack.id)) {
+            stream.addTrack(incomingTrack);
+        }
+
+        return stream;
+    }
+
+    findSenderByKind(pc, kind) {
+        return pc.getSenders().find((s) => s.track?.kind === kind)
+            || pc.getTransceivers().find((t) => t.receiver?.track?.kind === kind)?.sender
+            || null;
+    }
+
+    /**
      * Clean up all peers.
      */
     destroy() {
@@ -331,5 +406,6 @@ export class PeerManager {
         this.statsIntervals.clear();
         this.peers.forEach(({ pc }) => pc.close());
         this.peers.clear();
+        this.remoteStreams.clear();
     }
 }
