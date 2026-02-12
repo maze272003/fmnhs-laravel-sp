@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class GameSession extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'game_id', 'student_id', 'score', 'data', 'completed_at',
+    ];
+
+    protected $casts = [
+        'score' => 'integer',
+        'data' => 'array',
+        'completed_at' => 'datetime',
+    ];
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+}
