@@ -41,9 +41,12 @@ use App\Policies\ProgressReportPolicy;
 use App\Policies\StudySessionPolicy;
 use App\Policies\VideoConferencePolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -78,6 +81,18 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(StudySession::class, StudySessionPolicy::class);
         Gate::policy(LearningPath::class, LearningPathPolicy::class);
         Gate::policy(ProgressReport::class, ProgressReportPolicy::class);
+
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by($request->email . $request->ip());
+        });
+
+        RateLimiter::for('api-sensitive', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
 
         if ($this->app->environment('production')) {
             URL::forceScheme('https');

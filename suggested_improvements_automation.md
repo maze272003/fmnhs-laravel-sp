@@ -1,8 +1,8 @@
-﻿# FMNHS SIS — MASTER TODO LIST
+﻿# FMNHS SIS - MASTER TODO LIST
 
-## 🚨 1. CRITICAL BLOCKERS (FIX FIRST)
+## 1. CRITICAL BLOCKERS (FIX FIRST)
 
-### 🔴 Authentication & Parent Portal
+### Authentication & Parent Portal
 
 * [ ] Add `parent` guard in `config/auth.php`
 
@@ -18,105 +18,105 @@
 
 ---
 
-### 🔴 Route-Controller Contract Fix (GLOBAL PASS)
+### Route-Controller Contract Fix (GLOBAL PASS)
 
-* [ ] Audit routes between `routes/web.php:238-422`
-* [ ] Implement or remove missing controller methods:
+* [x] Audit routes between `routes/web.php:238-422`
+* [x] Implement or remove missing controller methods:
 
 #### Admin
 
-* [ ] `AdminAnalyticsController::students`
-* [ ] `AdminAnalyticsController::teachers`
-* [ ] `AdminSubjectController::destroy`
-* [ ] `AdminSubjectController::forceDelete`
+* [x] `AdminAnalyticsController::students`
+* [x] `AdminAnalyticsController::teachers`
+* [x] `AdminSubjectController::destroy`
+* [x] `AdminSubjectController::forceDelete`
 
 #### AI / Conference / Classroom APIs
 
-* [ ] `AIAssistantApiController::chat`
-* [ ] `BreakoutRoomApiController::autoAssign`
-* [ ] `BreakoutRoomApiController::endAll`
-* [ ] `CaptionApiController::search`
+* [x] `AIAssistantApiController::chat`
+* [x] `BreakoutRoomApiController::autoAssign`
+* [x] `BreakoutRoomApiController::endAll`
+* [x] `CaptionApiController::search`
 
 #### Forum / Game / Learning APIs
 
-* [ ] `ForumApiController::index`
-* [ ] `ForumApiController::storeThread`
-* [ ] `ForumApiController::storePost`
-* [ ] `GameApiController::submitScore`
-* [ ] `LearningPathApiController::updateProgress`
+* [x] `ForumApiController::index`
+* [x] `ForumApiController::storeThread`
+* [x] `ForumApiController::storePost`
+* [x] `GameApiController::submitScore`
+* [x] `LearningPathApiController::updateProgress`
 
 #### Portfolio / Presentation / Whiteboard APIs
 
-* [ ] `PortfolioApiController::index`
-* [ ] `PortfolioApiController::storeItem`
-* [ ] `PresentationApiController::slideAnalytics`
-* [ ] `WhiteboardApiController::save`
-* [ ] `WhiteboardApiController::load`
+* [x] `PortfolioApiController::index`
+* [x] `PortfolioApiController::storeItem`
+* [x] `PresentationApiController::slideAnalytics`
+* [x] `WhiteboardApiController::save`
+* [x] `WhiteboardApiController::load`
 
 #### Student Controllers
 
-* [ ] `StudentLearningPathController::updateProgress`
-* [ ] `StudentPortfolioController::storeItem`
-* [ ] `StudentPortfolioController::updateItem`
-* [ ] `StudentPortfolioController::destroyItem`
-* [ ] `StudentPortfolioController::storeReflection`
-* [ ] `StudentStudyController::startSession`
-* [ ] `StudentStudyController::endSession`
-* [ ] `StudentStudyController::storeGoal`
-* [ ] `StudentStudyController::updateGoal`
+* [x] `StudentLearningPathController::updateProgress`
+* [x] `StudentPortfolioController::storeItem`
+* [x] `StudentPortfolioController::updateItem`
+* [x] `StudentPortfolioController::destroyItem`
+* [x] `StudentPortfolioController::storeReflection`
+* [x] `StudentStudyController::startSession`
+* [x] `StudentStudyController::endSession`
+* [x] `StudentStudyController::storeGoal`
+* [x] `StudentStudyController::updateGoal`
 
 #### Bulk / Reports / Seating
 
-* [ ] `BulkActionController::bulkGrades`
+* [x] `BulkActionController::bulkGrades`
 
-* [ ] `BulkActionController::bulkAttendance`
+* [x] `BulkActionController::bulkAttendance`
 
-* [ ] `BulkActionController::duplicateAssignments`
+* [x] `BulkActionController::duplicateAssignments`
 
-* [ ] `ProgressReportController::show`
+* [x] `ProgressReportController::show`
 
-* [ ] `ProgressReportController::send`
+* [x] `ProgressReportController::send`
 
-* [ ] `SeatingController::update`
+* [x] `SeatingController::update`
 
-* [ ] `SeatingController::autoArrange`
+* [x] `SeatingController::autoArrange`
 
 * [ ] Add CI static route-contract check
 
 ---
 
-### 🔴 Authorization Bugs
+### Authorization Bugs
 
-* [ ] Separate student-only API routes
-* [ ] Separate teacher-only API routes
-* [ ] Use explicit guards (`Auth::guard('student')`)
+* [x] Separate student-only API routes
+* [x] Separate teacher-only API routes
+* [x] Use explicit guards (`Auth::guard('student')`)
 * [ ] Remove reliance on `Auth::id()` across mixed roles
 
 ---
 
-### 🔴 Announcement Security
+### Announcement Security
 
 * [ ] Remove hardcoded email authorization
-* [ ] Add ownership fields:
+* [x] Add ownership fields:
 
-  * [ ] `created_by_type`
-  * [ ] `created_by_id`
-* [ ] Implement Laravel Policy for Announcement deletion
-
----
+  * [x] `created_by_type`
+  * [x] `created_by_id`
+* [x] Implement Laravel Policy for Announcement deletion
 
 ---
 
-# 🟡 2. CONFIRMED UNFINISHED WORK
+---
+
+# 2. CONFIRMED UNFINISHED WORK
 
 ### Parent Portal UI
 
 * [ ] Fix layout wiring for parent portal
 
-* [ ] Create missing layouts:
+* [x] Create missing layouts:
 
-  * [ ] `layouts/app.blade.php`
-  * [ ] `layouts/parent.blade.php`
+  * [x] `layouts/app.blade.php`
+  * [x] `layouts/parent.blade.php`
 
 * [ ] Pass announcements data to parent dashboard controller
 
@@ -128,15 +128,15 @@
 
 Create:
 
-* [ ] `admin/alerts/index.blade.php`
-* [ ] `admin/workload/index.blade.php`
-* [ ] `admin/analytics/index.blade.php`
-* [ ] `student/learning-paths/index.blade.php`
-* [ ] `student/portfolios/index.blade.php`
-* [ ] `student/study/index.blade.php`
-* [ ] `teacher/reports/index.blade.php`
-* [ ] `teacher/seating/index.blade.php`
-* [ ] `parent/auth/login.blade.php`
+* [x] `admin/alerts/index.blade.php`
+* [x] `admin/workload/index.blade.php`
+* [x] `admin/analytics/index.blade.php`
+* [x] `student/learning-paths/index.blade.php`
+* [x] `student/portfolios/index.blade.php`
+* [x] `student/study/index.blade.php`
+* [x] `teacher/reports/index.blade.php`
+* [x] `teacher/seating/index.blade.php`
+* [x] `parent/auth/login.blade.php`
 
 ---
 
@@ -156,17 +156,17 @@ Create:
 
 ---
 
-# 🟢 3. FRONTEND IMPROVEMENTS
+# 3. FRONTEND IMPROVEMENTS
 
 ### Layout Standardization
 
-* [ ] Create unified base layouts:
+* [x] Create unified base layouts:
 
-  * [ ] `layouts.app`
-  * [ ] `layouts.student`
-  * [ ] `layouts.teacher`
-  * [ ] `layouts.admin`
-  * [ ] `layouts.parent`
+  * [x] `layouts.app`
+  * [x] `layouts.student`
+  * [x] `layouts.teacher`
+  * [x] `layouts.admin`
+  * [x] `layouts.parent`
 
 * [ ] Convert all views to extend role-specific layout
 
@@ -175,12 +175,12 @@ Create:
 
 ### Parent Feature Completion
 
-* [ ] Children list page
-* [ ] Child grades page
-* [ ] Attendance page
-* [ ] Schedule page
-* [ ] Assignments page
-* [ ] Messaging page
+* [x] Children list page
+* [x] Child grades page
+* [x] Attendance page
+* [x] Schedule page
+* [x] Assignments page
+* [x] Messaging page
 
 ---
 
@@ -189,7 +189,7 @@ Create:
 * [ ] Fix singular/plural mismatches
   Example:
 
-  * `student/portfolio/index` → `student.portfolios.index`
+  * `student/portfolio/index` -> `student.portfolios.index`
 
 ---
 
@@ -203,7 +203,7 @@ Create:
 
 ---
 
-# 🔵 4. BACKEND IMPROVEMENTS
+# 4. BACKEND IMPROVEMENTS
 
 ### Route Stabilization Sprint
 
@@ -216,12 +216,12 @@ Create:
 
 Create policies for:
 
-* [ ] Announcement
-* [ ] VideoConference
-* [ ] Portfolio
-* [ ] StudySession
-* [ ] LearningPath
-* [ ] ProgressReport
+* [x] Announcement
+* [x] VideoConference
+* [x] Portfolio
+* [x] StudySession
+* [x] LearningPath
+* [x] ProgressReport
 
 ---
 
@@ -233,22 +233,22 @@ Create policies for:
 
 ### Abuse Protection
 
-* [ ] Add login throttling
-* [ ] Add API throttling middleware
+* [x] Add login throttling
+* [x] Add API throttling middleware
 * [ ] Add rate limits to sensitive endpoints
 
 ---
 
 ### Analytics Contract Fix
 
-* [ ] Align `AdminAnalyticsController::exportReport()`
-* [ ] Ensure service receives correct payload format
+* [x] Align `AdminAnalyticsController::exportReport()`
+* [x] Ensure service receives correct payload format
 
 ---
 
 ---
 
-# 🟣 5. MIGRATIONS & DATA MODEL
+# 5. MIGRATIONS & DATA MODEL
 
 ### Schedule Schema Normalization
 
@@ -278,18 +278,18 @@ Create policies for:
 
 ---
 
-# 🔐 6. SECURITY HARDENING
+# 6. SECURITY HARDENING
 
 * [ ] Ensure DB reset route fully removed
 
 * [ ] Ensure all secrets rotated
 
-* [ ] Add login throttling per role:
+* [x] Add login throttling per role:
 
-  * [ ] student
-  * [ ] teacher
-  * [ ] admin
-  * [ ] parent
+  * [x] student
+  * [x] teacher
+  * [x] admin
+  * [x] parent
 
 * [ ] Restrict conference uploads by MIME type
 
@@ -297,14 +297,14 @@ Create policies for:
 
 * [ ] Stop emailing raw student passwords
 
-* [ ] Add Security Headers Middleware:
+* [x] Add Security Headers Middleware:
 
-  * [ ] CSP
-  * [ ] HSTS
+  * [x] CSP
+  * [x] HSTS
 
 * [ ] Include reCAPTCHA partial in all login pages
 
-# 🔐 7. Code Cleanup & Simplification
+# 7. Code Cleanup & Simplification
 
 * [ ] Remove unused controllers, services, models, helpers, and middleware
 * [ ] Remove unused routes (web + api)
@@ -315,7 +315,7 @@ Create policies for:
 
 ---
 
-## ♻️ Reuse & Refactor Repeated Logic
+## Reuse & Refactor Repeated Logic
 
 * [ ] Extract duplicated controller logic into reusable Services
 * [ ] Move repeated DB queries into Repository / Query classes
@@ -327,7 +327,7 @@ Create policies for:
 
 ---
 
-## 🧱 Controller & Route Simplification
+## Controller & Route Simplification
 
 * [ ] Convert fat controllers into Service-based architecture
 * [ ] Remove duplicate endpoints performing same action
@@ -337,7 +337,7 @@ Create policies for:
 
 ---
 
-## 🗃️ Model Cleanup
+## Model Cleanup
 
 * [ ] Remove unused relationships in models
 * [ ] Remove unused `$fillable` or `$casts` entries
@@ -347,7 +347,7 @@ Create policies for:
 
 ---
 
-## 🎯 Blade / Frontend Cleanup
+## Blade / Frontend Cleanup
 
 * [ ] Extract repeated UI into Blade components
 * [ ] Extract repeated tables into reusable table component
@@ -359,7 +359,7 @@ Create policies for:
 
 ---
 
-## ⚙️ Laravel Best Practice Improvements
+## Laravel Best Practice Improvements
 
 * [ ] Replace manual validation with FormRequest classes
 * [ ] Replace inline authorization checks with Policies
@@ -369,7 +369,7 @@ Create policies for:
 
 ---
 
-## 🧹 Performance & Query Cleanup
+## Performance & Query Cleanup
 
 * [ ] Remove N+1 queries using eager loading
 * [ ] Replace repeated joins with reusable scopes
@@ -379,7 +379,7 @@ Create policies for:
 
 ---
 
-## 🔎 Naming & Structure Consistency
+## Naming & Structure Consistency
 
 * [ ] Standardize naming conventions (singular vs plural)
 * [ ] Align folder structure per role module
@@ -388,7 +388,7 @@ Create policies for:
 
 ---
 
-## 🧪 Safety Before Removing Anything
+## Safety Before Removing Anything
 
 * [ ] Search usage before deleting files (`global search`)
 * [ ] Check routes referencing the file
@@ -398,7 +398,7 @@ Create policies for:
 
 ---
 
-## 🚀 Optional Advanced Cleanup (Recommended for Large SIS)
+## Optional Advanced Cleanup (Recommended for Large SIS)
 
 * [ ] Introduce BaseController for shared logic
 * [ ] Introduce BaseRepository pattern for DB access
@@ -409,6 +409,3 @@ Create policies for:
 * [ ] Introduce unified API Resource transformers
 
 ---
-
-
-

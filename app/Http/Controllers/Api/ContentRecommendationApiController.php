@@ -21,7 +21,7 @@ class ContentRecommendationApiController extends Controller
      */
     public function index(): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $recommendations = $this->recommendationService->getRecommendations($student);

@@ -28,7 +28,7 @@ class StudySessionApiController extends Controller
             'subject_id' => ['nullable', 'exists:subjects,id'],
         ]);
 
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
         $subject = ! empty($validated['subject_id']) ? Subject::find($validated['subject_id']) : null;
 
         try {
@@ -63,7 +63,7 @@ class StudySessionApiController extends Controller
      */
     public function stats(Request $request): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
         $period = $request->query('period', 'weekly');
 
         try {
@@ -80,7 +80,7 @@ class StudySessionApiController extends Controller
      */
     public function goals(): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         $goals = $this->studyTrackingService->getStudyGoals($student);
 
@@ -99,7 +99,7 @@ class StudySessionApiController extends Controller
             'due_date' => ['nullable', 'date', 'after:today'],
         ]);
 
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $goal = $this->studyTrackingService->createGoal($student, $validated);

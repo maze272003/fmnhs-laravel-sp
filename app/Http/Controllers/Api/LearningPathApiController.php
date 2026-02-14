@@ -60,7 +60,7 @@ class LearningPathApiController extends Controller
      */
     public function progress(LearningPath $path): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $progress = $this->adaptiveLearningService->getProgress($student, $path);
@@ -84,7 +84,7 @@ class LearningPathApiController extends Controller
      */
     public function recommend(LearningPath $path): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $recommendations = $this->adaptiveLearningService->getRecommendations($student);

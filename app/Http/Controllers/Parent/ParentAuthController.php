@@ -15,7 +15,7 @@ class ParentAuthController extends Controller
      */
     public function showLogin(): View
     {
-        return view('parent.auth.login');
+        return view('parent.login');
     }
 
     /**

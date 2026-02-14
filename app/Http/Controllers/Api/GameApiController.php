@@ -78,7 +78,7 @@ class GameApiController extends Controller
      */
     public function join(Game $game): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $session = $this->gameEngineService->joinGame($game, $student);
@@ -100,7 +100,7 @@ class GameApiController extends Controller
             'time_taken' => ['nullable', 'integer'],
         ]);
 
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $result = $this->gameEngineService->submitAnswer($game, $student, $validated);

@@ -22,7 +22,7 @@ class PortfolioApiController extends Controller
      */
     public function index(): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
         $portfolio = Portfolio::where('student_id', $student->id)->firstOrFail();
         $portfolio->load('items');
 
@@ -93,7 +93,7 @@ class PortfolioApiController extends Controller
             'type' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $reflection = $this->portfolioService->addReflection($student, $validated);

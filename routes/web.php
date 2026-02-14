@@ -212,36 +212,36 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/students/archived', [AdminStudentController::class, 'archived'])->name('admin.students.archived');
     Route::post('/admin/students', [AdminStudentController::class, 'store'])->name('admin.students.store');
     Route::post('/admin/students/promote', [AdminStudentController::class, 'promote'])->name('admin.students.promote');
-    Route::put('/admin/students/{id}', [AdminStudentController::class, 'update'])->name('admin.students.update');
-    Route::delete('/admin/students/{id}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
+    Route::put('/admin/students/{student}', [AdminStudentController::class, 'update'])->name('admin.students.update');
+    Route::delete('/admin/students/{student}', [AdminStudentController::class, 'destroy'])->name('admin.students.destroy');
 
     // Status Changes
-    Route::post('/admin/students/{id}/restore', [AdminStudentController::class, 'restore'])->name('admin.students.restore');
-    Route::post('/admin/students/{id}/drop', [AdminStudentController::class, 'dropStudent'])->name('admin.students.drop');
-    Route::post('/admin/students/{id}/transfer', [AdminStudentController::class, 'transferStudent'])->name('admin.students.transfer');
-    Route::post('/admin/students/{id}/reenroll', [AdminStudentController::class, 'reenrollStudent'])->name('admin.students.reenroll');
+    Route::post('/admin/students/{student}/restore', [AdminStudentController::class, 'restore'])->name('admin.students.restore');
+    Route::post('/admin/students/{student}/drop', [AdminStudentController::class, 'dropStudent'])->name('admin.students.drop');
+    Route::post('/admin/students/{student}/transfer', [AdminStudentController::class, 'transferStudent'])->name('admin.students.transfer');
+    Route::post('/admin/students/{student}/reenroll', [AdminStudentController::class, 'reenrollStudent'])->name('admin.students.reenroll');
 
-    Route::get('admin/students/{id}/print', [App\Http\Controllers\Admin\AdminStudentController::class, 'printRecord'])
+    Route::get('admin/students/{student}/print', [App\Http\Controllers\Admin\AdminStudentController::class, 'printRecord'])
         ->name('admin.students.print');
 
     // FIX: Renamed 'students.show' to 'admin.students.show' to match the View
-    Route::get('/admin/students/{id}/record', [AdminStudentController::class, 'show'])->name('admin.students.show');
+    Route::get('/admin/students/{student}/record', [AdminStudentController::class, 'show'])->name('admin.students.show');
 
     // TEACHER MANAGEMENT
     Route::get('/admin/teachers', [AdminTeacherController::class, 'index'])->name('admin.teachers.index');
     Route::put('/admin/teachers/{teacher}', [AdminTeacherController::class, 'update'])->name('admin.teachers.update');
     Route::post('/admin/teachers/{teacher}/archive', [AdminTeacherController::class, 'archive'])->name('admin.teachers.archive');
-    Route::post('/admin/teachers/{id}/restore', [AdminTeacherController::class, 'restore'])->name('admin.teachers.restore');
+    Route::post('/admin/teachers/{teacher}/restore', [AdminTeacherController::class, 'restore'])->name('admin.teachers.restore');
     Route::post('/admin/teachers', [AdminTeacherController::class, 'store'])->name('admin.teachers.store');
 
     // SUBJECT MANAGEMENT
     Route::get('/admin/subjects', [AdminSubjectController::class, 'index'])->name('admin.subjects.index');
     Route::post('/admin/subjects', [AdminSubjectController::class, 'store'])->name('admin.subjects.store');
-    Route::put('/admin/subjects/{id}', [AdminSubjectController::class, 'update'])->name('admin.subjects.update');
-    Route::delete('/admin/subjects/{id}', [AdminSubjectController::class, 'destroy'])->name('admin.subjects.destroy');
+    Route::put('/admin/subjects/{subject}', [AdminSubjectController::class, 'update'])->name('admin.subjects.update');
+    Route::delete('/admin/subjects/{subject}', [AdminSubjectController::class, 'destroy'])->name('admin.subjects.destroy');
     Route::post('/admin/subjects/{subject}/archive', [AdminSubjectController::class, 'archive'])->name('admin.subjects.archive');
-    Route::post('/admin/subjects/{id}/restore', [AdminSubjectController::class, 'restore'])->name('admin.subjects.restore');
-    Route::delete('/admin/subjects/{id}/force-delete', [AdminSubjectController::class, 'forceDelete'])->name('admin.subjects.force-delete');
+    Route::post('/admin/subjects/{subject}/restore', [AdminSubjectController::class, 'restore'])->name('admin.subjects.restore');
+    Route::delete('/admin/subjects/{subject}/force-delete', [AdminSubjectController::class, 'forceDelete'])->name('admin.subjects.force-delete');
 
     // ANNOUNCEMENTS
     Route::get('/admin/announcements', [App\Http\Controllers\Admin\AdminAnnouncementController::class, 'index'])->name('admin.announcements.index');
@@ -251,7 +251,7 @@ Route::middleware(['auth:admin'])->group(function () {
     // SCHEDULES
     Route::get('/admin/schedules', [App\Http\Controllers\Admin\AdminScheduleController::class, 'index'])->name('admin.schedules.index');
     Route::post('/admin/schedules', [App\Http\Controllers\Admin\AdminScheduleController::class, 'store'])->name('admin.schedules.store');
-    Route::delete('/admin/schedules/{id}', [App\Http\Controllers\Admin\AdminScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
+    Route::delete('/admin/schedules/{schedule}', [App\Http\Controllers\Admin\AdminScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
 
     // ATTENDANCE & GRADES
     Route::get('/admin/attendance', [App\Http\Controllers\Admin\AdminAttendanceController::class, 'index'])->name('admin.attendance.index');
@@ -263,13 +263,13 @@ Route::middleware(['auth:admin'])->group(function () {
 
     Route::get('/admin/school-years', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'index'])->name('admin.school-years.index');
     Route::post('/admin/school-years', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'store'])->name('admin.school-years.store');
-    Route::post('/admin/school-years/{id}/activate', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'activate'])->name('admin.school-years.activate');
-    Route::post('/admin/school-years/{id}/close', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'close'])->name('admin.school-years.close');
+    Route::post('/admin/school-years/{schoolYear}/activate', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'activate'])->name('admin.school-years.activate');
+    Route::post('/admin/school-years/{schoolYear}/close', [App\Http\Controllers\Admin\AdminSchoolYearController::class, 'close'])->name('admin.school-years.close');
 
     Route::get('/admin/rooms', [App\Http\Controllers\Admin\AdminRoomController::class, 'index'])->name('admin.rooms.index');
     Route::post('/admin/rooms', [App\Http\Controllers\Admin\AdminRoomController::class, 'store'])->name('admin.rooms.store');
-    Route::put('/admin/rooms/{id}', [App\Http\Controllers\Admin\AdminRoomController::class, 'update'])->name('admin.rooms.update');
-    Route::delete('/admin/rooms/{id}', [App\Http\Controllers\Admin\AdminRoomController::class, 'destroy'])->name('admin.rooms.destroy');
+    Route::put('/admin/rooms/{room}', [App\Http\Controllers\Admin\AdminRoomController::class, 'update'])->name('admin.rooms.update');
+    Route::delete('/admin/rooms/{room}', [App\Http\Controllers\Admin\AdminRoomController::class, 'destroy'])->name('admin.rooms.destroy');
 
     // ADMIN: Analytics
     Route::get('/admin/analytics', [AdminAnalyticsController::class, 'index'])->name('admin.analytics.index');
@@ -283,13 +283,13 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/parents', [AdminParentController::class, 'index'])->name('admin.parents.index');
     Route::post('/admin/parents', [AdminParentController::class, 'store'])->name('admin.parents.store');
     Route::get('/admin/parents/{parent}', [AdminParentController::class, 'show'])->name('admin.parents.show');
-    Route::put('/admin/parents/{id}', [AdminParentController::class, 'update'])->name('admin.parents.update');
-    Route::delete('/admin/parents/{id}', [AdminParentController::class, 'destroy'])->name('admin.parents.destroy');
+    Route::put('/admin/parents/{parent}', [AdminParentController::class, 'update'])->name('admin.parents.update');
+    Route::delete('/admin/parents/{parent}', [AdminParentController::class, 'destroy'])->name('admin.parents.destroy');
 
     // ADMIN: Intervention Alerts
     Route::get('/admin/alerts', [AdminAlertController::class, 'index'])->name('admin.alerts.index');
-    Route::get('/admin/alerts/{id}', [AdminAlertController::class, 'show'])->name('admin.alerts.show');
-    Route::post('/admin/alerts/{id}/resolve', [AdminAlertController::class, 'resolve'])->name('admin.alerts.resolve');
+    Route::get('/admin/alerts/{alert}', [AdminAlertController::class, 'show'])->name('admin.alerts.show');
+    Route::post('/admin/alerts/{alert}/resolve', [AdminAlertController::class, 'resolve'])->name('admin.alerts.resolve');
 });
 
 // Parent Portal Routes

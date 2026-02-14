@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Teacher;
 use App\Models\TeacherActivity;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -127,24 +128,10 @@ class WorkloadTrackingService
         $weekly = $this->getWorkloadMetrics($teacher, 'weekly');
         $monthly = $this->getWorkloadMetrics($teacher, 'monthly');
 
-        $content = "WORKLOAD REPORT\n";
-        $content .= str_repeat('=', 40) . "\n";
-        $content .= "Teacher: {$teacher->first_name} {$teacher->last_name}\n";
-        $content .= "Generated: " . now()->format('Y-m-d H:i') . "\n\n";
+        $pdf = Pdf::loadView('pdf.workload-report', compact('teacher', 'weekly', 'monthly'));
 
-        $content .= "WEEKLY SUMMARY:\n";
-        $content .= "  Total Activities: {$weekly['total_activities']}\n";
-        $content .= "  Total Hours: {$weekly['total_hours']}\n";
-        foreach ($weekly['by_type'] as $type => $data) {
-            $content .= "  {$type}: {$data['count']} activities ({$data['total_minutes']} min)\n";
-        }
-
-        $content .= "\nMONTHLY SUMMARY:\n";
-        $content .= "  Total Activities: {$monthly['total_activities']}\n";
-        $content .= "  Total Hours: {$monthly['total_hours']}\n";
-
-        $path = "reports/workload-{$teacher->id}-" . now()->format('Ymd') . '.txt';
-        Storage::disk('local')->put($path, $content);
+        $path = "reports/workload-{$teacher->id}-" . now()->format('Ymd') . '.pdf';
+        Storage::disk('local')->put($path, $pdf->output());
 
         return $path;
     }

@@ -7,6 +7,7 @@ use App\Models\Seat;
 use App\Models\SeatingArrangement;
 use App\Models\Section;
 use App\Models\Student;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -122,25 +123,12 @@ class SeatingOptimizationService
     public function printChart(SeatingArrangement $arrangement): string
     {
         $layout = $this->generateLayout($arrangement);
-        $content = "SEATING CHART: {$arrangement->name}\n";
-        $content .= str_repeat('=', 60) . "\n\n";
-        $content .= "[FRONT OF CLASSROOM]\n\n";
 
-        foreach ($layout['grid'] as $row) {
-            $names = array_map(function ($seat) {
-                $name = $seat['student_name'] ?? '[ empty ]';
+        $pdf = Pdf::loadView('pdf.seating-chart', compact('layout'));
+        $pdf->setPaper('a4', 'landscape');
 
-                return str_pad(substr($name, 0, 15), 16);
-            }, $row);
-
-            $content .= implode(' | ', $names) . "\n";
-        }
-
-        $content .= "\n" . str_repeat('-', 60) . "\n";
-        $content .= "Occupied: {$layout['occupied_seats']}/{$layout['total_seats']}\n";
-
-        $path = "seating/chart-{$arrangement->id}-" . now()->timestamp . '.txt';
-        Storage::disk('local')->put($path, $content);
+        $path = "seating/chart-{$arrangement->id}-" . now()->timestamp . '.pdf';
+        Storage::disk('local')->put($path, $pdf->output());
 
         return $path;
     }

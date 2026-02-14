@@ -88,7 +88,7 @@ class PresentationApiController extends Controller
      */
     public function trackView(Slide $slide): JsonResponse
     {
-        $student = Student::findOrFail(Auth::id());
+        $student = Student::findOrFail(Auth::guard('student')->id());
 
         try {
             $this->presentationService->trackSlideView($slide, $student);
