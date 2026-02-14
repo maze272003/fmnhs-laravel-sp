@@ -1,10 +1,28 @@
-﻿<?php
+<?php
 
+use App\Http\Controllers\Admin\AdminAlertController;
+use App\Http\Controllers\Admin\AdminAnalyticsController;
+use App\Http\Controllers\Admin\AdminParentController;
+use App\Http\Controllers\Admin\AdminWorkloadController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminStudentController;
 use App\Http\Controllers\Admin\AdminSubjectController;
 use App\Http\Controllers\Admin\AdminTeacherController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\Api\AIAssistantApiController;
+use App\Http\Controllers\Api\BreakoutRoomApiController;
+use App\Http\Controllers\Api\CaptionApiController;
+use App\Http\Controllers\Api\ConferenceMoodApiController;
+use App\Http\Controllers\Api\ContentRecommendationApiController;
+use App\Http\Controllers\Api\ForumApiController;
+use App\Http\Controllers\Api\GameApiController;
+use App\Http\Controllers\Api\InterventionAlertApiController;
+use App\Http\Controllers\Api\LearningPathApiController;
+use App\Http\Controllers\Api\PortfolioApiController;
+use App\Http\Controllers\Api\PresentationApiController;
+use App\Http\Controllers\Api\StudyGroupApiController;
+use App\Http\Controllers\Api\StudySessionApiController;
+use App\Http\Controllers\Api\WhiteboardApiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConferenceAccessController;
 use App\Http\Controllers\ConferencePlaybackController;
@@ -13,8 +31,17 @@ use App\Http\Controllers\Api\ConferenceRecordingController;
 use App\Http\Controllers\Api\ConferenceNotificationController;
 use App\Http\Controllers\Api\QuizApiController;
 use App\Http\Controllers\Api\GamificationApiController;
+use App\Http\Controllers\Parent\ParentAuthController;
+use App\Http\Controllers\Parent\ParentDashboardController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Student\StudentLearningPathController;
+use App\Http\Controllers\Student\StudentPortfolioController;
+use App\Http\Controllers\Student\StudentStudyController;
+use App\Http\Controllers\Teacher\BulkActionController;
+use App\Http\Controllers\Teacher\LessonPlanController;
+use App\Http\Controllers\Teacher\ProgressReportController;
+use App\Http\Controllers\Teacher\SeatingController;
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\VideoConferenceController;
 use App\Http\Controllers\TeacherAuthController;
@@ -243,6 +270,157 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/rooms', [App\Http\Controllers\Admin\AdminRoomController::class, 'store'])->name('admin.rooms.store');
     Route::put('/admin/rooms/{id}', [App\Http\Controllers\Admin\AdminRoomController::class, 'update'])->name('admin.rooms.update');
     Route::delete('/admin/rooms/{id}', [App\Http\Controllers\Admin\AdminRoomController::class, 'destroy'])->name('admin.rooms.destroy');
+
+    // ADMIN: Analytics
+    Route::get('/admin/analytics', [AdminAnalyticsController::class, 'index'])->name('admin.analytics.index');
+    Route::get('/admin/analytics/students', [AdminAnalyticsController::class, 'students'])->name('admin.analytics.students');
+    Route::get('/admin/analytics/teachers', [AdminAnalyticsController::class, 'teachers'])->name('admin.analytics.teachers');
+
+    // ADMIN: Workload
+    Route::get('/admin/workload', [AdminWorkloadController::class, 'index'])->name('admin.workload.index');
+
+    // ADMIN: Parent Management
+    Route::get('/admin/parents', [AdminParentController::class, 'index'])->name('admin.parents.index');
+    Route::post('/admin/parents', [AdminParentController::class, 'store'])->name('admin.parents.store');
+    Route::put('/admin/parents/{id}', [AdminParentController::class, 'update'])->name('admin.parents.update');
+    Route::delete('/admin/parents/{id}', [AdminParentController::class, 'destroy'])->name('admin.parents.destroy');
+
+    // ADMIN: Intervention Alerts
+    Route::get('/admin/alerts', [AdminAlertController::class, 'index'])->name('admin.alerts.index');
+    Route::get('/admin/alerts/{id}', [AdminAlertController::class, 'show'])->name('admin.alerts.show');
+    Route::post('/admin/alerts/{id}/resolve', [AdminAlertController::class, 'resolve'])->name('admin.alerts.resolve');
+});
+
+// Parent Portal Routes
+Route::middleware(['auth:parent'])->group(function () {
+    Route::get('/parent/dashboard', [ParentDashboardController::class, 'index'])->name('parent.dashboard');
+    Route::get('/parent/children', [ParentDashboardController::class, 'children'])->name('parent.children');
+    Route::get('/parent/children/{id}/grades', [ParentDashboardController::class, 'grades'])->name('parent.children.grades');
+    Route::get('/parent/children/{id}/attendance', [ParentDashboardController::class, 'attendance'])->name('parent.children.attendance');
+    Route::get('/parent/children/{id}/schedule', [ParentDashboardController::class, 'schedule'])->name('parent.children.schedule');
+    Route::get('/parent/children/{id}/assignments', [ParentDashboardController::class, 'assignments'])->name('parent.children.assignments');
+    Route::post('/parent/messages', [ParentDashboardController::class, 'sendMessage'])->name('parent.messages.send');
+});
+
+// Parent Login
+Route::get('/parent/login', [ParentAuthController::class, 'showLoginForm'])->name('parent.login');
+Route::post('/parent/login', [ParentAuthController::class, 'login'])->name('parent.login.submit');
+Route::post('/parent/logout', [ParentAuthController::class, 'logout'])->name('parent.logout');
+
+// Extended Student Routes
+Route::middleware(['auth:student'])->group(function () {
+    // Learning Paths
+    Route::get('/student/learning-path', [StudentLearningPathController::class, 'index'])->name('student.learning-path.index');
+    Route::get('/student/learning-path/{id}', [StudentLearningPathController::class, 'show'])->name('student.learning-path.show');
+    Route::post('/student/learning-path/{id}/progress', [StudentLearningPathController::class, 'updateProgress'])->name('student.learning-path.progress');
+
+    // Portfolio
+    Route::get('/student/portfolio', [StudentPortfolioController::class, 'index'])->name('student.portfolio.index');
+    Route::post('/student/portfolio/items', [StudentPortfolioController::class, 'storeItem'])->name('student.portfolio.items.store');
+    Route::put('/student/portfolio/items/{id}', [StudentPortfolioController::class, 'updateItem'])->name('student.portfolio.items.update');
+    Route::delete('/student/portfolio/items/{id}', [StudentPortfolioController::class, 'destroyItem'])->name('student.portfolio.items.destroy');
+    Route::post('/student/portfolio/reflections', [StudentPortfolioController::class, 'storeReflection'])->name('student.portfolio.reflections.store');
+
+    // Study Tools
+    Route::get('/student/study', [StudentStudyController::class, 'index'])->name('student.study.index');
+    Route::post('/student/study/sessions', [StudentStudyController::class, 'startSession'])->name('student.study.sessions.start');
+    Route::post('/student/study/sessions/{id}/end', [StudentStudyController::class, 'endSession'])->name('student.study.sessions.end');
+    Route::post('/student/study/goals', [StudentStudyController::class, 'storeGoal'])->name('student.study.goals.store');
+    Route::put('/student/study/goals/{id}', [StudentStudyController::class, 'updateGoal'])->name('student.study.goals.update');
+});
+
+// Extended Teacher Routes
+Route::middleware(['auth:teacher'])->group(function () {
+    // Lesson Plans
+    Route::get('/teacher/lesson-plans', [LessonPlanController::class, 'index'])->name('teacher.lesson-plans.index');
+    Route::post('/teacher/lesson-plans', [LessonPlanController::class, 'store'])->name('teacher.lesson-plans.store');
+    Route::get('/teacher/lesson-plans/{id}', [LessonPlanController::class, 'show'])->name('teacher.lesson-plans.show');
+    Route::put('/teacher/lesson-plans/{id}', [LessonPlanController::class, 'update'])->name('teacher.lesson-plans.update');
+    Route::delete('/teacher/lesson-plans/{id}', [LessonPlanController::class, 'destroy'])->name('teacher.lesson-plans.destroy');
+
+    // Progress Reports
+    Route::get('/teacher/progress-reports', [ProgressReportController::class, 'index'])->name('teacher.progress-reports.index');
+    Route::post('/teacher/progress-reports/generate', [ProgressReportController::class, 'generate'])->name('teacher.progress-reports.generate');
+    Route::get('/teacher/progress-reports/{id}', [ProgressReportController::class, 'show'])->name('teacher.progress-reports.show');
+    Route::post('/teacher/progress-reports/{id}/send', [ProgressReportController::class, 'send'])->name('teacher.progress-reports.send');
+
+    // Seating Arrangements
+    Route::get('/teacher/seating', [SeatingController::class, 'index'])->name('teacher.seating.index');
+    Route::post('/teacher/seating', [SeatingController::class, 'store'])->name('teacher.seating.store');
+    Route::put('/teacher/seating/{id}', [SeatingController::class, 'update'])->name('teacher.seating.update');
+    Route::post('/teacher/seating/{id}/auto-arrange', [SeatingController::class, 'autoArrange'])->name('teacher.seating.auto-arrange');
+
+    // Bulk Actions
+    Route::post('/teacher/bulk/grades', [BulkActionController::class, 'bulkGrades'])->name('teacher.bulk.grades');
+    Route::post('/teacher/bulk/attendance', [BulkActionController::class, 'bulkAttendance'])->name('teacher.bulk.attendance');
+    Route::post('/teacher/bulk/assignments', [BulkActionController::class, 'duplicateAssignments'])->name('teacher.bulk.assignments');
+    Route::post('/teacher/bulk/email', [BulkActionController::class, 'sendBulkEmail'])->name('teacher.bulk.email');
+});
+
+// Extended API Routes for Conference Features
+Route::middleware(['auth:teacher,student'])->group(function () {
+    Route::prefix('api')->group(function () {
+        // Whiteboard
+        Route::post('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'save']);
+        Route::get('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'load']);
+        Route::delete('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'clear']);
+
+        // Breakout Rooms
+        Route::get('/conference/{conference}/breakout-rooms', [BreakoutRoomApiController::class, 'index']);
+        Route::post('/conference/{conference}/breakout-rooms', [BreakoutRoomApiController::class, 'store']);
+        Route::post('/conference/{conference}/breakout-rooms/auto-assign', [BreakoutRoomApiController::class, 'autoAssign']);
+        Route::post('/conference/{conference}/breakout-rooms/{id}/join', [BreakoutRoomApiController::class, 'join']);
+        Route::post('/conference/{conference}/breakout-rooms/{id}/leave', [BreakoutRoomApiController::class, 'leave']);
+        Route::post('/conference/{conference}/breakout-rooms/end-all', [BreakoutRoomApiController::class, 'endAll']);
+
+        // Mood/Feedback
+        Route::post('/conference/{conference}/mood', [ConferenceMoodApiController::class, 'store']);
+        Route::get('/conference/{conference}/mood/aggregate', [ConferenceMoodApiController::class, 'aggregate']);
+
+        // Games
+        Route::post('/conference/{conference}/games', [GameApiController::class, 'store']);
+        Route::post('/conference/{conference}/games/{id}/score', [GameApiController::class, 'submitScore']);
+        Route::post('/conference/{conference}/games/{id}/end', [GameApiController::class, 'end']);
+
+        // Captions
+        Route::get('/conference/{conference}/captions', [CaptionApiController::class, 'index']);
+        Route::get('/conference/{conference}/captions/search', [CaptionApiController::class, 'search']);
+
+        // Presentations
+        Route::post('/conference/{conference}/presentations', [PresentationApiController::class, 'store']);
+        Route::get('/conference/{conference}/presentations/{id}', [PresentationApiController::class, 'show']);
+        Route::get('/conference/{conference}/presentations/{id}/slides/{slide}/analytics', [PresentationApiController::class, 'slideAnalytics']);
+
+        // Study Groups & Forum
+        Route::get('/study-groups', [StudyGroupApiController::class, 'index']);
+        Route::post('/study-groups', [StudyGroupApiController::class, 'store']);
+        Route::post('/study-groups/{id}/join', [StudyGroupApiController::class, 'join']);
+        Route::get('/forums', [ForumApiController::class, 'index']);
+        Route::post('/forums/threads', [ForumApiController::class, 'storeThread']);
+        Route::post('/forums/threads/{id}/posts', [ForumApiController::class, 'storePost']);
+
+        // Learning Paths
+        Route::get('/learning-paths', [LearningPathApiController::class, 'index']);
+        Route::post('/learning-paths/{id}/progress', [LearningPathApiController::class, 'updateProgress']);
+
+        // Portfolio
+        Route::get('/portfolio', [PortfolioApiController::class, 'index']);
+        Route::post('/portfolio/items', [PortfolioApiController::class, 'storeItem']);
+
+        // Study Sessions
+        Route::post('/study-sessions', [StudySessionApiController::class, 'start']);
+        Route::post('/study-sessions/{id}/end', [StudySessionApiController::class, 'end']);
+
+        // Intervention Alerts
+        Route::get('/intervention-alerts', [InterventionAlertApiController::class, 'index']);
+
+        // Content Recommendations
+        Route::get('/recommendations', [ContentRecommendationApiController::class, 'index']);
+
+        // AI Assistant
+        Route::post('/ai-assistant/chat', [AIAssistantApiController::class, 'chat']);
+        Route::get('/ai-assistant/history', [AIAssistantApiController::class, 'history']);
+    });
 });
 
 require __DIR__.'/db.php';

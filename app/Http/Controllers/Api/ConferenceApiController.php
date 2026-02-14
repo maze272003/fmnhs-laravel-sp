@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ConferenceJoined;
 use App\Http\Controllers\Controller;
 use App\Models\VideoConference;
 use App\Services\ConferenceDataService;
@@ -167,6 +168,8 @@ class ConferenceApiController extends Controller
             $isGuest,
             $request->input('device_info'),
         );
+
+        ConferenceJoined::dispatch($participant, $request->input('device_info', []));
 
         return response()->json([
             'participant_id' => $participant->id,

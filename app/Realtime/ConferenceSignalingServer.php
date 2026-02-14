@@ -101,6 +101,20 @@ class ConferenceSignalingServer
             'kick-participant' => $this->handleKickParticipant($connection, $message),
             'mute-all' => $this->handleMuteAll($connection),
             'file-shared' => $this->broadcastFileShared($connection, $message),
+            'quiz-started', 'quiz-question', 'quiz-question-ended', 'quiz-ended', 'quiz-results', 'quiz-leaderboard' 
+                => $this->broadcastQuizEvent($connection, $type, $message),
+            'whiteboard-draw', 'whiteboard-clear', 'whiteboard-undo', 'whiteboard-sync' 
+                => $this->broadcastWhiteboardEvent($connection, $type, $message),
+            'breakout-created', 'breakout-assigned', 'breakout-joined', 'breakout-left', 'breakout-ended', 'breakout-broadcast', 'breakout-timer' 
+                => $this->broadcastBreakoutEvent($connection, $type, $message),
+            'mood-speed', 'mood-understanding', 'mood-confidence', 'mood-aggregate' 
+                => $this->broadcastMoodEvent($connection, $type, $message),
+            'game-started', 'game-state', 'game-action', 'game-ended', 'game-scores' 
+                => $this->broadcastGameEvent($connection, $type, $message),
+            'caption', 'caption-clear' 
+                => $this->broadcastCaptionEvent($connection, $type, $message),
+            'presentation-started', 'slide-changed', 'slide-annotate', 'presentation-ended', 'slide-progress' 
+                => $this->broadcastPresentationEvent($connection, $type, $message),
             default => $this->sendError($connection, 'unsupported-type', "Unsupported message type [{$type}]."),
         };
     }
@@ -748,6 +762,144 @@ class ConferenceSignalingServer
             'fileUrl' => trim((string) ($message['fileUrl'] ?? '')),
             'fileMime' => trim((string) ($message['fileMime'] ?? '')),
             'fileSize' => (int) ($message['fileSize'] ?? 0),
+        ]);
+    }
+
+    private function broadcastQuizEvent(ConnectionInterface $connection, string $type, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can control quizzes.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $type,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'quiz' => $message['quiz'] ?? null,
+            'question' => $message['question'] ?? null,
+            'questionIndex' => $message['questionIndex'] ?? null,
+            'results' => $message['results'] ?? null,
+            'leaderboard' => $message['leaderboard'] ?? null,
+        ]);
+    }
+
+    private function broadcastWhiteboardEvent(ConnectionInterface $connection, string $type, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $type,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'stroke' => $message['stroke'] ?? null,
+            'strokes' => $message['strokes'] ?? null,
+        ], $connection);
+    }
+
+    private function broadcastBreakoutEvent(ConnectionInterface $connection, string $type, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (in_array($type, ['breakout-created', 'breakout-assigned', 'breakout-ended', 'breakout-timer']) && ($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can manage breakout rooms.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $type,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'rooms' => $message['rooms'] ?? null,
+            'assignments' => $message['assignments'] ?? null,
+            'participantId' => $message['participantId'] ?? null,
+            'roomId' => $message['roomId'] ?? null,
+            'message' => $message['message'] ?? null,
+            'duration' => $message['duration'] ?? null,
+            'participant' => $message['participant'] ?? null,
+        ]);
+    }
+
+    private function broadcastMoodEvent(ConnectionInterface $connection, string $type, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $type,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'speed' => $message['speed'] ?? null,
+            'level' => $message['level'] ?? null,
+            'data' => $message['data'] ?? null,
+        ]);
+    }
+
+    private function broadcastGameEvent(ConnectionInterface $connection, string $type, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (in_array($type, ['game-started', 'game-ended']) && ($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can control games.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $type,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'game' => $message['game'] ?? null,
+            'state' => $message['state'] ?? null,
+            'action' => $message['action'] ?? null,
+            'data' => $message['data'] ?? null,
+            'scores' => $message['scores'] ?? null,
+            'results' => $message['results'] ?? null,
+        ]);
+    }
+
+    private function broadcastCaptionEvent(ConnectionInterface $connection, string $type, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $type,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'caption' => $message['caption'] ?? null,
+        ]);
+    }
+
+    private function broadcastPresentationEvent(ConnectionInterface $connection, string $type, array $message): void
+    {
+        $state = $this->connections[$connection->id] ?? null;
+        if (! is_array($state)) return;
+        if (in_array($type, ['presentation-started', 'presentation-ended']) && ($state['role'] ?? '') !== 'teacher') {
+            $this->sendError($connection, 'forbidden', 'Only the teacher can control presentations.');
+            return;
+        }
+        $roomId = (string) ($state['roomId'] ?? '');
+        if ($roomId === '') return;
+        $this->broadcastToRoom($roomId, [
+            'type' => $type,
+            'roomId' => $roomId,
+            'from' => $this->participantFromState($state),
+            'presentation' => $message['presentation'] ?? null,
+            'slides' => $message['slides'] ?? null,
+            'currentSlide' => $message['currentSlide'] ?? null,
+            'slideIndex' => $message['slideIndex'] ?? null,
+            'slide' => $message['slide'] ?? null,
+            'annotation' => $message['annotation'] ?? null,
+            'action' => $message['action'] ?? null,
         ]);
     }
 

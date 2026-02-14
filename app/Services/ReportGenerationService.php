@@ -187,4 +187,38 @@ class ReportGenerationService
             return false;
         }
     }
+
+    /**
+     * Generate batch reports for all enrolled students.
+     */
+    public function generateBatch(string $period = 'weekly'): Collection
+    {
+        $periodStart = match ($period) {
+            'weekly' => now()->subWeek()->toDateString(),
+            'monthly' => now()->subMonth()->toDateString(),
+            'quarterly' => now()->subMonths(3)->toDateString(),
+            default => now()->subWeek()->toDateString(),
+        };
+        
+        $periodEnd = now()->toDateString();
+        
+        $reports = collect();
+        
+        Student::where('enrollment_status', 'enrolled')
+            ->chunk(100, function ($students) use ($periodStart, $periodEnd, $reports) {
+                foreach ($students as $student) {
+                    try {
+                        $report = $this->generateProgressReport($student, $periodStart, $periodEnd);
+                        $reports->push($report);
+                    } catch (\Throwable $e) {
+                        Log::error('Failed to generate progress report', [
+                            'student_id' => $student->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            });
+        
+        return $reports;
+    }
 }
