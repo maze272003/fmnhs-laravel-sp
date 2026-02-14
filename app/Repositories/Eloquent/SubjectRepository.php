@@ -36,4 +36,16 @@ class SubjectRepository implements SubjectRepositoryInterface
         $subject->restore();
         return $subject->fresh();
     }
+
+    public function deleteById(int $id): void
+    {
+        $subject = Subject::findOrFail($id);
+        $subject->delete();
+    }
+
+    public function forceDeleteById(int $id): void
+    {
+        $subject = Subject::withTrashed()->findOrFail($id);
+        $subject->forceDelete();
+    }
 }

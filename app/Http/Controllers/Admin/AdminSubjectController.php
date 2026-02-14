@@ -72,4 +72,32 @@ class AdminSubjectController extends Controller
         $this->subjectManagement->restore((int) $id);
         return redirect()->back()->with('success', 'Subject has been restored successfully.');
     }
+
+    /**
+     * Delete the specified subject (soft delete).
+     */
+    public function destroy($id): RedirectResponse
+    {
+        try {
+            $this->subjectManagement->delete((int) $id);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete subject.');
+        }
+
+        return redirect()->back()->with('success', 'Subject has been deleted successfully.');
+    }
+
+    /**
+     * Permanently delete the specified subject.
+     */
+    public function forceDelete($id): RedirectResponse
+    {
+        try {
+            $this->subjectManagement->forceDelete((int) $id);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to permanently delete subject.');
+        }
+
+        return redirect()->back()->with('success', 'Subject has been permanently deleted.');
+    }
 }

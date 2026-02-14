@@ -16,4 +16,8 @@ interface SubjectRepositoryInterface
     public function archive(Subject $subject): void;
 
     public function restoreById(int $id): Subject;
+
+    public function deleteById(int $id): void;
+
+    public function forceDeleteById(int $id): void;
 }

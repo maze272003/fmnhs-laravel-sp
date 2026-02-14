@@ -7,6 +7,7 @@ use App\Models\Grade;
 use App\Models\LearningAnalytic;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -190,5 +191,45 @@ class AnalyticsAggregationService
         }
 
         return 'stable';
+    }
+
+    /**
+     * Get aggregated analytics for all students.
+     */
+    public function getStudentsAnalytics(): array
+    {
+        $totalStudents = Student::count();
+        $activeStudents = Student::active()->count();
+
+        $overallAverage = Grade::avg('grade_value');
+        $overallAverage = $overallAverage !== null ? round($overallAverage, 2) : null;
+
+        $totalRecords = Attendance::count();
+        $presentCount = Attendance::where('status', 'present')->count();
+        $attendanceRate = $totalRecords > 0 ? round(($presentCount / $totalRecords) * 100, 2) : 0;
+
+        return [
+            'total_students' => $totalStudents,
+            'active_students' => $activeStudents,
+            'overall_average' => $overallAverage,
+            'attendance_rate' => $attendanceRate,
+        ];
+    }
+
+    /**
+     * Get aggregated analytics for all teachers.
+     */
+    public function getTeachersAnalytics(): array
+    {
+        $totalTeachers = Teacher::count();
+        $withAdvisory = Teacher::has('advisorySection')->count();
+
+        $gradesCount = Grade::distinct('teacher_id')->count('teacher_id');
+
+        return [
+            'total_teachers' => $totalTeachers,
+            'with_advisory' => $withAdvisory,
+            'teachers_with_grades' => $gradesCount,
+        ];
     }
 }
