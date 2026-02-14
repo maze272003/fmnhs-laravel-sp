@@ -57,15 +57,15 @@ Route::get('/', function () {
 
 // Authentication Routes
 Route::get('/student/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/student/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/student/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.login');
-Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.login.submit');
+Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->middleware('throttle:5,1')->name('teacher.login.submit');
 Route::post('/teacher/logout', [TeacherAuthController::class, 'logout'])->name('teacher.logout');
 
 Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1')->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
 // Public Meeting Join and Room Access
@@ -110,7 +110,7 @@ Route::middleware(['auth:teacher,student'])->group(function () {
     Route::post('/conference/{conference}/join', [ConferenceApiController::class, 'recordJoin']);
     Route::post('/conference/{conference}/leave', [ConferenceApiController::class, 'recordLeave']);
 
-    Route::prefix('api')->group(function () {
+    Route::prefix('api')->middleware('throttle:60,1')->group(function () {
         Route::post('/conference/{conference}/messages', [ConferenceApiController::class, 'storeMessage']);
         Route::post('/conference/{conference}/files', [ConferenceApiController::class, 'uploadFile']);
         Route::get('/conference/{conference}/messages', [ConferenceApiController::class, 'getMessages']);
@@ -306,7 +306,7 @@ Route::middleware(['auth:parent'])->group(function () {
 
 // Parent Login
 Route::get('/parent/login', [ParentAuthController::class, 'showLoginForm'])->name('parent.login');
-Route::post('/parent/login', [ParentAuthController::class, 'login'])->name('parent.login.submit');
+Route::post('/parent/login', [ParentAuthController::class, 'login'])->middleware('throttle:5,1')->name('parent.login.submit');
 Route::post('/parent/logout', [ParentAuthController::class, 'logout'])->name('parent.logout');
 
 // Extended Student Routes
@@ -375,7 +375,7 @@ Route::middleware(['auth:teacher'])->group(function () {
 |
 */
 Route::middleware(['auth:teacher,student'])->group(function () {
-    Route::prefix('api')->group(function () {
+    Route::prefix('api')->middleware('throttle:60,1')->group(function () {
         // Whiteboard (shared — both roles collaborate)
         Route::post('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'save']);
         Route::get('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'load']);

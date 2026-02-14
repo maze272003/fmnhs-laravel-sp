@@ -53,6 +53,8 @@
             </div>
         </form>
 
+        @include('partials.recaptcha')
+
         <div class="text-center mt-4">
             <a href="{{ route('login') }}" class="text-sm text-indigo-600 hover:text-indigo-500">Student Login</a>
             <span class="mx-2 text-gray-400">|</span>

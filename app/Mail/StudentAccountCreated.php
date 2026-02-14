@@ -12,13 +12,10 @@ class StudentAccountCreated extends Mailable
     use Queueable, SerializesModels;
 
     public $student;
-    public $password;
 
-    // We pass the student object and the raw password (LRN)
-    public function __construct(Student $student, $password)
+    public function __construct(Student $student, $password = null)
     {
         $this->student = $student;
-        $this->password = $password;
     }
 
     public function build()

@@ -69,6 +69,8 @@
                 LOGIN AS FACULTY
             </button>
         </form>
+
+        @include('partials.recaptcha')
         
         <div class="text-center mt-6">
             <a href="{{ url('/') }}" class="text-emerald-500 hover:text-emerald-700 text-sm font-medium transition-colors">
