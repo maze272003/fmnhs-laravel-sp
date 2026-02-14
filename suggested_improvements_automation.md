@@ -1,161 +1,309 @@
-## FMNHS SIS Improvement Audit (2026-02-14)
+﻿# FMNHS SIS — MASTER TODO LIST
 
-### 1) Critical blockers to fix first
+## 🚨 1. CRITICAL BLOCKERS (FIX FIRST)
 
-1. Public database reset endpoint is exposed on web routes.
-   - Evidence: `routes/web.php:426`, `routes/db.php:5`, `routes/db.php:8`, `routes/db.php:49`
-   - Risk: Full data loss in production using a static query key.
-   - Fix: Remove this route from web, move reset actions to CLI-only (`php artisan ...`) and restrict to local environment.
+### 🔴 Authentication & Parent Portal
 
-2. Real credentials/secrets are committed in `.env.example`.
-   - Evidence: `.env.example:4`, `.env.example:29`, `.env.example:67`, `.env.example:73`, `.env.example:74`, `.env.example:89`
-   - Risk: Account compromise (DB, mail, object storage, realtime channel).
-   - Fix: Immediately rotate all leaked secrets and replace with placeholders.
+* [ ] Add `parent` guard in `config/auth.php`
 
-3. Parent auth is routed but not configured in auth guards/providers.
-   - Evidence: `routes/web.php:295`, `routes/web.php:306`, `config/auth.php:38`, `config/auth.php:74`
-   - Risk: `auth:parent` middleware and login flow can fail at runtime.
-   - Fix: Add `parent` guard and `parents` provider in `config/auth.php`.
+* [ ] Add `parents` provider in `config/auth.php`
 
-4. Parent routes reference methods that do not exist.
-   - Evidence: `routes/web.php:297` to `routes/web.php:302`, `routes/web.php:306`, `app/Http/Controllers/Parent/ParentDashboardController.php:26`, `app/Http/Controllers/Parent/ParentDashboardController.php:39`, `app/Http/Controllers/Parent/ParentDashboardController.php:51`, `app/Http/Controllers/Parent/ParentAuthController.php:16`
-   - Risk: 500 errors on parent portal pages.
-   - Fix: Align route method names with controller implementations (or rename controller methods).
+* [ ] Verify middleware `auth:parent` works correctly
 
-5. Route-controller contract drift is widespread across SIS modules.
-   - Evidence: `routes/web.php:238` to `routes/web.php:422`
-   - Confirmed missing controller methods include:
-     - `AdminAnalyticsController::students`, `AdminAnalyticsController::teachers`
-     - `AdminSubjectController::destroy`, `AdminSubjectController::forceDelete`
-     - `AIAssistantApiController::chat`
-     - `BreakoutRoomApiController::autoAssign`, `BreakoutRoomApiController::endAll`
-     - `CaptionApiController::search`
-     - `ForumApiController::index`, `ForumApiController::storeThread`, `ForumApiController::storePost`
-     - `GameApiController::submitScore`
-     - `LearningPathApiController::updateProgress`
-     - `PortfolioApiController::index`, `PortfolioApiController::storeItem`
-     - `PresentationApiController::slideAnalytics`
-     - `WhiteboardApiController::save`, `WhiteboardApiController::load`
-     - `StudentLearningPathController::updateProgress`
-     - `StudentPortfolioController::storeItem`, `StudentPortfolioController::updateItem`, `StudentPortfolioController::destroyItem`, `StudentPortfolioController::storeReflection`
-     - `StudentStudyController::startSession`, `StudentStudyController::endSession`, `StudentStudyController::storeGoal`, `StudentStudyController::updateGoal`
-     - `BulkActionController::bulkGrades`, `BulkActionController::bulkAttendance`, `BulkActionController::duplicateAssignments`
-     - `ProgressReportController::show`, `ProgressReportController::send`
-     - `SeatingController::update`, `SeatingController::autoArrange`
-   - Fix: Do one route-contract pass and enforce static checks in CI.
+* [ ] Fix parent routes calling missing controller methods
 
-6. Mixed role middleware with student-only queries can produce authorization bugs.
-   - Evidence: `routes/web.php:89`, `routes/web.php:361`, `app/Http/Controllers/Api/StudySessionApiController.php:31`, `app/Http/Controllers/Api/GameApiController.php:81`, `app/Http/Controllers/Api/ContentRecommendationApiController.php:24`, `app/Http/Controllers/Api/LearningPathApiController.php:63`, `app/Http/Controllers/Api/PortfolioApiController.php:76`, `app/Http/Controllers/Api/PresentationApiController.php:91`
-   - Risk: Teacher sessions may resolve wrong student IDs (`Auth::id()` collision).
-   - Fix: Split student-only and teacher-only API route groups and use explicit guards (`Auth::guard('student')`).
+* [ ] Align route method names with controller implementations
 
-7. Announcement deletion authorization is weak.
-   - Evidence: `app/Http/Controllers/Admin/AdminAnnouncementController.php:59`, `app/Http/Controllers/Admin/AdminAnnouncementController.php:64`, `app/Http/Controllers/Teacher/TeacherAnnouncementController.php:54`, `app/Services/AnnouncementManagementService.php:63`
-   - Risk: Hardcoded emails and no ownership checks allow unsafe deletes.
-   - Fix: Move to policy-based authorization and store creator IDs (`created_by_type`, `created_by_id`) on announcements.
+* [ ] Rename controller methods if needed to match routes
 
-### 2) Confirmed undone work
+---
 
-1. Missing parent portal pages and layout wiring.
-   - Evidence: `resources/views/parent/login.blade.php:1`, `resources/views/parent/dashboard.blade.php:1`, missing `resources/views/layouts/app.blade.php`, missing `resources/views/layouts/parent.blade.php`
-   - Additional mismatch: view expects announcements not passed by controller (`resources/views/parent/dashboard.blade.php:69`, `app/Http/Controllers/Parent/ParentDashboardController.php:20`).
-   - Additional UX gap: quick actions still dead links (`resources/views/parent/dashboard.blade.php:97`, `resources/views/parent/dashboard.blade.php:107`, `resources/views/parent/dashboard.blade.php:117`).
+### 🔴 Route-Controller Contract Fix (GLOBAL PASS)
 
-2. Missing module view folders used by controllers.
-   - Missing: `resources/views/admin/alerts/index.blade.php`, `resources/views/admin/workload/index.blade.php`, `resources/views/admin/analytics/index.blade.php`, `resources/views/student/learning-paths/index.blade.php`, `resources/views/student/portfolios/index.blade.php`, `resources/views/student/study/index.blade.php`, `resources/views/teacher/reports/index.blade.php`, `resources/views/teacher/seating/index.blade.php`, `resources/views/parent/auth/login.blade.php`.
+* [ ] Audit routes between `routes/web.php:238-422`
+* [ ] Implement or remove missing controller methods:
 
-3. Broken route names referenced in code.
-   - Evidence: `app/Http/Controllers/Teacher/ProgressReportController.php:56`, `app/Http/Controllers/Teacher/SeatingController.php:52`, `app/Http/Controllers/Student/StudentPortfolioController.php:71`, `app/Http/Controllers/Student/StudentStudyController.php:73`, `app/Http/Controllers/Admin/AdminParentController.php:92`, `resources/views/student/portfolio/index.blade.php:100`
-   - Fix: Normalize names to currently declared routes or add missing named routes.
+#### Admin
 
-4. Placeholder/non-production implementations still in core SIS flows.
-   - Portfolio export creates `.txt`, not PDF: `app/Services/PortfolioService.php:67`
-   - Progress report "PDF" also `.txt`: `app/Services/ReportGenerationService.php:72`
+* [ ] `AdminAnalyticsController::students`
+* [ ] `AdminAnalyticsController::teachers`
+* [ ] `AdminSubjectController::destroy`
+* [ ] `AdminSubjectController::forceDelete`
 
-### 3) Frontend improvements (recommended)
+#### AI / Conference / Classroom APIs
 
-1. Standardize layout architecture.
-   - Create role-specific base layouts and convert pages to a common shell (`layouts.app`, `layouts.student`, `layouts.teacher`, `layouts.admin`, `layouts.parent`).
+* [ ] `AIAssistantApiController::chat`
+* [ ] `BreakoutRoomApiController::autoAssign`
+* [ ] `BreakoutRoomApiController::endAll`
+* [ ] `CaptionApiController::search`
 
-2. Complete parent UX flow.
-   - Add children list, child grades, attendance, schedule, assignments, and messaging pages to match routes.
+#### Forum / Game / Learning APIs
 
-3. Resolve naming drift between singular/plural feature views.
-   - Current mismatch example: existing `student/portfolio/index.blade.php` versus controller expecting `student.portfolios.index`.
+* [ ] `ForumApiController::index`
+* [ ] `ForumApiController::storeThread`
+* [ ] `ForumApiController::storePost`
+* [ ] `GameApiController::submitScore`
+* [ ] `LearningPathApiController::updateProgress`
 
-4. Finish dead UI actions and align to backend endpoints.
-   - Replace all `href="#"` placeholders in parent dashboard with real route actions.
+#### Portfolio / Presentation / Whiteboard APIs
 
-5. Add empty-state and error handling consistency.
-   - Parent login uses `session('error')` but controller uses validation errors (`withErrors`); wire Blade `@error` output.
+* [ ] `PortfolioApiController::index`
+* [ ] `PortfolioApiController::storeItem`
+* [ ] `PresentationApiController::slideAnalytics`
+* [ ] `WhiteboardApiController::save`
+* [ ] `WhiteboardApiController::load`
 
-### 4) Backend improvements (recommended)
+#### Student Controllers
 
-1. Route/API contract stabilization sprint.
-   - Freeze route signatures, then align all controller methods and parameter names in one pass.
+* [ ] `StudentLearningPathController::updateProgress`
+* [ ] `StudentPortfolioController::storeItem`
+* [ ] `StudentPortfolioController::updateItem`
+* [ ] `StudentPortfolioController::destroyItem`
+* [ ] `StudentPortfolioController::storeReflection`
+* [ ] `StudentStudyController::startSession`
+* [ ] `StudentStudyController::endSession`
+* [ ] `StudentStudyController::storeGoal`
+* [ ] `StudentStudyController::updateGoal`
 
-2. Enforce authorization using policies/gates.
-   - Add policies for `Announcement`, `VideoConference`, `Portfolio`, `StudySession`, `LearningPath`, and `ProgressReport`.
+#### Bulk / Reports / Seating
 
-3. Fix model binding parameter mismatches.
-   - Route uses `{id}` while controller expects typed model:
-     - `routes/web.php:240` + `app/Http/Controllers/Admin/AdminSubjectController.php:46`
-     - `routes/web.php:285` and `routes/web.php:286` + `app/Http/Controllers/Admin/AdminParentController.php:74`
+* [ ] `BulkActionController::bulkGrades`
 
-4. Add request throttling and abuse protection.
-   - No current rate limiter usage found for auth/API endpoints; add `throttle` to login and high-frequency API routes.
+* [ ] `BulkActionController::bulkAttendance`
 
-5. Correct analytics service-controller contract.
-   - Controller calls `exportReport($validated)` but service expects report data payload (`app/Http/Controllers/Admin/AdminAnalyticsController.php:59`, `app/Services/AnalyticsAggregationService.php:153`).
+* [ ] `BulkActionController::duplicateAssignments`
 
-### 5) Migration and data-model improvements (recommended)
+* [ ] `ProgressReportController::show`
 
-1. Normalize schedules schema usage.
-   - Current code still writes/validates `room` string (`database/migrations/2025_11_25_042154_create_schedules_table.php:23`, `app/Services/ScheduleManagementService.php:20`) while later migration introduces `room_id` and `school_year_id` (`database/migrations/2026_02_06_100005_add_phase2_columns_to_existing_tables.php:38`, `database/migrations/2026_02_06_100005_add_phase2_columns_to_existing_tables.php:47`).
-   - Also fix `Schedule` model fillables to use `school_year_id` (currently `school_year`): `app/Models/Schedule.php:21`.
+* [ ] `ProgressReportController::send`
 
-2. Add composite uniqueness constraints for SIS integrity.
-   - `submissions`: unique `(assignment_id, student_id)`.
-   - `attendances`: unique `(student_id, subject_id, date)`.
-   - `grades`: unique `(student_id, subject_id, teacher_id, quarter, school_year_id)`.
-   - `parent_student`: unique `(parent_id, student_id)` (`database/migrations/2026_02_12_000037_create_parent_student_table.php:11`).
-   - `study_group_members`: unique `(study_group_id, student_id)` (`database/migrations/2026_02_12_000052_create_study_group_members_table.php:11`).
+* [ ] `SeatingController::update`
 
-3. Remove or deprecate stale conference password field.
-   - Legacy `video_conferences.password` remains alongside `secret_key_hash` (`database/migrations/2026_02_11_000001_enhance_video_conferences_table.php:20`, `database/migrations/2026_02_14_000100_add_privacy_fields_to_video_conferences_table.php:13`, `app/Models/VideoConference.php:20`).
+* [ ] `SeatingController::autoArrange`
 
-### 6) Security hardening improvements (recommended)
+* [ ] Add CI static route-contract check
 
-1. Immediately remove the dangerous reset route and rotate all leaked secrets.
-2. Add dedicated login throttling (`student`, `teacher`, `admin`, `parent`).
-3. Enforce secure upload constraints for conference files.
-   - Current validation allows any file type by size only (`app/Http/Controllers/Api/ConferenceApiController.php:59`).
-4. Enforce secure credential defaults.
-   - Teacher account default password is static `"password"` (`app/Services/TeacherManagementService.php:28`).
-   - Student onboarding emails the raw password (`app/Services/StudentLifecycleService.php:24`, `app/Services/StudentLifecycleService.php:34`).
-5. Add security headers middleware and CSP/HSTS configuration.
-6. Activate bot protection consistently.
-   - `resources/views/partials/recaptcha.blade.php` exists but is not included in login views.
+---
 
-### 7) Correct SIS implementation approach (recommended sequence)
+### 🔴 Authorization Bugs
 
-1. Stabilization (Week 1-2)
-   - Remove critical security exposures.
-   - Fix route-controller mismatches and parent auth guard.
-   - Make parent portal minimally functional.
+* [ ] Separate student-only API routes
+* [ ] Separate teacher-only API routes
+* [ ] Use explicit guards (`Auth::guard('student')`)
+* [ ] Remove reliance on `Auth::id()` across mixed roles
 
-2. Data integrity (Week 2-3)
-   - Ship normalization migrations and composite unique indexes.
-   - Backfill `room_id`, `school_year_id`, and ownership columns.
+---
 
-3. Authorization hardening (Week 3-4)
-   - Add policies and split API route middleware by role.
-   - Add throttling and audit logging for sensitive actions.
+### 🔴 Announcement Security
 
-4. Feature completion (Week 4-6)
-   - Complete missing views and unfinished modules (alerts, analytics, workload, reports, seating, student study/portfolio/learning paths, parent messaging).
+* [ ] Remove hardcoded email authorization
+* [ ] Add ownership fields:
 
-5. Test expansion (parallel)
-   - Add feature tests for parent portal, role-isolated APIs, policy enforcement, and migration integrity.
-   - Existing tests are strong for enrollment/schedule/quiz/conference but do not cover these incomplete modules.
-﻿
+  * [ ] `created_by_type`
+  * [ ] `created_by_id`
+* [ ] Implement Laravel Policy for Announcement deletion
+
+---
+
+---
+
+# 🟡 2. CONFIRMED UNFINISHED WORK
+
+### Parent Portal UI
+
+* [ ] Fix layout wiring for parent portal
+
+* [ ] Create missing layouts:
+
+  * [ ] `layouts/app.blade.php`
+  * [ ] `layouts/parent.blade.php`
+
+* [ ] Pass announcements data to parent dashboard controller
+
+* [ ] Replace dead quick-action links with real routes
+
+---
+
+### Missing View Files
+
+Create:
+
+* [ ] `admin/alerts/index.blade.php`
+* [ ] `admin/workload/index.blade.php`
+* [ ] `admin/analytics/index.blade.php`
+* [ ] `student/learning-paths/index.blade.php`
+* [ ] `student/portfolios/index.blade.php`
+* [ ] `student/study/index.blade.php`
+* [ ] `teacher/reports/index.blade.php`
+* [ ] `teacher/seating/index.blade.php`
+* [ ] `parent/auth/login.blade.php`
+
+---
+
+### Broken Route Names
+
+* [ ] Normalize route names referenced in controllers
+* [ ] Add missing named routes where required
+
+---
+
+### Fake Export Implementations
+
+* [ ] Replace Portfolio TXT export with real PDF generation
+* [ ] Replace Progress Report TXT export with real PDF generation
+
+---
+
+---
+
+# 🟢 3. FRONTEND IMPROVEMENTS
+
+### Layout Standardization
+
+* [ ] Create unified base layouts:
+
+  * [ ] `layouts.app`
+  * [ ] `layouts.student`
+  * [ ] `layouts.teacher`
+  * [ ] `layouts.admin`
+  * [ ] `layouts.parent`
+
+* [ ] Convert all views to extend role-specific layout
+
+---
+
+### Parent Feature Completion
+
+* [ ] Children list page
+* [ ] Child grades page
+* [ ] Attendance page
+* [ ] Schedule page
+* [ ] Assignments page
+* [ ] Messaging page
+
+---
+
+### View Naming Cleanup
+
+* [ ] Fix singular/plural mismatches
+  Example:
+
+  * `student/portfolio/index` → `student.portfolios.index`
+
+---
+
+### UX Fixes
+
+* [ ] Replace all `href="#"` placeholders
+* [ ] Standardize empty-state UI
+* [ ] Fix parent login error display to use Blade `@error`
+
+---
+
+---
+
+# 🔵 4. BACKEND IMPROVEMENTS
+
+### Route Stabilization Sprint
+
+* [ ] Freeze route signatures
+* [ ] Align controller parameter names globally
+
+---
+
+### Authorization Policies
+
+Create policies for:
+
+* [ ] Announcement
+* [ ] VideoConference
+* [ ] Portfolio
+* [ ] StudySession
+* [ ] LearningPath
+* [ ] ProgressReport
+
+---
+
+### Model Binding Fix
+
+* [ ] Fix `{id}` routes expecting typed model instances
+
+---
+
+### Abuse Protection
+
+* [ ] Add login throttling
+* [ ] Add API throttling middleware
+* [ ] Add rate limits to sensitive endpoints
+
+---
+
+### Analytics Contract Fix
+
+* [ ] Align `AdminAnalyticsController::exportReport()`
+* [ ] Ensure service receives correct payload format
+
+---
+
+---
+
+# 🟣 5. MIGRATIONS & DATA MODEL
+
+### Schedule Schema Normalization
+
+* [ ] Stop using string `room`
+* [ ] Fully migrate to `room_id`
+* [ ] Fully migrate to `school_year_id`
+* [ ] Fix Schedule model fillables
+
+---
+
+### Add Composite Unique Constraints
+
+* [ ] submissions `(assignment_id, student_id)`
+* [ ] attendances `(student_id, subject_id, date)`
+* [ ] grades `(student_id, subject_id, teacher_id, quarter, school_year_id)`
+* [ ] parent_student `(parent_id, student_id)`
+* [ ] study_group_members `(study_group_id, student_id)`
+
+---
+
+### Video Conference Cleanup
+
+* [ ] Remove deprecated `video_conferences.password`
+* [ ] Keep only `secret_key_hash`
+
+---
+
+---
+
+# 🔐 6. SECURITY HARDENING
+
+* [ ] Ensure DB reset route fully removed
+
+* [ ] Ensure all secrets rotated
+
+* [ ] Add login throttling per role:
+
+  * [ ] student
+  * [ ] teacher
+  * [ ] admin
+  * [ ] parent
+
+* [ ] Restrict conference uploads by MIME type
+
+* [ ] Remove static default password for teacher creation
+
+* [ ] Stop emailing raw student passwords
+
+* [ ] Add Security Headers Middleware:
+
+  * [ ] CSP
+  * [ ] HSTS
+
+* [ ] Include reCAPTCHA partial in all login pages
+
+---
+
+---
+
