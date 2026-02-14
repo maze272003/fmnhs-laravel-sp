@@ -63,7 +63,7 @@ class StudentLearningPathController extends Controller
             $this->adaptiveLearningService->adjustDifficulty($student, $path);
 
             return redirect()
-                ->route('student.learning-paths.progress', $path)
+                ->route('student.learning-path.progress', $path)
                 ->with('success', 'Learning path progress updated.');
         } catch (\Exception $e) {
             return redirect()

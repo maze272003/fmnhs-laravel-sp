@@ -56,7 +56,7 @@
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    <a href="{{ route('admin.analytics.enrollment') ?? '#' }}" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group block">
+    <a href="{{ route('admin.analytics.students') }}" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group block">
         <div class="flex items-center gap-4 mb-4">
             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-chart-line"></i>
@@ -67,7 +67,7 @@
         <div class="mt-4 text-xs font-bold text-blue-500 uppercase tracking-widest">View Details <i class="fa-solid fa-arrow-right ml-1"></i></div>
     </a>
 
-    <a href="{{ route('admin.analytics.performance') ?? '#' }}" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group block">
+    <a href="{{ route('admin.analytics.students') }}" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group block">
         <div class="flex items-center gap-4 mb-4">
             <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-ranking-star"></i>
@@ -78,7 +78,7 @@
         <div class="mt-4 text-xs font-bold text-emerald-500 uppercase tracking-widest">View Details <i class="fa-solid fa-arrow-right ml-1"></i></div>
     </a>
 
-    <a href="{{ route('admin.analytics.attendance') ?? '#' }}" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group block">
+    <a href="{{ route('admin.analytics.index') }}" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all group block">
         <div class="flex items-center gap-4 mb-4">
             <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-clipboard-user"></i>

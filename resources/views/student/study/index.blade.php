@@ -42,7 +42,7 @@
 </div>
 
 <div class="mb-8 flex justify-end">
-    <a href="{{ route('student.study.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
+    <a href="{{ route('student.study.sessions.start') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
         <i class="fa-solid fa-play"></i> Start New Session
     </a>
 </div>
@@ -68,7 +68,7 @@
                             <p class="text-xs text-slate-400">Started {{ $session->created_at ? $session->created_at->diffForHumans() : '' }}</p>
                         </div>
                     </div>
-                    <a href="{{ route('student.study.show', $session->id) }}" class="text-indigo-600 hover:text-indigo-700 text-xs font-bold uppercase tracking-widest">
+                    <a href="{{ route('student.study.index') }}" class="text-indigo-600 hover:text-indigo-700 text-xs font-bold uppercase tracking-widest">
                         Resume <i class="fa-solid fa-arrow-right ml-1"></i>
                     </a>
                 </div>

@@ -6,6 +6,7 @@ use App\Models\Portfolio;
 use App\Models\PortfolioItem;
 use App\Models\Reflection;
 use App\Models\Student;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 
 class PortfolioService
@@ -64,27 +65,16 @@ class PortfolioService
     }
 
     /**
-     * Export a portfolio as a text-based report (PDF placeholder).
+     * Export a portfolio as a PDF.
      */
     public function exportPDF(Portfolio $portfolio): string
     {
         $portfolio->load(['items', 'student']);
 
-        $content = "PORTFOLIO: {$portfolio->title}\n";
-        $content .= str_repeat('=', 40) . "\n";
-        $content .= "Student: {$portfolio->student->first_name} {$portfolio->student->last_name}\n";
-        $content .= "Description: {$portfolio->description}\n\n";
+        $pdf = Pdf::loadView('pdf.portfolio', compact('portfolio'));
 
-        $content .= "ITEMS:\n";
-        foreach ($portfolio->items as $index => $item) {
-            $content .= ($index + 1) . ". {$item->title} ({$item->type})\n";
-            if ($item->description) {
-                $content .= "   {$item->description}\n";
-            }
-        }
-
-        $path = "portfolios/export-{$portfolio->id}-" . now()->timestamp . '.txt';
-        Storage::disk('local')->put($path, $content);
+        $path = "portfolios/export-{$portfolio->id}-" . now()->timestamp . '.pdf';
+        Storage::disk('local')->put($path, $pdf->output());
 
         return $path;
     }

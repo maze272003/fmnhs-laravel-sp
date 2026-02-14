@@ -282,6 +282,7 @@ Route::middleware(['auth:admin'])->group(function () {
     // ADMIN: Parent Management
     Route::get('/admin/parents', [AdminParentController::class, 'index'])->name('admin.parents.index');
     Route::post('/admin/parents', [AdminParentController::class, 'store'])->name('admin.parents.store');
+    Route::get('/admin/parents/{parent}', [AdminParentController::class, 'show'])->name('admin.parents.show');
     Route::put('/admin/parents/{id}', [AdminParentController::class, 'update'])->name('admin.parents.update');
     Route::delete('/admin/parents/{id}', [AdminParentController::class, 'destroy'])->name('admin.parents.destroy');
 
@@ -348,6 +349,7 @@ Route::middleware(['auth:teacher'])->group(function () {
     // Seating Arrangements
     Route::get('/teacher/seating', [SeatingController::class, 'index'])->name('teacher.seating.index');
     Route::post('/teacher/seating', [SeatingController::class, 'store'])->name('teacher.seating.store');
+    Route::get('/teacher/seating/{arrangement}', [SeatingController::class, 'show'])->name('teacher.seating.show');
     Route::put('/teacher/seating/{id}', [SeatingController::class, 'update'])->name('teacher.seating.update');
     Route::post('/teacher/seating/{id}/auto-arrange', [SeatingController::class, 'autoArrange'])->name('teacher.seating.auto-arrange');
 

@@ -72,7 +72,7 @@ class StudentStudyController extends Controller
             $this->studyTrackingService->createGoal($student, $validated);
 
             return redirect()
-                ->route('student.study.goals')
+                ->route('student.study.index')
                 ->with('success', 'Study goal created successfully.');
         } catch (\Exception $e) {
             return redirect()
@@ -102,7 +102,7 @@ class StudentStudyController extends Controller
             );
 
             return redirect()
-                ->route('student.study.timer')
+                ->route('student.study.index')
                 ->with('success', 'Study session started.');
         } catch (\Exception $e) {
             return redirect()
@@ -153,7 +153,7 @@ class StudentStudyController extends Controller
             $goal->update($validated);
 
             return redirect()
-                ->route('student.study.goals')
+                ->route('student.study.index')
                 ->with('success', 'Study goal updated successfully.');
         } catch (\Exception $e) {
             return redirect()

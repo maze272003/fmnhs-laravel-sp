@@ -68,7 +68,7 @@ class StudentPortfolioController extends Controller
             $this->portfolioService->addItem($portfolio, $validated);
 
             return redirect()
-                ->route('student.portfolios.show', $portfolio)
+                ->route('student.portfolio.index')
                 ->with('success', 'Item added to portfolio.');
         } catch (\Exception $e) {
             return redirect()
@@ -88,7 +88,7 @@ class StudentPortfolioController extends Controller
             $this->portfolioService->removeItem($item);
 
             return redirect()
-                ->route('student.portfolios.show', $portfolioId)
+                ->route('student.portfolio.index')
                 ->with('success', 'Item removed from portfolio.');
         } catch (\Exception $e) {
             return redirect()
@@ -120,7 +120,7 @@ class StudentPortfolioController extends Controller
             $item->update($validated);
 
             return redirect()
-                ->route('student.portfolios.show', $item->portfolio_id)
+                ->route('student.portfolio.index')
                 ->with('success', 'Item updated successfully.');
         } catch (\Exception $e) {
             return redirect()

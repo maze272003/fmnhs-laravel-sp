@@ -39,7 +39,7 @@
                 </div>
 
                 <div class="mt-6">
-                    <a href="{{ route('student.learning-paths.show', $path->id) }}" class="block text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-colors">
+                    <a href="{{ route('student.learning-path.show', $path->id) }}" class="block text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-colors">
                         {{ $progress > 0 ? 'Continue Learning' : 'Start Path' }}
                     </a>
                 </div>

@@ -10,10 +10,10 @@
 </div>
 
 <div class="mb-8 flex flex-col sm:flex-row gap-3 justify-end">
-    <a href="{{ route('teacher.seating.auto-arrange') }}" class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
+    <a href="{{ route('teacher.seating.index') }}" class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
         <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Arrange
     </a>
-    <a href="{{ route('teacher.seating.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
+    <a href="{{ route('teacher.seating.index') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
         <i class="fa-solid fa-plus"></i> Create Arrangement
     </a>
 </div>
@@ -48,7 +48,7 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <a href="{{ route('teacher.seating.edit', $arrangement->id) }}" class="flex-1 text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold px-4 py-3 rounded-xl transition-colors">
+                    <a href="{{ route('teacher.seating.show', $arrangement->id) }}" class="flex-1 text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold px-4 py-3 rounded-xl transition-colors">
                         <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
                     </a>
                     <a href="{{ route('teacher.seating.show', $arrangement->id) }}" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-colors">
@@ -65,7 +65,7 @@
                         <i class="fa-solid fa-chair"></i>
                     </div>
                     <p class="text-slate-400 font-medium">No seating arrangements created yet.</p>
-                    <a href="{{ route('teacher.seating.create') }}" class="text-emerald-600 hover:text-emerald-700 text-sm font-bold">Create your first arrangement <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                    <a href="{{ route('teacher.seating.index') }}" class="text-emerald-600 hover:text-emerald-700 text-sm font-bold">Create your first arrangement <i class="fa-solid fa-arrow-right ml-1"></i></a>
                 </div>
             </div>
         </div>

@@ -10,7 +10,7 @@
 </div>
 
 <div class="mb-8 flex flex-col sm:flex-row gap-3 justify-end">
-    <a href="{{ route('teacher.reports.generate') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
+    <a href="{{ route('teacher.progress-reports.generate') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2">
         <i class="fa-solid fa-file-circle-plus"></i> Generate Report
     </a>
 </div>
@@ -58,11 +58,11 @@
                         </td>
                         <td class="px-8 py-4">
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('teacher.reports.show', $report->id) }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold px-3 py-2 rounded-xl transition-colors" title="View">
+                                <a href="{{ route('teacher.progress-reports.show', $report->id) }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold px-3 py-2 rounded-xl transition-colors" title="View">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
                                 @if (!($report->sent ?? false))
-                                    <form action="{{ route('teacher.reports.send', $report->id) }}" method="POST" class="inline">
+                                    <form action="{{ route('teacher.progress-reports.send', $report->id) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors" title="Send">
                                             <i class="fa-solid fa-paper-plane"></i>
@@ -80,7 +80,7 @@
                                     <i class="fa-solid fa-file-circle-xmark"></i>
                                 </div>
                                 <p class="text-slate-400 font-medium">No progress reports generated yet.</p>
-                                <a href="{{ route('teacher.reports.generate') }}" class="text-emerald-600 hover:text-emerald-700 text-sm font-bold">Generate your first report <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                                <a href="{{ route('teacher.progress-reports.generate') }}" class="text-emerald-600 hover:text-emerald-700 text-sm font-bold">Generate your first report <i class="fa-solid fa-arrow-right ml-1"></i></a>
                             </div>
                         </td>
                     </tr>

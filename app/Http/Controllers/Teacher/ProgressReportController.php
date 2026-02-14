@@ -53,7 +53,7 @@ class ProgressReportController extends Controller
             );
 
             return redirect()
-                ->route('teacher.reports.preview', $report)
+                ->route('teacher.progress-reports.show', $report)
                 ->with('success', 'Report generated successfully.');
         } catch (\Exception $e) {
             return redirect()
@@ -100,7 +100,7 @@ class ProgressReportController extends Controller
             $this->reportService->scheduleReports($teacher, $validated['frequency']);
 
             return redirect()
-                ->route('teacher.reports.index')
+                ->route('teacher.progress-reports.index')
                 ->with('success', 'Report schedule created successfully.');
         } catch (\Exception $e) {
             return redirect()
@@ -131,7 +131,7 @@ class ProgressReportController extends Controller
             $this->reportService->sendReport($report, $validated['recipients']);
 
             return redirect()
-                ->route('teacher.reports.index')
+                ->route('teacher.progress-reports.index')
                 ->with('success', 'Report sent successfully.');
         } catch (\Exception $e) {
             return redirect()
