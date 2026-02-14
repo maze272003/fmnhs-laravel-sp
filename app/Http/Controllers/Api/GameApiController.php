@@ -112,6 +112,14 @@ class GameApiController extends Controller
     }
 
     /**
+     * Submit a score in a game (delegates to submitAnswer).
+     */
+    public function submitScore(Request $request, Game $game): JsonResponse
+    {
+        return $this->submitAnswer($request, $game);
+    }
+
+    /**
      * Get game leaderboard.
      */
     public function leaderboard(Game $game): JsonResponse

@@ -61,6 +61,25 @@ class CaptionApiController extends Controller
     }
 
     /**
+     * Search captions for a conference by query string.
+     */
+    public function search(Request $request, VideoConference $conference): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => ['required', 'string', 'min:2', 'max:255'],
+        ]);
+
+        $language = $request->query('language', 'en');
+        $captions = $this->captionService->getCaptions($conference, $language);
+
+        $filtered = $captions->filter(function ($caption) use ($validated) {
+            return str_contains(strtolower($caption->text), strtolower($validated['q']));
+        })->values();
+
+        return response()->json($filtered);
+    }
+
+    /**
      * Translate a caption to another language.
      */
     public function translate(Request $request, Caption $caption): JsonResponse

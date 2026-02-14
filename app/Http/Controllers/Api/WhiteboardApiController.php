@@ -35,6 +35,22 @@ class WhiteboardApiController extends Controller
     }
 
     /**
+     * Save a whiteboard (delegates to store).
+     */
+    public function save(Request $request, VideoConference $conference): JsonResponse
+    {
+        return $this->store($request, $conference);
+    }
+
+    /**
+     * Load a whiteboard (delegates to show).
+     */
+    public function load(Whiteboard $whiteboard): JsonResponse
+    {
+        return $this->show($whiteboard);
+    }
+
+    /**
      * Get a whiteboard with its elements.
      */
     public function show(Whiteboard $whiteboard): JsonResponse

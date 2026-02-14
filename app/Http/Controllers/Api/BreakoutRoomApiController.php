@@ -77,6 +77,14 @@ class BreakoutRoomApiController extends Controller
     }
 
     /**
+     * Auto-assign students to breakout rooms (delegates to assignStudents).
+     */
+    public function autoAssign(Request $request, BreakoutRoom $room): JsonResponse
+    {
+        return $this->assignStudents($request, $room);
+    }
+
+    /**
      * Join a breakout room.
      */
     public function join(BreakoutRoom $room): JsonResponse
@@ -138,6 +146,14 @@ class BreakoutRoomApiController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
+    }
+
+    /**
+     * End all breakout rooms for a conference (delegates to closeAll).
+     */
+    public function endAll(VideoConference $conference): JsonResponse
+    {
+        return $this->closeAll($conference);
     }
 
     /**

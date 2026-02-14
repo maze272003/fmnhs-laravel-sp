@@ -72,6 +72,14 @@ class LearningPathApiController extends Controller
     }
 
     /**
+     * Update progress on a learning path (delegates to progress).
+     */
+    public function updateProgress(LearningPath $path): JsonResponse
+    {
+        return $this->progress($path);
+    }
+
+    /**
      * Get recommended learning paths.
      */
     public function recommend(LearningPath $path): JsonResponse
