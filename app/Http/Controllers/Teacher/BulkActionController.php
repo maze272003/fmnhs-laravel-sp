@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Assignment;
+use App\Models\Section;
 use App\Services\BulkActionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -144,6 +146,66 @@ class BulkActionController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Export failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk grade entry.
+     */
+    public function bulkGrades(Request $request): RedirectResponse
+    {
+        return $this->processGradeEntry($request);
+    }
+
+    /**
+     * Bulk attendance marking.
+     */
+    public function bulkAttendance(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'attendance' => ['required', 'array'],
+            'attendance.*.student_id' => ['required', 'exists:students,id'],
+            'attendance.*.status' => ['required', 'string', 'in:present,absent,late,excused'],
+            'attendance.*.date' => ['required', 'date'],
+        ]);
+
+        try {
+            $this->bulkActionService->bulkAttendanceImport($validated['attendance']);
+
+            return redirect()
+                ->back()
+                ->with('success', 'Attendance recorded successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to record attendance: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Duplicate assignments to other sections.
+     */
+    public function duplicateAssignments(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'assignment_id' => ['required', 'exists:assignments,id'],
+            'section_ids' => ['required', 'array'],
+            'section_ids.*' => ['exists:sections,id'],
+        ]);
+
+        try {
+            $assignment = Assignment::findOrFail($validated['assignment_id']);
+            $sections = Section::whereIn('id', $validated['section_ids'])->get();
+
+            $this->bulkActionService->bulkAssignmentDuplicate($assignment, $sections);
+
+            return redirect()
+                ->back()
+                ->with('success', 'Assignments duplicated successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to duplicate assignments: '.$e->getMessage());
         }
     }
 }

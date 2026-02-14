@@ -96,4 +96,69 @@ class StudentPortfolioController extends Controller
                 ->with('error', 'Failed to remove item: '.$e->getMessage());
         }
     }
+
+    /**
+     * Store a new portfolio item.
+     */
+    public function storeItem(Request $request): RedirectResponse
+    {
+        return $this->addItem($request);
+    }
+
+    /**
+     * Update a portfolio item.
+     */
+    public function updateItem(Request $request, PortfolioItem $item): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'type' => ['required', 'string'],
+        ]);
+
+        try {
+            $item->update($validated);
+
+            return redirect()
+                ->route('student.portfolios.show', $item->portfolio_id)
+                ->with('success', 'Item updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to update item: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Destroy a portfolio item.
+     */
+    public function destroyItem(PortfolioItem $item): RedirectResponse
+    {
+        return $this->removeItem($item);
+    }
+
+    /**
+     * Store a reflection.
+     */
+    public function storeReflection(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string'],
+        ]);
+
+        $student = Auth::guard('student')->user();
+
+        try {
+            $this->portfolioService->addReflection($student, $validated);
+
+            return redirect()
+                ->back()
+                ->with('success', 'Reflection added successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to add reflection: '.$e->getMessage());
+        }
+    }
 }

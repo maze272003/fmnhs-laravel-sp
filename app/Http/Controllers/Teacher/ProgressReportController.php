@@ -108,4 +108,35 @@ class ProgressReportController extends Controller
                 ->with('error', 'Failed to schedule report: '.$e->getMessage());
         }
     }
+
+    /**
+     * Show a progress report.
+     */
+    public function show(ProgressReport $report): View
+    {
+        return $this->preview($report);
+    }
+
+    /**
+     * Send a progress report.
+     */
+    public function send(Request $request, ProgressReport $report): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipients' => ['required', 'array'],
+            'recipients.*' => ['string', 'email'],
+        ]);
+
+        try {
+            $this->reportService->sendReport($report, $validated['recipients']);
+
+            return redirect()
+                ->route('teacher.reports.index')
+                ->with('success', 'Report sent successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to send report: '.$e->getMessage());
+        }
+    }
 }
