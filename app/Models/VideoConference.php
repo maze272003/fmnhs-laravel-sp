@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Hash;
 
 class VideoConference extends Model
 {
@@ -13,6 +14,7 @@ class VideoConference extends Model
 
     protected $fillable = [
         'teacher_id', 'section_id', 'title', 'slug', 'is_active', 'started_at', 'ended_at',
+        'terminated_at', 'visibility', 'secret_key_hash',
         'settings', 'branding_logo', 'branding_color', 'recording_enabled',
         'chat_enabled', 'screen_share_enabled', 'guest_access',
         'max_participants', 'password', 'notification_rules',
@@ -22,7 +24,9 @@ class VideoConference extends Model
         'is_active' => 'boolean',
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
+        'terminated_at' => 'datetime',
         'settings' => 'array',
+        'visibility' => 'string',
         'recording_enabled' => 'boolean',
         'chat_enabled' => 'boolean',
         'screen_share_enabled' => 'boolean',
@@ -76,6 +80,10 @@ class VideoConference extends Model
             return false;
         }
 
+        if ($this->isPublicRoom()) {
+            return true;
+        }
+
         if (! $student->section_id) {
             return false;
         }
@@ -90,6 +98,39 @@ class VideoConference extends Model
             || Section::where('teacher_id', $this->teacher_id)
                 ->whereKey($student->section_id)
                 ->exists();
+    }
+
+    public function isPublicRoom(): bool
+    {
+        return strtolower((string) ($this->visibility ?? 'private')) === 'public';
+    }
+
+    public function isPrivateRoom(): bool
+    {
+        return ! $this->isPublicRoom();
+    }
+
+    public function hasSecretKey(): bool
+    {
+        return is_string($this->secret_key_hash) && $this->secret_key_hash !== '';
+    }
+
+    public function requiresSecretKey(): bool
+    {
+        return $this->isPrivateRoom() && $this->hasSecretKey();
+    }
+
+    public function verifySecretKey(?string $key): bool
+    {
+        if (! $this->requiresSecretKey()) {
+            return true;
+        }
+
+        if (! is_string($key) || trim($key) === '') {
+            return false;
+        }
+
+        return Hash::check(trim($key), (string) $this->secret_key_hash);
     }
 
     public function getElapsedSeconds(): int

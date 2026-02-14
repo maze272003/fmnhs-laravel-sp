@@ -157,13 +157,14 @@ class ConferenceApiController extends Controller
         $this->authorizeAccess($conference);
 
         $actor = $this->resolveActor($conference);
+        $isGuest = $actor['role'] === 'guest';
 
         $participant = $this->dataService->recordJoin(
             $conference,
             $actor['id'],
             $actor['name'],
             $actor['role'],
-            false,
+            $isGuest,
             $request->input('device_info'),
         );
 
@@ -211,14 +212,31 @@ class ConferenceApiController extends Controller
 
     private function authorizeAccess(VideoConference $conference): void
     {
+        $request = request();
         $teacher = Auth::guard('teacher')->user();
         $student = Auth::guard('student')->user();
+        $guest = $this->resolveGuestIdentity($conference);
 
         if ($teacher && (int) $conference->teacher_id === (int) $teacher->id) {
             return;
         }
 
-        if ($student && $conference->canStudentJoin($student)) {
+        if (
+            $student
+            && $conference->canStudentJoin($student)
+            && (! $conference->requiresSecretKey() || $this->hasValidatedSecret($conference, $request))
+        ) {
+            return;
+        }
+
+        if (
+            $guest !== null
+            && $conference->isPrivateRoom()
+            && $conference->hasSecretKey()
+            && $conference->is_active
+            && $conference->ended_at === null
+            && $this->hasValidatedSecret($conference, $request)
+        ) {
             return;
         }
 
@@ -227,8 +245,10 @@ class ConferenceApiController extends Controller
 
     private function resolveActor(VideoConference $conference): array
     {
+        $request = request();
         $teacher = Auth::guard('teacher')->user();
         $student = Auth::guard('student')->user();
+        $guest = $this->resolveGuestIdentity($conference);
 
         if ($teacher && (int) $conference->teacher_id === (int) $teacher->id) {
             return [
@@ -238,7 +258,11 @@ class ConferenceApiController extends Controller
             ];
         }
 
-        if ($student) {
+        if (
+            $student
+            && $conference->canStudentJoin($student)
+            && (! $conference->requiresSecretKey() || $this->hasValidatedSecret($conference, $request))
+        ) {
             return [
                 'id' => 'student-'.$student->id,
                 'name' => trim($student->first_name.' '.$student->last_name),
@@ -246,6 +270,39 @@ class ConferenceApiController extends Controller
             ];
         }
 
+        if ($guest !== null) {
+            return [
+                'id' => (string) $guest['id'],
+                'name' => (string) $guest['name'],
+                'role' => 'guest',
+            ];
+        }
+
         abort(403);
+    }
+
+    private function resolveGuestIdentity(VideoConference $conference): ?array
+    {
+        $identity = request()->session()->get('conference.guest_identity.'.$conference->id);
+        if (! is_array($identity)) {
+            return null;
+        }
+
+        $id = trim((string) ($identity['id'] ?? ''));
+        $name = trim((string) ($identity['name'] ?? ''));
+
+        if ($id === '' || $name === '') {
+            return null;
+        }
+
+        return [
+            'id' => $id,
+            'name' => $name,
+        ];
+    }
+
+    private function hasValidatedSecret(VideoConference $conference, Request $request): bool
+    {
+        return is_numeric($request->session()->get('conference.secret_validated.'.$conference->id));
     }
 }

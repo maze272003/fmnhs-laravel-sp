@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminStudentController;
@@ -41,22 +41,26 @@ Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name(
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
-// Public Meeting Join Page (student credentials required)
+// Public Meeting Join and Room Access
 Route::get('/conference/join/{conference}', [ConferenceAccessController::class, 'showJoinForm'])->name('conference.join.form');
 Route::post('/conference/join/{conference}', [ConferenceAccessController::class, 'joinWithCredentials'])->name('conference.join.attempt');
+Route::post('/conference/join/{conference}/guest/validate', [ConferenceAccessController::class, 'validateGuestKey'])->name('conference.join.guest.validate');
+Route::post('/conference/join/{conference}/guest', [ConferenceAccessController::class, 'joinAsGuest'])->name('conference.join.guest');
+
+Route::get('/conference/{conference}/room', [ConferenceAccessController::class, 'room'])->name('conference.room');
+Route::get('/conference/{conference}/status', [ConferenceAccessController::class, 'status'])->name('conference.status');
+
+Route::post('/conference/{conference}/messages', [ConferenceApiController::class, 'storeMessage'])->name('conference.messages.store');
+Route::post('/conference/{conference}/files', [ConferenceApiController::class, 'uploadFile'])->name('conference.files.upload');
+Route::get('/conference/{conference}/messages', [ConferenceApiController::class, 'getMessages'])->name('conference.messages.index');
+Route::get('/conference/{conference}/participants', [ConferenceApiController::class, 'getParticipants'])->name('conference.participants.index');
+Route::post('/conference/{conference}/events', [ConferenceApiController::class, 'logEvent'])->name('conference.events.store');
+Route::post('/conference/{conference}/join-log', [ConferenceApiController::class, 'recordJoin'])->name('conference.join.log');
+Route::post('/conference/{conference}/leave-log', [ConferenceApiController::class, 'recordLeave'])->name('conference.leave.log');
 
 // Shared Room Route (teacher or student session)
 Route::middleware(['auth:teacher,student'])->group(function () {
-    Route::get('/conference/{conference}/room', [ConferenceAccessController::class, 'room'])->name('conference.room');
-
-    // Conference API — Chat, Participants, Events
-    Route::post('/conference/{conference}/messages', [ConferenceApiController::class, 'storeMessage'])->name('conference.messages.store');
-    Route::post('/conference/{conference}/files', [ConferenceApiController::class, 'uploadFile'])->name('conference.files.upload');
-    Route::get('/conference/{conference}/messages', [ConferenceApiController::class, 'getMessages'])->name('conference.messages.index');
-    Route::get('/conference/{conference}/participants', [ConferenceApiController::class, 'getParticipants'])->name('conference.participants.index');
-    Route::post('/conference/{conference}/events', [ConferenceApiController::class, 'logEvent'])->name('conference.events.store');
-    Route::post('/conference/{conference}/join-log', [ConferenceApiController::class, 'recordJoin'])->name('conference.join.log');
-    Route::post('/conference/{conference}/leave-log', [ConferenceApiController::class, 'recordLeave'])->name('conference.leave.log');
+    // Conference API â€” Restricted analytics endpoints
     Route::get('/conference/{conference}/summary', [ConferenceApiController::class, 'getSummary'])->name('conference.summary');
     Route::get('/conference/{conference}/timeline', [ConferenceApiController::class, 'getTimeline'])->name('conference.timeline');
 
@@ -167,6 +171,7 @@ Route::middleware(['auth:teacher'])->group(function () {
 
     Route::get('/teacher/conferences', [VideoConferenceController::class, 'index'])->name('teacher.conferences.index');
     Route::post('/teacher/conferences', [VideoConferenceController::class, 'store'])->name('teacher.conferences.store');
+    Route::patch('/teacher/conferences/{conference}/privacy', [VideoConferenceController::class, 'updatePrivacy'])->name('teacher.conferences.privacy');
     Route::get('/teacher/conferences/{conference}', [VideoConferenceController::class, 'show'])->name('teacher.conferences.show');
     Route::post('/teacher/conferences/{conference}/end', [VideoConferenceController::class, 'end'])->name('teacher.conferences.end');
 });
@@ -241,3 +246,4 @@ Route::middleware(['auth:admin'])->group(function () {
 });
 
 require __DIR__.'/db.php';
+

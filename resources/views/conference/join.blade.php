@@ -40,6 +40,18 @@
                 </div>
             @endif
 
+            <div class="flex items-center gap-2 mb-5">
+                @if(($conference->visibility ?? 'private') === 'public')
+                    <span class="inline-flex items-center gap-2 rounded-full bg-sky-500/20 text-sky-300 px-3 py-1 text-[11px] font-black uppercase tracking-wider">
+                        <i class="fa-solid fa-earth-asia"></i>Public Room
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-2 rounded-full bg-amber-500/20 text-amber-200 px-3 py-1 text-[11px] font-black uppercase tracking-wider">
+                        <i class="fa-solid fa-key"></i>Private Room
+                    </span>
+                @endif
+            </div>
+
             <form method="POST" action="{{ route('conference.join.attempt', $conference) }}" class="space-y-5">
                 @csrf
                 <div>
@@ -64,12 +76,88 @@
                     >
                 </div>
 
+                @if($requiresSecretKey)
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Secret Key</label>
+                        <input
+                            type="text"
+                            name="secret_key"
+                            value="{{ old('secret_key') }}"
+                            required
+                            minlength="6"
+                            maxlength="32"
+                            placeholder="Enter teacher-provided key"
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-800 text-slate-100 focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400 outline-none"
+                        >
+                    </div>
+                @endif
+
                 <button type="submit" class="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm uppercase tracking-wider transition-colors">
-                    <i class="fa-solid fa-video mr-2"></i>Join Video Class
+                    <i class="fa-solid fa-video mr-2"></i>Join with Student Account
                 </button>
             </form>
 
-            <p class="text-xs text-slate-500 mt-5">Only students assigned to this teacher/section can enter.</p>
+            @if($supportsGuestJoin)
+                <div class="mt-6 pt-6 border-t border-slate-800">
+                    <h2 class="text-sm font-black uppercase tracking-widest text-slate-300 mb-3">Guest Entry</h2>
+
+                    @if(!$guestKeyValidated)
+                        <form method="POST" action="{{ route('conference.join.guest.validate', $conference) }}" class="space-y-4">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Secret Key</label>
+                                <input
+                                    type="text"
+                                    name="guest_secret_key"
+                                    value="{{ old('guest_secret_key') }}"
+                                    required
+                                    minlength="6"
+                                    maxlength="32"
+                                    placeholder="Enter private room key"
+                                    class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-800 text-slate-100 focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400 outline-none"
+                                >
+                            </div>
+                            <button type="submit" class="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-colors">
+                                <i class="fa-solid fa-circle-check mr-2"></i>Validate Key
+                            </button>
+                        </form>
+                    @else
+                        <div class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-200 text-xs font-semibold mb-4">
+                            <i class="fa-solid fa-circle-check mr-2"></i>Secret key validated. Enter temporary name.
+                        </div>
+                        <form method="POST" action="{{ route('conference.join.guest', $conference) }}" class="space-y-4">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Temporary Name</label>
+                                <input
+                                    type="text"
+                                    name="temporary_name"
+                                    value="{{ old('temporary_name') }}"
+                                    required
+                                    minlength="2"
+                                    maxlength="40"
+                                    placeholder="Ex: Parent - Maria"
+                                    class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-800 text-slate-100 focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 outline-none"
+                                >
+                            </div>
+                            <button type="submit" class="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-colors">
+                                <i class="fa-solid fa-door-open mr-2"></i>Join as Guest
+                            </button>
+                            <a href="{{ route('conference.join.form', ['conference' => $conference, 'reset_guest' => 1]) }}" class="block text-center text-xs text-slate-400 hover:text-slate-200 underline underline-offset-4">
+                                Use a different secret key
+                            </a>
+                        </form>
+                    @endif
+                </div>
+            @endif
+
+            <p class="text-xs text-slate-500 mt-5">
+                @if(($conference->visibility ?? 'private') === 'public')
+                    Public room: any system user can join.
+                @else
+                    Private room: join requires the teacher's secret key.
+                @endif
+            </p>
         @endif
     </div>
 </body>

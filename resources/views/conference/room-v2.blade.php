@@ -1004,6 +1004,7 @@
         'isActive' => $isMeetingActive,
         'joinLink' => $joinLink,
         'endMeetingUrl' => $endMeetingUrl,
+        'statusUrl' => $statusUrl,
         'backUrl' => $backUrl,
         'csrf' => csrf_token(),
     ];
@@ -1237,7 +1238,13 @@ dom.fsOverlay.addEventListener('dblclick', (e) => {
     if (e.target === dom.fsVideo || e.target === dom.fsOverlay) exitFullScreen();
 });
 dom.fsPip?.addEventListener('click', () => {
-    if (dom.fsVideo.requestPictureInPicture) dom.fsVideo.requestPictureInPicture().catch(() => {});
+    if (dom.fsVideo.requestPictureInPicture) {
+        dom.fsVideo.requestPictureInPicture().catch(() => {
+            toast('Picture-in-Picture is unavailable on this browser/device.', 'warning');
+        });
+    } else {
+        toast('Picture-in-Picture is unavailable on this browser/device.', 'warning');
+    }
 });
 
 function enterFullScreen() {
@@ -1717,7 +1724,14 @@ dom.btnMic.addEventListener('click', () => app.toggleAudio());
 dom.btnCam.addEventListener('click', () => app.toggleVideo());
 dom.btnScreen.addEventListener('click', () => app.toggleScreenShare());
 dom.btnHand.addEventListener('click', () => app.toggleRaiseHand());
-dom.btnPip.addEventListener('click', () => app.togglePiP(dom.localVideo));
+dom.btnPip.addEventListener('click', async () => {
+    try {
+        const active = await app.togglePiP(dom.localVideo);
+        toast(active ? 'Picture-in-Picture enabled' : 'Picture-in-Picture closed', 'success');
+    } catch {
+        toast('Picture-in-Picture is unavailable on this browser/device.', 'warning');
+    }
+});
 
 // Chat form
 dom.chatForm.addEventListener('submit', (e) => {
@@ -1986,6 +2000,38 @@ dom.selAudioOut?.addEventListener('change', async (e) => {
 // NETWORK QUALITY REPORTING
 // ═══════════════════════════════════════════
 setInterval(() => app.sendNetworkQuality(), 30000);
+
+// Keep participants in sync when host terminates room from another page.
+let roomTerminated = false;
+async function monitorRoomStatus() {
+    if (roomTerminated || !meetingConfig.statusUrl) return;
+    try {
+        const res = await fetch(meetingConfig.statusUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': meetingConfig.csrf },
+            credentials: 'same-origin',
+        });
+
+        if (!res.ok) {
+            if (res.status === 404 || res.status === 410) {
+                roomTerminated = true;
+                toast('This room has been terminated by the host.', 'warning');
+                app.destroy();
+                setTimeout(() => { window.location.href = meetingConfig.backUrl; }, 1200);
+            }
+            return;
+        }
+
+        const payload = await res.json();
+        if (!payload.is_active) {
+            roomTerminated = true;
+            toast('This room has ended.', 'warning');
+            app.destroy();
+            setTimeout(() => { window.location.href = meetingConfig.backUrl; }, 1200);
+        }
+    } catch {}
+}
+setInterval(monitorRoomStatus, 10000);
 
 // ═══════════════════════════════════════════
 // CLEANUP

@@ -680,13 +680,18 @@ export class ConferenceApp {
 
     // PiP
     async togglePiP(videoElement) {
+        if (!document.pictureInPictureEnabled || !videoElement?.requestPictureInPicture) {
+            throw new Error('pip-not-supported');
+        }
+
         if (document.pictureInPictureElement) {
             await document.exitPictureInPicture();
             this.isPiPActive = false;
-        } else if (videoElement && videoElement.requestPictureInPicture) {
-            await videoElement.requestPictureInPicture();
-            this.isPiPActive = true;
+            return this.isPiPActive;
         }
+
+        await videoElement.requestPictureInPicture();
+        this.isPiPActive = true;
         return this.isPiPActive;
     }
 

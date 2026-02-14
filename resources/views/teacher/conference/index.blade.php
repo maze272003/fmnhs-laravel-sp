@@ -76,7 +76,32 @@
                                         Grade {{ $section->grade_level }} - {{ $section->name }}
                                     </option>
                                 @endforeach
+                                </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Privacy</label>
+                            <select
+                                name="visibility"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"
+                            >
+                                <option value="public" {{ old('visibility', 'public') === 'public' ? 'selected' : '' }}>Public (All system users)</option>
+                                <option value="private" {{ old('visibility') === 'private' ? 'selected' : '' }}>Private (Secret Key)</option>
                             </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Secret Key (Private Rooms)</label>
+                            <input
+                                type="text"
+                                name="secret_key"
+                                value="{{ old('secret_key') }}"
+                                minlength="6"
+                                maxlength="32"
+                                placeholder="Ex: FMNHS2026"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"
+                            >
+                            <p class="text-[11px] text-slate-500 mt-1">Alphanumeric only, 6-32 characters.</p>
                         </div>
 
                         <button type="submit" class="w-full px-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm tracking-wide transition-colors">
@@ -107,6 +132,11 @@
                                                     <span class="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-black uppercase tracking-wider">Active</span>
                                                 @else
                                                     <span class="text-[10px] px-2 py-1 rounded-full bg-rose-100 text-rose-700 font-black uppercase tracking-wider">Ended</span>
+                                                @endif
+                                                @if(($conference->visibility ?? 'private') === 'public')
+                                                    <span class="text-[10px] px-2 py-1 rounded-full bg-sky-100 text-sky-700 font-black uppercase tracking-wider">Public</span>
+                                                @else
+                                                    <span class="text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-black uppercase tracking-wider">Private</span>
                                                 @endif
                                             </div>
 
@@ -140,13 +170,36 @@
                                             </a>
 
                                             @if($conference->is_active && !$conference->ended_at)
+                                                <form method="POST" action="{{ route('teacher.conferences.privacy', $conference) }}" class="flex flex-wrap gap-2 items-center">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <select name="visibility" class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700">
+                                                        <option value="private" {{ ($conference->visibility ?? 'private') === 'private' ? 'selected' : '' }}>Private</option>
+                                                        <option value="public" {{ ($conference->visibility ?? 'private') === 'public' ? 'selected' : '' }}>Public</option>
+                                                    </select>
+                                                    <input
+                                                        type="text"
+                                                        name="secret_key"
+                                                        minlength="6"
+                                                        maxlength="32"
+                                                        placeholder="New key (private)"
+                                                        class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700"
+                                                    >
+                                                    <button
+                                                        type="submit"
+                                                        class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold uppercase tracking-wide hover:bg-indigo-700 transition-colors"
+                                                    >
+                                                        <i class="fa-solid fa-shield-halved mr-1"></i>Privacy
+                                                    </button>
+                                                </form>
+
                                                 <form method="POST" action="{{ route('teacher.conferences.end', $conference) }}">
                                                     @csrf
                                                     <button
                                                         type="submit"
                                                         class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold uppercase tracking-wide hover:bg-rose-700 transition-colors"
                                                     >
-                                                        <i class="fa-solid fa-phone-slash mr-1"></i>End
+                                                        <i class="fa-solid fa-phone-slash mr-1"></i>Terminate
                                                     </button>
                                                 </form>
                                             @endif

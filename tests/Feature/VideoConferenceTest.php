@@ -139,6 +139,124 @@ class VideoConferenceTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_private_conference_requires_secret_key_for_student_join(): void
+    {
+        $teacher = $this->createTeacher('teacher6@example.com');
+        $section = Section::create([
+            'name' => 'Sampaguita',
+            'grade_level' => 10,
+            'teacher_id' => $teacher->id,
+        ]);
+
+        $conference = VideoConference::create([
+            'teacher_id' => $teacher->id,
+            'section_id' => $section->id,
+            'title' => 'Private Room',
+            'slug' => 'private-room-secret',
+            'is_active' => true,
+            'visibility' => 'private',
+            'secret_key_hash' => Hash::make('SECRET12'),
+        ]);
+
+        Student::create([
+            'lrn' => '123123123123',
+            'first_name' => 'Marco',
+            'last_name' => 'Reyes',
+            'email' => 'marco@student.com',
+            'password' => Hash::make('student-pass'),
+            'section_id' => $section->id,
+        ]);
+
+        $missingKey = $this->from(route('conference.join.form', $conference))
+            ->post(route('conference.join.attempt', $conference), [
+                'credential' => 'marco@student.com',
+                'password' => 'student-pass',
+            ]);
+        $missingKey->assertSessionHasErrors('secret_key');
+
+        $badKey = $this->from(route('conference.join.form', $conference))
+            ->post(route('conference.join.attempt', $conference), [
+                'credential' => 'marco@student.com',
+                'password' => 'student-pass',
+                'secret_key' => 'WRONG123',
+            ]);
+        $badKey->assertSessionHasErrors('secret_key');
+
+        $goodKey = $this->post(route('conference.join.attempt', $conference), [
+            'credential' => 'marco@student.com',
+            'password' => 'student-pass',
+            'secret_key' => 'SECRET12',
+        ]);
+        $goodKey->assertRedirect(route('conference.room', $conference));
+    }
+
+    public function test_guest_can_join_private_conference_with_secret_key_and_temporary_name(): void
+    {
+        $teacher = $this->createTeacher('teacher7@example.com');
+
+        $conference = VideoConference::create([
+            'teacher_id' => $teacher->id,
+            'section_id' => null,
+            'title' => 'Guest Private Room',
+            'slug' => 'guest-private-room',
+            'is_active' => true,
+            'visibility' => 'private',
+            'secret_key_hash' => Hash::make('GUEST123'),
+        ]);
+
+        $validate = $this->post(route('conference.join.guest.validate', $conference), [
+            'guest_secret_key' => 'GUEST123',
+        ]);
+        $validate->assertRedirect(route('conference.join.form', $conference));
+
+        $join = $this->post(route('conference.join.guest', $conference), [
+            'temporary_name' => 'Guest Parent',
+        ]);
+        $join->assertRedirect(route('conference.room', $conference));
+
+        $room = $this->get(route('conference.room', $conference));
+        $room->assertOk();
+    }
+
+    public function test_public_conference_allows_unassigned_student_to_join(): void
+    {
+        $teacher = $this->createTeacher('teacher8@example.com');
+        $assignedSection = Section::create([
+            'name' => 'Topaz',
+            'grade_level' => 10,
+            'teacher_id' => $teacher->id,
+        ]);
+        $otherSection = Section::create([
+            'name' => 'Jasper',
+            'grade_level' => 10,
+        ]);
+
+        $conference = VideoConference::create([
+            'teacher_id' => $teacher->id,
+            'section_id' => $assignedSection->id,
+            'title' => 'Public Room',
+            'slug' => 'public-room-open',
+            'is_active' => true,
+            'visibility' => 'public',
+        ]);
+
+        Student::create([
+            'lrn' => '321321321321',
+            'first_name' => 'Lia',
+            'last_name' => 'Cruz',
+            'email' => 'lia@student.com',
+            'password' => Hash::make('student-pass'),
+            'section_id' => $otherSection->id,
+        ]);
+
+        $response = $this->post(route('conference.join.attempt', $conference), [
+            'credential' => 'lia@student.com',
+            'password' => 'student-pass',
+        ]);
+
+        $response->assertRedirect(route('conference.room', $conference));
+    }
+
     private function createTeacher(string $email): Teacher
     {
         return Teacher::create([
