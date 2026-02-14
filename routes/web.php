@@ -48,6 +48,16 @@ use App\Http\Controllers\TeacherAuthController;
 use App\Models\Announcement;
 use Illuminate\Support\Facades\Route;
 
+
+Route::get('/redis-test', function(){
+    try {
+        Cache::store('redis')->put('health','ok',10);
+        return Cache::store('redis')->get('health');
+    } catch(Throwable $e){
+        return $e->getMessage();
+    }
+});
+
 // Default Route
 Route::get('/', function () {
     $announcements = Announcement::orderBy('created_at', 'desc')->take(3)->get();

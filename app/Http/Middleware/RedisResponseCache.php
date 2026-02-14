@@ -18,7 +18,14 @@ class RedisResponseCache
             return $next($request);
         }
 
-        $store = Cache::store('redis');
+        try {
+            $store = Cache::store('redis');
+            // Force a connection attempt early so we can catch failures cleanly
+            $store->get('redis_response_cache:__ping__');
+        } catch (\Throwable $e) {
+            return $next($request); // fallback: app still works without redis
+        }
+
         $cacheKey = $this->cacheKey($request);
 
         $cached = $store->get($cacheKey);
@@ -45,16 +52,21 @@ class RedisResponseCache
 
         $ttl = max((int) config('performance.redis_response_cache_ttl', 30), 1);
 
-        $store->put($cacheKey, [
-            'status' => $response->getStatusCode(),
-            'headers' => $this->cacheableHeaders($response),
-            'content' => $response->getContent(),
-        ], now()->addSeconds($ttl));
+        try {
+            $store->put($cacheKey, [
+                'status' => $response->getStatusCode(),
+                'headers' => $this->cacheableHeaders($response),
+                'content' => $response->getContent(),
+            ], now()->addSeconds($ttl));
+        } catch (\Throwable $e) {
+            return $response; // if redis dies mid-request, still don’t break app
+        }
 
         $response->headers->set('X-Redis-Cache', 'MISS');
 
         return $response;
     }
+
 
     private function shouldCacheRequest(Request $request): bool
     {
