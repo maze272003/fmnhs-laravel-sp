@@ -17,7 +17,7 @@ class VideoConference extends Model
         'terminated_at', 'visibility', 'secret_key_hash',
         'settings', 'branding_logo', 'branding_color', 'recording_enabled',
         'chat_enabled', 'screen_share_enabled', 'guest_access',
-        'max_participants', 'password', 'notification_rules',
+        'max_participants', 'notification_rules',
     ];
 
     protected $casts = [
