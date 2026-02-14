@@ -299,6 +299,7 @@ Route::middleware(['auth:parent'])->group(function () {
     Route::get('/parent/children/{id}/attendance', [ParentDashboardController::class, 'attendance'])->name('parent.children.attendance');
     Route::get('/parent/children/{id}/schedule', [ParentDashboardController::class, 'schedule'])->name('parent.children.schedule');
     Route::get('/parent/children/{id}/assignments', [ParentDashboardController::class, 'assignments'])->name('parent.children.assignments');
+    Route::get('/parent/messages', [ParentDashboardController::class, 'messages'])->name('parent.messages');
     Route::post('/parent/messages', [ParentDashboardController::class, 'sendMessage'])->name('parent.messages.send');
 });
 
