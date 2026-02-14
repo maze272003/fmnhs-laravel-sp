@@ -357,15 +357,28 @@ Route::middleware(['auth:teacher'])->group(function () {
     Route::post('/teacher/bulk/email', [BulkActionController::class, 'sendBulkEmail'])->name('teacher.bulk.email');
 });
 
-// Extended API Routes for Conference Features
+/*
+|--------------------------------------------------------------------------
+| Extended API Routes for Conference Features
+|--------------------------------------------------------------------------
+|
+| These routes use shared middleware `auth:teacher,student` so both roles
+| can access them. Controllers MUST perform explicit guard checks
+| (e.g. Auth::guard('teacher')->check()) to enforce role-specific
+| permissions where needed. Teacher-only actions include: creating/ending
+| breakout rooms, managing presentations, creating/ending games, and
+| viewing intervention alerts. Student-facing actions (study groups,
+| forums, portfolio, study sessions, learning paths) may remain shared.
+|
+*/
 Route::middleware(['auth:teacher,student'])->group(function () {
     Route::prefix('api')->group(function () {
-        // Whiteboard
+        // Whiteboard (shared — both roles collaborate)
         Route::post('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'save']);
         Route::get('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'load']);
         Route::delete('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'clear']);
 
-        // Breakout Rooms
+        // Breakout Rooms (controllers must enforce teacher-only for create/end actions)
         Route::get('/conference/{conference}/breakout-rooms', [BreakoutRoomApiController::class, 'index']);
         Route::post('/conference/{conference}/breakout-rooms', [BreakoutRoomApiController::class, 'store']);
         Route::post('/conference/{conference}/breakout-rooms/auto-assign', [BreakoutRoomApiController::class, 'autoAssign']);
@@ -373,25 +386,25 @@ Route::middleware(['auth:teacher,student'])->group(function () {
         Route::post('/conference/{conference}/breakout-rooms/{id}/leave', [BreakoutRoomApiController::class, 'leave']);
         Route::post('/conference/{conference}/breakout-rooms/end-all', [BreakoutRoomApiController::class, 'endAll']);
 
-        // Mood/Feedback
+        // Mood/Feedback (shared)
         Route::post('/conference/{conference}/mood', [ConferenceMoodApiController::class, 'store']);
         Route::get('/conference/{conference}/mood/aggregate', [ConferenceMoodApiController::class, 'aggregate']);
 
-        // Games
+        // Games (controllers must enforce teacher-only for create/end actions)
         Route::post('/conference/{conference}/games', [GameApiController::class, 'store']);
         Route::post('/conference/{conference}/games/{id}/score', [GameApiController::class, 'submitScore']);
         Route::post('/conference/{conference}/games/{id}/end', [GameApiController::class, 'end']);
 
-        // Captions
+        // Captions (shared — read-only)
         Route::get('/conference/{conference}/captions', [CaptionApiController::class, 'index']);
         Route::get('/conference/{conference}/captions/search', [CaptionApiController::class, 'search']);
 
-        // Presentations
+        // Presentations (controllers must enforce teacher-only for store)
         Route::post('/conference/{conference}/presentations', [PresentationApiController::class, 'store']);
         Route::get('/conference/{conference}/presentations/{id}', [PresentationApiController::class, 'show']);
         Route::get('/conference/{conference}/presentations/{id}/slides/{slide}/analytics', [PresentationApiController::class, 'slideAnalytics']);
 
-        // Study Groups & Forum
+        // Study Groups & Forum (shared)
         Route::get('/study-groups', [StudyGroupApiController::class, 'index']);
         Route::post('/study-groups', [StudyGroupApiController::class, 'store']);
         Route::post('/study-groups/{id}/join', [StudyGroupApiController::class, 'join']);
@@ -399,25 +412,25 @@ Route::middleware(['auth:teacher,student'])->group(function () {
         Route::post('/forums/threads', [ForumApiController::class, 'storeThread']);
         Route::post('/forums/threads/{id}/posts', [ForumApiController::class, 'storePost']);
 
-        // Learning Paths
+        // Learning Paths (shared)
         Route::get('/learning-paths', [LearningPathApiController::class, 'index']);
         Route::post('/learning-paths/{id}/progress', [LearningPathApiController::class, 'updateProgress']);
 
-        // Portfolio
+        // Portfolio (shared)
         Route::get('/portfolio', [PortfolioApiController::class, 'index']);
         Route::post('/portfolio/items', [PortfolioApiController::class, 'storeItem']);
 
-        // Study Sessions
+        // Study Sessions (shared)
         Route::post('/study-sessions', [StudySessionApiController::class, 'start']);
         Route::post('/study-sessions/{id}/end', [StudySessionApiController::class, 'end']);
 
-        // Intervention Alerts
+        // Intervention Alerts (controllers must enforce teacher-only)
         Route::get('/intervention-alerts', [InterventionAlertApiController::class, 'index']);
 
-        // Content Recommendations
+        // Content Recommendations (shared)
         Route::get('/recommendations', [ContentRecommendationApiController::class, 'index']);
 
-        // AI Assistant
+        // AI Assistant (shared)
         Route::post('/ai-assistant/chat', [AIAssistantApiController::class, 'chat']);
         Route::get('/ai-assistant/history', [AIAssistantApiController::class, 'history']);
     });

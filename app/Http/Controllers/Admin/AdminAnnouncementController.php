@@ -54,18 +54,10 @@ class AdminAnnouncementController extends Controller
      */
     public function destroy($announcement): RedirectResponse
     {
-        $admin = Auth::guard('admin')->user();
+        $model = \App\Models\Announcement::findOrFail((int) $announcement);
+        $this->authorize('delete', $model);
 
-        $allowedEmails = [
-            'admin@school.com',
-            'sangbaanstephaniemary@gmail.com',
-        ];
-
-        if (!$admin || !in_array($admin->email, $allowedEmails, true)) {
-            return back()->with('error', 'You are not authorized to delete this announcement.');
-        }
-
-        $this->announcementManagement->deleteById((int) $announcement);
+        $this->announcementManagement->deleteById($model->id);
 
         return back()->with('success', 'Announcement has been retracted and media deleted.');
     }

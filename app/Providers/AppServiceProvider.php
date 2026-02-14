@@ -28,6 +28,9 @@ use App\Repositories\Eloquent\SchoolYearRepository;
 use App\Repositories\Eloquent\StudentRepository;
 use App\Repositories\Eloquent\SubjectRepository;
 use App\Repositories\Eloquent\TeacherRepository;
+use App\Models\Announcement;
+use App\Policies\AnnouncementPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -59,6 +62,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Announcement::class, AnnouncementPolicy::class);
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
