@@ -18,6 +18,26 @@ class PortfolioApiController extends Controller
     ) {}
 
     /**
+     * List the authenticated user's portfolio.
+     */
+    public function index(): JsonResponse
+    {
+        $student = Student::findOrFail(Auth::id());
+        $portfolio = Portfolio::where('student_id', $student->id)->firstOrFail();
+        $portfolio->load('items');
+
+        return response()->json($portfolio);
+    }
+
+    /**
+     * Store an item in a portfolio (delegates to addItem).
+     */
+    public function storeItem(Request $request, Portfolio $portfolio): JsonResponse
+    {
+        return $this->addItem($request, $portfolio);
+    }
+
+    /**
      * Show a portfolio with its items.
      */
     public function show(Portfolio $portfolio): JsonResponse

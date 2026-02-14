@@ -60,4 +60,24 @@ class AdminAnalyticsController extends Controller
 
         return response()->download($path);
     }
+
+    /**
+     * Students analytics overview.
+     */
+    public function students(): View
+    {
+        $analytics = $this->analyticsService->getStudentsAnalytics();
+
+        return view('admin.analytics.students', compact('analytics'));
+    }
+
+    /**
+     * Teachers analytics overview.
+     */
+    public function teachers(): View
+    {
+        $analytics = $this->analyticsService->getTeachersAnalytics();
+
+        return view('admin.analytics.teachers', compact('analytics'));
+    }
 }

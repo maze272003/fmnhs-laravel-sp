@@ -8,6 +8,7 @@ use App\Models\ReportSchedule;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\Teacher;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -74,31 +75,15 @@ class ReportGenerationService
     public function generatePDF(ProgressReport $report): string
     {
         $data = $report->report_data;
-        $content = "PROGRESS REPORT\n";
-        $content .= str_repeat('=', 40) . "\n";
-        $content .= "Student: {$data['student']['name']}\n";
-        $content .= "Section: {$data['student']['section']}\n";
-        $content .= "Period: {$data['period']['start']} to {$data['period']['end']}\n\n";
 
-        if (!empty($data['grades'])) {
-            $content .= "GRADES:\n";
-            foreach ($data['grades'] as $subject => $gradeData) {
-                $content .= "  {$subject}: {$gradeData['average']}\n";
-            }
-            $content .= "\n";
-        }
+        $pdf = Pdf::loadView('pdf.progress-report', compact('data'));
 
-        $content .= "ATTENDANCE:\n";
-        $content .= "  Total: {$data['attendance']['total_classes']}\n";
-        $content .= "  Present: {$data['attendance']['present']}\n";
-        $content .= "  Rate: {$data['attendance']['rate']}%\n";
-
-        $path = "reports/progress-{$report->student_id}-{$report->period_start}.txt";
-        Storage::disk('local')->put($path, $content);
+        $path = "reports/progress-{$report->student_id}-{$report->period_start}.pdf";
+        Storage::disk('local')->put($path, $pdf->output());
 
         $report->update(['pdf_path' => $path]);
 
-        return $path;
+        return Storage::disk('local')->path($path);
     }
 
     /**

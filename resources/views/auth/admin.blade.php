@@ -81,6 +81,8 @@
                 <span class="tracking-tight">AUTHENTICATE & ENTER</span>
             </button>
         </form>
+
+        @include('partials.recaptcha')
         
         <div class="text-center mt-10">
             <a href="{{ url('/') }}" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-600 text-[11px] font-black uppercase tracking-widest transition-all group">

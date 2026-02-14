@@ -6,6 +6,7 @@ use App\Models\Teacher;
 use App\Repositories\Contracts\TeacherRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class TeacherManagementService
 {
@@ -25,7 +26,7 @@ class TeacherManagementService
 
     public function create(array $validated): Teacher
     {
-        $validated['password'] = Hash::make('password');
+        $validated['password'] = Hash::make(Str::random(12));
         return $this->teachers->create($validated);
     }
 

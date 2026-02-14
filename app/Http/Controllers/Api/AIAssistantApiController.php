@@ -57,6 +57,14 @@ class AIAssistantApiController extends Controller
     }
 
     /**
+     * Chat with the AI assistant (delegates to ask).
+     */
+    public function chat(Request $request, AiConversation $conversation): JsonResponse
+    {
+        return $this->ask($request, $conversation);
+    }
+
+    /**
      * Get conversation history.
      */
     public function history(AiConversation $conversation): JsonResponse

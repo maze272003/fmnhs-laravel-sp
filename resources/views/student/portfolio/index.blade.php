@@ -97,7 +97,7 @@
                 </div>
                 
                 <div class="mt-6">
-                    <a href="{{ route('student.portfolio.export') ?? '#' }}" class="block text-center bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium">
+                    <a href="{{ route('student.portfolio.index') }}" class="block text-center bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium">
                         Export as PDF
                     </a>
                 </div>

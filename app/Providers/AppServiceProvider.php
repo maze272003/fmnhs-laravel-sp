@@ -28,6 +28,19 @@ use App\Repositories\Eloquent\SchoolYearRepository;
 use App\Repositories\Eloquent\StudentRepository;
 use App\Repositories\Eloquent\SubjectRepository;
 use App\Repositories\Eloquent\TeacherRepository;
+use App\Models\Announcement;
+use App\Models\LearningPath;
+use App\Models\Portfolio;
+use App\Models\ProgressReport;
+use App\Models\StudySession;
+use App\Models\VideoConference;
+use App\Policies\AnnouncementPolicy;
+use App\Policies\LearningPathPolicy;
+use App\Policies\PortfolioPolicy;
+use App\Policies\ProgressReportPolicy;
+use App\Policies\StudySessionPolicy;
+use App\Policies\VideoConferencePolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -59,6 +72,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Announcement::class, AnnouncementPolicy::class);
+        Gate::policy(VideoConference::class, VideoConferencePolicy::class);
+        Gate::policy(Portfolio::class, PortfolioPolicy::class);
+        Gate::policy(StudySession::class, StudySessionPolicy::class);
+        Gate::policy(LearningPath::class, LearningPathPolicy::class);
+        Gate::policy(ProgressReport::class, ProgressReportPolicy::class);
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }

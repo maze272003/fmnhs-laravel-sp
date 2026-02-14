@@ -57,15 +57,15 @@ Route::get('/', function () {
 
 // Authentication Routes
 Route::get('/student/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/student/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/student/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.login');
-Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.login.submit');
+Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->middleware('throttle:5,1')->name('teacher.login.submit');
 Route::post('/teacher/logout', [TeacherAuthController::class, 'logout'])->name('teacher.logout');
 
 Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1')->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
 // Public Meeting Join and Room Access
@@ -110,7 +110,7 @@ Route::middleware(['auth:teacher,student'])->group(function () {
     Route::post('/conference/{conference}/join', [ConferenceApiController::class, 'recordJoin']);
     Route::post('/conference/{conference}/leave', [ConferenceApiController::class, 'recordLeave']);
 
-    Route::prefix('api')->group(function () {
+    Route::prefix('api')->middleware('throttle:60,1')->group(function () {
         Route::post('/conference/{conference}/messages', [ConferenceApiController::class, 'storeMessage']);
         Route::post('/conference/{conference}/files', [ConferenceApiController::class, 'uploadFile']);
         Route::get('/conference/{conference}/messages', [ConferenceApiController::class, 'getMessages']);
@@ -282,6 +282,7 @@ Route::middleware(['auth:admin'])->group(function () {
     // ADMIN: Parent Management
     Route::get('/admin/parents', [AdminParentController::class, 'index'])->name('admin.parents.index');
     Route::post('/admin/parents', [AdminParentController::class, 'store'])->name('admin.parents.store');
+    Route::get('/admin/parents/{parent}', [AdminParentController::class, 'show'])->name('admin.parents.show');
     Route::put('/admin/parents/{id}', [AdminParentController::class, 'update'])->name('admin.parents.update');
     Route::delete('/admin/parents/{id}', [AdminParentController::class, 'destroy'])->name('admin.parents.destroy');
 
@@ -299,12 +300,13 @@ Route::middleware(['auth:parent'])->group(function () {
     Route::get('/parent/children/{id}/attendance', [ParentDashboardController::class, 'attendance'])->name('parent.children.attendance');
     Route::get('/parent/children/{id}/schedule', [ParentDashboardController::class, 'schedule'])->name('parent.children.schedule');
     Route::get('/parent/children/{id}/assignments', [ParentDashboardController::class, 'assignments'])->name('parent.children.assignments');
+    Route::get('/parent/messages', [ParentDashboardController::class, 'messages'])->name('parent.messages');
     Route::post('/parent/messages', [ParentDashboardController::class, 'sendMessage'])->name('parent.messages.send');
 });
 
 // Parent Login
 Route::get('/parent/login', [ParentAuthController::class, 'showLoginForm'])->name('parent.login');
-Route::post('/parent/login', [ParentAuthController::class, 'login'])->name('parent.login.submit');
+Route::post('/parent/login', [ParentAuthController::class, 'login'])->middleware('throttle:5,1')->name('parent.login.submit');
 Route::post('/parent/logout', [ParentAuthController::class, 'logout'])->name('parent.logout');
 
 // Extended Student Routes
@@ -347,6 +349,7 @@ Route::middleware(['auth:teacher'])->group(function () {
     // Seating Arrangements
     Route::get('/teacher/seating', [SeatingController::class, 'index'])->name('teacher.seating.index');
     Route::post('/teacher/seating', [SeatingController::class, 'store'])->name('teacher.seating.store');
+    Route::get('/teacher/seating/{arrangement}', [SeatingController::class, 'show'])->name('teacher.seating.show');
     Route::put('/teacher/seating/{id}', [SeatingController::class, 'update'])->name('teacher.seating.update');
     Route::post('/teacher/seating/{id}/auto-arrange', [SeatingController::class, 'autoArrange'])->name('teacher.seating.auto-arrange');
 
@@ -357,15 +360,28 @@ Route::middleware(['auth:teacher'])->group(function () {
     Route::post('/teacher/bulk/email', [BulkActionController::class, 'sendBulkEmail'])->name('teacher.bulk.email');
 });
 
-// Extended API Routes for Conference Features
+/*
+|--------------------------------------------------------------------------
+| Extended API Routes for Conference Features
+|--------------------------------------------------------------------------
+|
+| These routes use shared middleware `auth:teacher,student` so both roles
+| can access them. Controllers MUST perform explicit guard checks
+| (e.g. Auth::guard('teacher')->check()) to enforce role-specific
+| permissions where needed. Teacher-only actions include: creating/ending
+| breakout rooms, managing presentations, creating/ending games, and
+| viewing intervention alerts. Student-facing actions (study groups,
+| forums, portfolio, study sessions, learning paths) may remain shared.
+|
+*/
 Route::middleware(['auth:teacher,student'])->group(function () {
-    Route::prefix('api')->group(function () {
-        // Whiteboard
+    Route::prefix('api')->middleware('throttle:60,1')->group(function () {
+        // Whiteboard (shared — both roles collaborate)
         Route::post('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'save']);
         Route::get('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'load']);
         Route::delete('/conference/{conference}/whiteboard', [WhiteboardApiController::class, 'clear']);
 
-        // Breakout Rooms
+        // Breakout Rooms (controllers must enforce teacher-only for create/end actions)
         Route::get('/conference/{conference}/breakout-rooms', [BreakoutRoomApiController::class, 'index']);
         Route::post('/conference/{conference}/breakout-rooms', [BreakoutRoomApiController::class, 'store']);
         Route::post('/conference/{conference}/breakout-rooms/auto-assign', [BreakoutRoomApiController::class, 'autoAssign']);
@@ -373,25 +389,25 @@ Route::middleware(['auth:teacher,student'])->group(function () {
         Route::post('/conference/{conference}/breakout-rooms/{id}/leave', [BreakoutRoomApiController::class, 'leave']);
         Route::post('/conference/{conference}/breakout-rooms/end-all', [BreakoutRoomApiController::class, 'endAll']);
 
-        // Mood/Feedback
+        // Mood/Feedback (shared)
         Route::post('/conference/{conference}/mood', [ConferenceMoodApiController::class, 'store']);
         Route::get('/conference/{conference}/mood/aggregate', [ConferenceMoodApiController::class, 'aggregate']);
 
-        // Games
+        // Games (controllers must enforce teacher-only for create/end actions)
         Route::post('/conference/{conference}/games', [GameApiController::class, 'store']);
         Route::post('/conference/{conference}/games/{id}/score', [GameApiController::class, 'submitScore']);
         Route::post('/conference/{conference}/games/{id}/end', [GameApiController::class, 'end']);
 
-        // Captions
+        // Captions (shared — read-only)
         Route::get('/conference/{conference}/captions', [CaptionApiController::class, 'index']);
         Route::get('/conference/{conference}/captions/search', [CaptionApiController::class, 'search']);
 
-        // Presentations
+        // Presentations (controllers must enforce teacher-only for store)
         Route::post('/conference/{conference}/presentations', [PresentationApiController::class, 'store']);
         Route::get('/conference/{conference}/presentations/{id}', [PresentationApiController::class, 'show']);
         Route::get('/conference/{conference}/presentations/{id}/slides/{slide}/analytics', [PresentationApiController::class, 'slideAnalytics']);
 
-        // Study Groups & Forum
+        // Study Groups & Forum (shared)
         Route::get('/study-groups', [StudyGroupApiController::class, 'index']);
         Route::post('/study-groups', [StudyGroupApiController::class, 'store']);
         Route::post('/study-groups/{id}/join', [StudyGroupApiController::class, 'join']);
@@ -399,25 +415,25 @@ Route::middleware(['auth:teacher,student'])->group(function () {
         Route::post('/forums/threads', [ForumApiController::class, 'storeThread']);
         Route::post('/forums/threads/{id}/posts', [ForumApiController::class, 'storePost']);
 
-        // Learning Paths
+        // Learning Paths (shared)
         Route::get('/learning-paths', [LearningPathApiController::class, 'index']);
         Route::post('/learning-paths/{id}/progress', [LearningPathApiController::class, 'updateProgress']);
 
-        // Portfolio
+        // Portfolio (shared)
         Route::get('/portfolio', [PortfolioApiController::class, 'index']);
         Route::post('/portfolio/items', [PortfolioApiController::class, 'storeItem']);
 
-        // Study Sessions
+        // Study Sessions (shared)
         Route::post('/study-sessions', [StudySessionApiController::class, 'start']);
         Route::post('/study-sessions/{id}/end', [StudySessionApiController::class, 'end']);
 
-        // Intervention Alerts
+        // Intervention Alerts (controllers must enforce teacher-only)
         Route::get('/intervention-alerts', [InterventionAlertApiController::class, 'index']);
 
-        // Content Recommendations
+        // Content Recommendations (shared)
         Route::get('/recommendations', [ContentRecommendationApiController::class, 'index']);
 
-        // AI Assistant
+        // AI Assistant (shared)
         Route::post('/ai-assistant/chat', [AIAssistantApiController::class, 'chat']);
         Route::get('/ai-assistant/history', [AIAssistantApiController::class, 'history']);
     });

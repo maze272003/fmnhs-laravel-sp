@@ -19,6 +19,7 @@ class Schedule extends Model
         'room',
         'room_id',
         'school_year',
+        'school_year_id',
     ];
 
     public function section() { return $this->belongsTo(Section::class); }

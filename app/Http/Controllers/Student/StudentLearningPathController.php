@@ -7,6 +7,7 @@ use App\Models\LearningPath;
 use App\Models\StudentPathProgress;
 use App\Services\AdaptiveLearningService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class StudentLearningPathController extends Controller
@@ -49,5 +50,25 @@ class StudentLearningPathController extends Controller
         $progress = $this->adaptiveLearningService->getProgress($student, $path);
 
         return view('student.learning-paths.progress', compact('path', 'progress'));
+    }
+
+    /**
+     * Update progress on a learning path.
+     */
+    public function updateProgress(LearningPath $path): RedirectResponse
+    {
+        $student = Auth::guard('student')->user();
+
+        try {
+            $this->adaptiveLearningService->adjustDifficulty($student, $path);
+
+            return redirect()
+                ->route('student.learning-path.progress', $path)
+                ->with('success', 'Learning path progress updated.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to update progress: '.$e->getMessage());
+        }
     }
 }

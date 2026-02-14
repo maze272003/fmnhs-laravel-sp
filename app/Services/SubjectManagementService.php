@@ -38,4 +38,14 @@ class SubjectManagementService
     {
         return $this->subjects->restoreById($id);
     }
+
+    public function delete(int $id): void
+    {
+        $this->subjects->deleteById($id);
+    }
+
+    public function forceDelete(int $id): void
+    {
+        $this->subjects->forceDeleteById($id);
+    }
 }

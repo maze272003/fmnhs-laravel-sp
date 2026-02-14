@@ -12,6 +12,30 @@ use Illuminate\Support\Facades\Auth;
 class ForumApiController extends Controller
 {
     /**
+     * List forum threads (delegates to threads).
+     */
+    public function index(Request $request): JsonResponse
+    {
+        return $this->threads($request);
+    }
+
+    /**
+     * Store a new forum thread (delegates to createThread).
+     */
+    public function storeThread(Request $request): JsonResponse
+    {
+        return $this->createThread($request);
+    }
+
+    /**
+     * Store a post in a thread (delegates to createPost).
+     */
+    public function storePost(Request $request, ForumThread $thread): JsonResponse
+    {
+        return $this->createPost($request, $thread);
+    }
+
+    /**
      * List forum threads.
      */
     public function threads(Request $request): JsonResponse

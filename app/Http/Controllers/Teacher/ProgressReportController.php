@@ -53,7 +53,7 @@ class ProgressReportController extends Controller
             );
 
             return redirect()
-                ->route('teacher.reports.preview', $report)
+                ->route('teacher.progress-reports.show', $report)
                 ->with('success', 'Report generated successfully.');
         } catch (\Exception $e) {
             return redirect()
@@ -100,12 +100,43 @@ class ProgressReportController extends Controller
             $this->reportService->scheduleReports($teacher, $validated['frequency']);
 
             return redirect()
-                ->route('teacher.reports.index')
+                ->route('teacher.progress-reports.index')
                 ->with('success', 'Report schedule created successfully.');
         } catch (\Exception $e) {
             return redirect()
                 ->back()
                 ->with('error', 'Failed to schedule report: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Show a progress report.
+     */
+    public function show(ProgressReport $report): View
+    {
+        return $this->preview($report);
+    }
+
+    /**
+     * Send a progress report.
+     */
+    public function send(Request $request, ProgressReport $report): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipients' => ['required', 'array'],
+            'recipients.*' => ['string', 'email'],
+        ]);
+
+        try {
+            $this->reportService->sendReport($report, $validated['recipients']);
+
+            return redirect()
+                ->route('teacher.progress-reports.index')
+                ->with('success', 'Report sent successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to send report: '.$e->getMessage());
         }
     }
 }

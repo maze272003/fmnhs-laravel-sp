@@ -121,6 +121,25 @@ class PresentationApiController extends Controller
     }
 
     /**
+     * Get analytics for a specific slide.
+     */
+    public function slideAnalytics(Presentation $presentation, Slide $slide): JsonResponse
+    {
+        try {
+            $analytics = $this->presentationService->getEngagementAnalytics(
+                (string) $presentation->id
+            );
+
+            $slideData = collect($analytics['slide_engagement'])
+                ->firstWhere('slide_id', $slide->id);
+
+            return response()->json($slideData ?? ['message' => 'No analytics found for this slide.']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
      * Get presentation analytics.
      */
     public function analytics(Presentation $presentation): JsonResponse

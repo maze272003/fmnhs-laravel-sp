@@ -95,4 +95,35 @@ class SeatingController extends Controller
 
         return view('teacher.seating.print', compact('arrangement'));
     }
+
+    /**
+     * Update a seating arrangement.
+     */
+    public function update(Request $request, SeatingArrangement $arrangement): RedirectResponse
+    {
+        $validated = $request->validate([
+            'section_id' => ['required', 'exists:sections,id'],
+            'room_id' => ['nullable', 'exists:rooms,id'],
+        ]);
+
+        try {
+            $arrangement->update($validated);
+
+            return redirect()
+                ->route('teacher.seating.show', $arrangement)
+                ->with('success', 'Seating arrangement updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to update arrangement: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Auto-arrange a seating arrangement.
+     */
+    public function autoArrange(SeatingArrangement $arrangement): RedirectResponse
+    {
+        return $this->optimize($arrangement);
+    }
 }

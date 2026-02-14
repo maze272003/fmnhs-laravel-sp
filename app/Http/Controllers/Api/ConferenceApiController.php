@@ -56,7 +56,7 @@ class ConferenceApiController extends Controller
         $this->authorizeAccess($conference);
 
         $request->validate([
-            'file' => ['required', 'file', 'max:20480'], // 20MB max
+            'file' => ['required', 'file', 'max:20480', 'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,jpg,jpeg,png,gif,mp4,mp3,wav,webm,ogg'], // 20MB max
         ]);
 
         $file = $request->file('file');
