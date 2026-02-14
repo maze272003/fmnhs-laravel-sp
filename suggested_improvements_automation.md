@@ -170,6 +170,7 @@ Create:
 
 * [ ] Convert all views to extend role-specific layout
 
+* [ ] all pages have a action most have a modal validation for confirmation optional use the reusable if need for maximize the code quality structure
 ---
 
 ### Parent Feature Completion
@@ -303,7 +304,111 @@ Create policies for:
 
 * [ ] Include reCAPTCHA partial in all login pages
 
----
+# 🔐 7. Code Cleanup & Simplification
+
+* [ ] Remove unused controllers, services, models, helpers, and middleware
+* [ ] Remove unused routes (web + api)
+* [ ] Remove unused Blade views and components
+* [ ] Remove unused JS/CSS assets
+* [ ] Remove unused migrations or abandoned schema columns
+* [ ] Remove dead feature flags and commented legacy code
 
 ---
+
+## ♻️ Reuse & Refactor Repeated Logic
+
+* [ ] Extract duplicated controller logic into reusable Services
+* [ ] Move repeated DB queries into Repository / Query classes
+* [ ] Create shared FormRequest validation classes for repeated validation rules
+* [ ] Move repeated file upload logic into a single UploadService
+* [ ] Move repeated PDF/export logic into a dedicated ExportService
+* [ ] Create reusable Notification service instead of inline notification code
+* [ ] Centralize API response format (success/error JSON helper)
+
+---
+
+## 🧱 Controller & Route Simplification
+
+* [ ] Convert fat controllers into Service-based architecture
+* [ ] Remove duplicate endpoints performing same action
+* [ ] Standardize REST naming (index/show/store/update/destroy)
+* [ ] Group routes by role (`student`, `teacher`, `admin`, `parent`)
+* [ ] Remove controller methods not used by any route
+
+---
+
+## 🗃️ Model Cleanup
+
+* [ ] Remove unused relationships in models
+* [ ] Remove unused `$fillable` or `$casts` entries
+* [ ] Remove legacy accessors/mutators not used
+* [ ] Standardize timestamps and soft delete usage
+* [ ] Move heavy logic from models into Services
+
+---
+
+## 🎯 Blade / Frontend Cleanup
+
+* [ ] Extract repeated UI into Blade components
+* [ ] Extract repeated tables into reusable table component
+* [ ] Extract repeated forms into partials
+* [ ] Remove inline JS duplicated across pages
+* [ ] Move shared scripts into global JS file
+* [ ] Standardize flash message component
+* [ ] Standardize modal component usage
+
+---
+
+## ⚙️ Laravel Best Practice Improvements
+
+* [ ] Replace manual validation with FormRequest classes
+* [ ] Replace inline authorization checks with Policies
+* [ ] Replace repeated `Auth::user()` role checks with middleware
+* [ ] Replace hardcoded config values with config files
+* [ ] Replace inline env() calls outside config with config()
+
+---
+
+## 🧹 Performance & Query Cleanup
+
+* [ ] Remove N+1 queries using eager loading
+* [ ] Replace repeated joins with reusable scopes
+* [ ] Cache heavy dashboard queries
+* [ ] Add indexes for frequently filtered columns
+* [ ] Remove debug logs in production
+
+---
+
+## 🔎 Naming & Structure Consistency
+
+* [ ] Standardize naming conventions (singular vs plural)
+* [ ] Align folder structure per role module
+* [ ] Rename unclear classes to descriptive names
+* [ ] Remove duplicate utility/helper functions
+
+---
+
+## 🧪 Safety Before Removing Anything
+
+* [ ] Search usage before deleting files (`global search`)
+* [ ] Check routes referencing the file
+* [ ] Check Blade includes referencing the file
+* [ ] Check Service container bindings
+* [ ] Run full test suite after cleanup
+
+---
+
+## 🚀 Optional Advanced Cleanup (Recommended for Large SIS)
+
+* [ ] Introduce BaseController for shared logic
+* [ ] Introduce BaseRepository pattern for DB access
+* [ ] Introduce BaseService pattern
+* [ ] Add shared trait for pagination/filter logic
+* [ ] Add shared trait for activity logging
+* [ ] Introduce centralized Exception Handler responses
+* [ ] Introduce unified API Resource transformers
+
+---
+
+
 
