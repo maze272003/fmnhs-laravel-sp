@@ -10,7 +10,6 @@ RUN npm run build
 FROM php:8.3-fpm-alpine
 
 # Install system dependencies
-# Cleaned up formatting to remove invisible spaces
 RUN apk add --no-cache \
     nginx \
     supervisor \
@@ -23,11 +22,19 @@ RUN apk add --no-cache \
     git \
     oniguruma-dev \
     mariadb-client \
-    linux-headers
+    linux-headers \
+    $PHPIZE_DEPS
 
 # Install PHP extensions
 # 'pcntl' is REQUIRED for WebSocket servers to run correctly
 RUN docker-php-ext-install pdo_mysql mbstring bcmath gd pcntl opcache
+
+# Install + enable phpredis (Fix: Class "Redis" not found)
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# Remove build deps (optional but recommended to reduce image size)
+RUN apk del $PHPIZE_DEPS
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
