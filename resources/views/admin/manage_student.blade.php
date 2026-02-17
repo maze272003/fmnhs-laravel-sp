@@ -28,7 +28,7 @@
     {{-- 3. MAIN CONTENT WRAPPER --}}
     {{-- Adjusted margins to fit your specific sidebar width (md:ml-20 for tablet icon view, lg:ml-64 for full view) --}}
     <div id="main-content" class="flex flex-col min-h-screen transition-all duration-300 md:ml-20 lg:ml-64">
-        
+
         {{-- HEADER --}}
         <header class="bg-white sticky top-0 z-30 px-8 py-4 flex justify-between items-center border-b border-slate-200">
             <div class="flex items-center gap-4">
@@ -52,7 +52,7 @@
 
         {{-- MAIN BODY --}}
         <main class="flex-1 p-8 flex gap-8 overflow-hidden">
-            
+
             {{-- LEFT COLUMN: Sections Filter --}}
             <aside class="hidden xl:flex flex-col w-72 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden h-[calc(100vh-140px)] sticky top-24">
                 <div class="p-5 border-b border-slate-50 bg-slate-50">
@@ -71,7 +71,7 @@
                         </div>
                         @foreach($sections as $sec)
                             @php $isActive = (isset($activeSection) && $activeSection->id == $sec->id); @endphp
-                            <a href="{{ route('admin.students.index', ['section_id' => $sec->id]) }}" 
+                            <a href="{{ route('admin.students.index', ['section_id' => $sec->id]) }}"
                                class="flex items-center justify-between p-3 rounded-xl transition-all group {{ $isActive ? 'bg-white border border-indigo-100 shadow-md shadow-indigo-50' : 'hover:bg-slate-50' }}">
                                 <span class="text-sm font-bold {{ $isActive ? 'text-slate-800' : 'text-slate-500' }}">{{ $sec->name }}</span>
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded {{ $isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-400' }}">{{ $sec->students_count }}</span>
@@ -175,7 +175,22 @@
                             <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">First Name</label><input type="text" name="first_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
                             <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Last Name</label><input type="text" name="last_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
                         </div>
-                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">LRN</label><input type="number" name="lrn" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
+                        <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                            LRN
+                        </label>
+
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            pattern="\d{11}"
+                            maxlength="11"
+                            required
+                            oninput="this.value = this.value.replace(/\D/g,'').slice(0,11)"
+                            class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"
+                        >
+                        </div>
+
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" name="email" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -252,10 +267,10 @@
                     </div>
                     <button onclick="closeModal('promoteModal')" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                
+
                 <form action="{{ route('admin.students.promote') }}" method="POST" class="p-6 overflow-y-auto custom-scrollbar">
                     @csrf
-                    
+
                     {{-- Student Checklist --}}
                     <div class="mb-4">
                         <div class="flex justify-between items-center mb-2">
