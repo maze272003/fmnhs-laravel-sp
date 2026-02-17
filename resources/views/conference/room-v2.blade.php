@@ -1675,7 +1675,7 @@ function toggleDarkMode(dark) {
     app.classList.toggle('dark-mode', dark);
     const icon = themeToggleBtn?.querySelector('i');
     if (icon) icon.className = dark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
-    document.querySelector('meta[name="theme-color"]').content = dark ? '#020617' : '#f8fafc';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#020617' : '#f8fafc');
     setTimeout(() => app.classList.remove('theme-transitioning'), 450);
 }
 
