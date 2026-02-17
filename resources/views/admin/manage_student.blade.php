@@ -179,16 +179,21 @@
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                                 LRN
                             </label>
+
                             <input
+                                id="lrnInput"
                                 type="text"
                                 name="lrn"
                                 inputmode="numeric"
-                                pattern="\d{12}"
                                 maxlength="12"
                                 required
-                                oninput="this.value = this.value.replace(/\D/g,'').slice(0,11)"
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"
+                                oninput="validateLRN(this)"
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold transition-all"
                             >
+
+                            <p id="lrnError" class="text-xs text-rose-500 mt-1 hidden font-semibold">
+                                LRN must be exactly 12 digits.
+                            </p>
                         </div>
 
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" name="email" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
@@ -355,5 +360,24 @@
             checkboxes.forEach(cb => cb.checked = source.checked);
         }
     </script>
+    <script>
+function validateLRN(input) {
+    // remove non-digits
+    input.value = input.value.replace(/\D/g, '').slice(0, 12);
+
+    const errorText = document.getElementById('lrnError');
+
+    if (input.value.length > 0 && input.value.length < 12) {
+        input.classList.remove('border-slate-200');
+        input.classList.add('border-rose-500', 'ring-1', 'ring-rose-300');
+        errorText.classList.remove('hidden');
+    } else {
+        input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-300');
+        input.classList.add('border-slate-200');
+        errorText.classList.add('hidden');
+    }
+}
+</script>
+
 </body>
 </html>
