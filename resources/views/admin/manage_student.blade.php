@@ -175,22 +175,7 @@
                             <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">First Name</label><input type="text" name="first_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
                             <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Last Name</label><input type="text" name="last_name" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
                         </div>
-                        <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">
-                            LRN
-                        </label>
-
-                        <input
-                            type="text"
-                            inputmode="numeric"
-                            pattern="\d{11}"
-                            maxlength="11"
-                            required
-                            oninput="this.value = this.value.replace(/\D/g,'').slice(0,11)"
-                            class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"
-                        >
-                        </div>
-
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">LRN</label><input type="number" maxlength="12" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" name="email" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold"></div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
