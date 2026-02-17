@@ -727,8 +727,7 @@
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
 
-        /* GPU optimization for animations */
-        .video-tile, .conf-sidebar, .command-center, .fullscreen-overlay { will-change: transform; }
+        /* GPU optimization for key animations */
         .video-tile--speaking { will-change: box-shadow; }
 
         /* Dark mode */
@@ -1666,7 +1665,16 @@ function setToggle(el, on) {
 // DARK MODE TOGGLE
 // ═══════════════════════════════════════════
 const themeToggleBtn = document.getElementById('theme-toggle');
-let isDarkMode = false;
+let isDarkMode = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+
+if (isDarkMode) {
+    document.getElementById('app').classList.add('dark-mode');
+    if (themeToggleBtn) {
+        const icon = themeToggleBtn.querySelector('i');
+        if (icon) icon.className = 'fa-solid fa-moon';
+    }
+    if (dom.toggleTheme) setToggle(dom.toggleTheme, true);
+}
 
 function toggleDarkMode(dark) {
     isDarkMode = dark;
@@ -1676,7 +1684,7 @@ function toggleDarkMode(dark) {
     const icon = themeToggleBtn?.querySelector('i');
     if (icon) icon.className = dark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#020617' : '#f8fafc');
-    setTimeout(() => app.classList.remove('theme-transitioning'), 450);
+    setTimeout(() => app.classList.remove('theme-transitioning'), 400);
 }
 
 if (themeToggleBtn) {
