@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#020617">
+    <meta name="theme-color" content="#f8fafc">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>{{ $conference->title }} | Live Room</title>
     @vite('resources/css/app.css')
@@ -18,14 +18,14 @@
         :root {
             --brand: {{ $conference->branding_color ?? '#10b981' }};
             --brand-glow: {{ $conference->branding_color ?? '#10b981' }}33;
-            --surface-0: #020617;
-            --surface-1: #0f172a;
-            --surface-2: #1e293b;
-            --surface-3: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border: rgba(51, 65, 85, 0.5);
+            --surface-0: #f8fafc;
+            --surface-1: #ffffff;
+            --surface-2: #f1f5f9;
+            --surface-3: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: rgba(148, 163, 184, 0.3);
             --spring: cubic-bezier(0.22, 1, 0.36, 1);
             --smooth: cubic-bezier(0.4, 0, 0.2, 1);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -59,7 +59,7 @@
             gap: 0.5rem;
             padding: 0.5rem 0.75rem;
             padding-top: calc(0.5rem + var(--safe-top));
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px) saturate(1.2);
             -webkit-backdrop-filter: blur(20px) saturate(1.2);
             border-bottom: 1px solid var(--border);
@@ -122,7 +122,7 @@
 
         /* Spotlight mode: screen share dominant */
         .video-grid--spotlight {
-            grid-template-columns: 1fr 220px !important;
+            grid-template-columns: 1fr 240px !important;
             grid-template-rows: 1fr !important;
         }
         .video-grid--spotlight .video-tile--screen {
@@ -138,6 +138,45 @@
             overflow-x: hidden;
         }
 
+        /* Presenter banner */
+        .presenter-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            background: linear-gradient(90deg, rgba(79, 70, 229, 0.1), rgba(99, 102, 241, 0.05));
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            animation: banner-slide-in 350ms var(--spring);
+        }
+        .dark-mode .presenter-banner { background: linear-gradient(90deg, rgba(79, 70, 229, 0.15), rgba(99, 102, 241, 0.05)); }
+        .presenter-banner i { color: #6366f1; }
+        .presenter-banner .presenter-name { font-weight: 700; color: var(--text-primary); }
+        .presenter-banner.hidden { display: none; }
+        @keyframes banner-slide-in { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobile collapsible strip for screen share */
+        .mobile-strip-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            padding: 0.375rem;
+            background: var(--surface-1);
+            border-top: 1px solid var(--border);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .mobile-strip-toggle i { font-size: 0.5rem; transition: transform 200ms var(--spring); }
+        .mobile-strip-toggle.collapsed i { transform: rotate(180deg); }
+
         /* ---- Video Tile ---- */
         .video-tile {
             position: relative;
@@ -146,10 +185,37 @@
             background: var(--surface-1);
             border: 1px solid var(--border);
             min-height: 0;
-            transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms var(--spring);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms var(--spring), opacity 350ms var(--spring);
+            animation: tile-enter 400ms var(--spring) both;
         }
-        .video-tile:hover { border-color: rgba(99, 102, 241, 0.3); }
-        .video-tile--speaking { border-color: #10b981 !important; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25); }
+        .dark-mode .video-tile { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15); }
+        .video-tile:hover { border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+        .dark-mode .video-tile:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); }
+        .video-tile--exiting { animation: tile-exit 300ms var(--smooth) forwards; }
+        @keyframes tile-enter { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+        @keyframes tile-exit { to { opacity: 0; transform: scale(0.92); } }
+
+        /* Skeleton loading state */
+        .video-tile--loading::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s ease-in-out infinite;
+            z-index: 1;
+        }
+        @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .video-tile--speaking {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25), 0 0 16px rgba(16, 185, 129, 0.15);
+            animation: speaker-pulse 2s ease-in-out infinite;
+        }
+        @keyframes speaker-pulse {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25), 0 0 16px rgba(16, 185, 129, 0.1); }
+            50% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4), 0 0 24px rgba(16, 185, 129, 0.2); }
+        }
         .video-tile--screen {
             border: 2px solid rgba(99, 102, 241, 0.5);
             box-shadow: 0 0 30px rgba(99, 102, 241, 0.15);
@@ -402,7 +468,7 @@
             gap: 0.25rem;
             padding: 0.5rem 0.5rem;
             padding-bottom: calc(0.5rem + var(--safe-bottom));
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(20px) saturate(1.2);
             -webkit-backdrop-filter: blur(20px) saturate(1.2);
             border-top: 1px solid var(--border);
@@ -456,7 +522,7 @@
         }
         .toast {
             padding: 0.5rem 1rem;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(12px);
             border: 1px solid var(--border);
             border-radius: 0.625rem;
@@ -594,16 +660,44 @@
         .participant-action:hover { background: var(--brand); color: #fff; }
         .participant-action--danger:hover { background: #dc2626; }
 
-        /* ========== MOBILE RESPONSIVE ========== */
-        @media (max-width: 639px) {
-            .conf-topbar__title { max-width: 120px; font-size: 0.75rem; }
-            .video-grid { gap: 0.25rem; padding: 0.25rem; }
+        /* ========== MOBILE RESPONSIVE (Mobile-First) ========== */
+        @media (max-width: 479px) {
+            .conf-topbar__title { max-width: 100px; font-size: 0.6875rem; }
+            .video-grid { gap: 0.1875rem; padding: 0.1875rem; }
             .video-grid[data-count="2"] { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+            .video-grid[data-count="3"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; }
+            .video-grid[data-count="4"] { grid-template-columns: 1fr 1fr; }
+            .video-grid[data-count="5"],
+            .video-grid[data-count="6"],
+            .video-grid[data-count="7"],
+            .video-grid[data-count="8"],
+            .video-grid[data-count="9"] { grid-template-columns: 1fr 1fr; }
+            .video-grid--spotlight { grid-template-columns: 1fr !important; grid-template-rows: 1fr auto !important; }
+            .video-grid--spotlight .video-grid__sidebar { flex-direction: row; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
+            .video-grid--spotlight .video-grid__sidebar .video-tile { min-width: 100px; min-height: 75px; flex-shrink: 0; scroll-snap-align: start; }
+            .mobile-strip-toggle { display: flex; }
+            .video-tile { border-radius: 0.5rem; }
+            .video-tile__avatar-circle { width: 2.5rem; height: 2.5rem; font-size: 1rem; }
+            .video-tile__label { font-size: 0.625rem; padding: 0.125rem 0.375rem; }
+            .tb-btn { min-width: 2.625rem; height: 2.625rem; font-size: 0; gap: 0; padding: 0.1875rem; }
+            .tb-btn i { font-size: 1rem; }
+            .conf-toolbar { gap: 0.1875rem; padding: 0.375rem 0.25rem; padding-bottom: calc(0.375rem + var(--safe-bottom)); }
+            .conf-sidebar { width: 100%; max-width: 100%; }
+            .command-center { width: 100%; max-width: 100%; }
+            .annotation-toolbar { bottom: 4rem; transform: translateX(-50%) scale(0.9); }
+            .presenter-banner { font-size: 0.6875rem; padding: 0.25rem 0.5rem; }
+        }
+
+        @media (min-width: 480px) and (max-width: 639px) {
+            .conf-topbar__title { max-width: 140px; font-size: 0.75rem; }
+            .video-grid { gap: 0.25rem; padding: 0.25rem; }
+            .video-grid[data-count="2"] { grid-template-columns: 1fr 1fr; }
             .video-grid[data-count="3"],
             .video-grid[data-count="4"] { grid-template-columns: 1fr 1fr; }
             .video-grid--spotlight { grid-template-columns: 1fr !important; grid-template-rows: 1fr auto !important; }
-            .video-grid--spotlight .video-grid__sidebar { flex-direction: row; overflow-x: auto; }
-            .video-grid--spotlight .video-grid__sidebar .video-tile { min-width: 120px; min-height: 90px; }
+            .video-grid--spotlight .video-grid__sidebar { flex-direction: row; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
+            .video-grid--spotlight .video-grid__sidebar .video-tile { min-width: 120px; min-height: 90px; flex-shrink: 0; scroll-snap-align: start; }
+            .mobile-strip-toggle { display: flex; }
             .video-tile { border-radius: 0.5rem; }
             .video-tile__avatar-circle { width: 3rem; height: 3rem; font-size: 1.25rem; }
             .tb-btn { min-width: 2.75rem; height: 2.75rem; font-size: 0; gap: 0; }
@@ -633,10 +727,21 @@
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
 
-        /* Light mode */
-        .light-mode { --surface-0: #f8fafc; --surface-1: #ffffff; --surface-2: #f1f5f9; --surface-3: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8; --border: rgba(148, 163, 184, 0.4); }
-        .light-mode body { background: var(--surface-0); color: var(--text-primary); }
-        .light-mode .chat-bubble--mine { color: #fff; }
+        /* GPU optimization for animations */
+        .video-tile, .conf-sidebar, .command-center, .fullscreen-overlay { will-change: transform; }
+        .video-tile--speaking { will-change: box-shadow; }
+
+        /* Dark mode */
+        .dark-mode { --surface-0: #020617; --surface-1: #0f172a; --surface-2: #1e293b; --surface-3: #334155; --text-primary: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b; --border: rgba(51, 65, 85, 0.5); }
+        .dark-mode .chat-bubble--mine { color: #fff; }
+        .dark-mode .conf-topbar { background: rgba(15, 23, 42, 0.85); }
+        .dark-mode .conf-toolbar { background: rgba(15, 23, 42, 0.9); }
+        .dark-mode .toast { background: rgba(15, 23, 42, 0.9); }
+
+        /* Theme transition */
+        .theme-transitioning, .theme-transitioning *, .theme-transitioning *::before, .theme-transitioning *::after {
+            transition: background-color 400ms var(--smooth), color 300ms var(--smooth), border-color 300ms var(--smooth), box-shadow 300ms var(--smooth) !important;
+        }
     </style>
     <script>
         /* Fix 100vh on mobile browsers */
@@ -669,8 +774,11 @@
         </div>
 
         <div class="conf-topbar__actions">
-            <span id="meeting-timer" class="text-xs font-mono text-slate-400 mr-1">00:00:00</span>
+            <span id="meeting-timer" class="text-xs font-mono mr-1" style="color:var(--text-muted);">00:00:00</span>
             <span class="badge badge--role">{{ strtoupper($actorRole) }}</span>
+            <button id="theme-toggle" class="tb-btn" style="width:2rem;height:2rem;min-width:2rem;" title="Toggle Dark Mode">
+                <i class="fa-solid fa-sun" style="font-size:0.875rem;"></i>
+            </button>
             <button id="sidebar-toggle" class="tb-btn" style="width:2rem;height:2rem;min-width:2rem;" title="Chat & People">
                 <i class="fa-solid fa-message" style="font-size:0.875rem;"></i>
                 <span id="chat-unread-badge" class="tb-badge hidden">0</span>
@@ -736,6 +844,10 @@
 
         {{-- Video Area --}}
         <div class="conf-stage__video-area">
+            <div id="presenter-banner" class="presenter-banner hidden">
+                <i class="fa-solid fa-display"></i>
+                <span><span id="presenter-name" class="presenter-name"></span> is presenting</span>
+            </div>
             <div id="video-grid" class="video-grid" data-count="1">
                 {{-- Local Video Tile --}}
                 <div id="local-tile" class="video-tile video-tile--local">
@@ -1551,6 +1663,47 @@ function setToggle(el, on) {
 }
 
 // ═══════════════════════════════════════════
+// DARK MODE TOGGLE
+// ═══════════════════════════════════════════
+const themeToggleBtn = document.getElementById('theme-toggle');
+let isDarkMode = false;
+
+function toggleDarkMode(dark) {
+    isDarkMode = dark;
+    const app = document.getElementById('app');
+    app.classList.add('theme-transitioning');
+    app.classList.toggle('dark-mode', dark);
+    const icon = themeToggleBtn?.querySelector('i');
+    if (icon) icon.className = dark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+    document.querySelector('meta[name="theme-color"]').content = dark ? '#020617' : '#f8fafc';
+    setTimeout(() => app.classList.remove('theme-transitioning'), 450);
+}
+
+if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+        toggleDarkMode(!isDarkMode);
+        if (dom.toggleTheme) setToggle(dom.toggleTheme, isDarkMode);
+    });
+}
+
+// ═══════════════════════════════════════════
+// PRESENTER BANNER
+// ═══════════════════════════════════════════
+const presenterBanner = document.getElementById('presenter-banner');
+const presenterNameEl = document.getElementById('presenter-name');
+
+function showPresenterBanner(name) {
+    if (!presenterBanner || !presenterNameEl) return;
+    presenterNameEl.textContent = name;
+    presenterBanner.classList.remove('hidden');
+}
+
+function hidePresenterBanner() {
+    if (!presenterBanner) return;
+    presenterBanner.classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════
 // CONFERENCE APP INIT
 // ═══════════════════════════════════════════
 const app = new ConferenceApp({
@@ -1588,9 +1741,12 @@ const app = new ConferenceApp({
         },
         getPeerStream: (peerId) => peerStreams.get(peerId),
         onPeerRemoved: (peerId) => {
-            document.getElementById(`tile-${peerId}`)?.remove();
+            const tile = document.getElementById(`tile-${peerId}`);
+            if (tile) {
+                tile.classList.add('video-tile--exiting');
+                setTimeout(() => { tile.remove(); updateGridLayout(); }, 300);
+            }
             peerStreams.delete(peerId);
-            updateGridLayout();
         },
 
         onRemoteScreenShare: (peerId, stream, name) => {
@@ -1601,6 +1757,7 @@ const app = new ConferenceApp({
             screenShareSrc = 'remote';
             updateGridLayout();
             syncAnnotCanvasSize(dom.annotCanvas);
+            showPresenterBanner(name);
             toast(`${name} is sharing their screen. Double-click to view full screen.`, 'success');
         },
         onRemoteScreenShareStopped: () => {
@@ -1608,6 +1765,7 @@ const app = new ConferenceApp({
             dom.screenVideo.srcObject = null;
             screenShareSrc = null;
             updateGridLayout();
+            hidePresenterBanner();
             if (isScreenFull) exitFullScreen();
         },
         onLocalScreenShareStarted: (stream) => {
@@ -1618,6 +1776,7 @@ const app = new ConferenceApp({
             screenShareSrc = 'local';
             updateGridLayout();
             syncAnnotCanvasSize(dom.annotCanvas);
+            showPresenterBanner('You');
             dom.btnScreen.classList.add('tb-btn--danger');
             dom.btnScreen.classList.remove('tb-btn--screen');
             dom.btnScreen.querySelector('span').textContent = 'Stop';
@@ -1627,6 +1786,7 @@ const app = new ConferenceApp({
             dom.screenVideo.srcObject = null;
             screenShareSrc = null;
             updateGridLayout();
+            hidePresenterBanner();
             if (isScreenFull) exitFullScreen();
             dom.btnScreen.classList.remove('tb-btn--danger');
             dom.btnScreen.classList.add('tb-btn--screen');
@@ -1782,7 +1942,7 @@ dom.toggleSounds?.addEventListener('click', () => {
 dom.toggleTheme?.addEventListener('click', () => {
     const on = dom.toggleTheme.dataset.on !== '1';
     setToggle(dom.toggleTheme, on);
-    document.getElementById('app').classList.toggle('light-mode', !on);
+    toggleDarkMode(on);
 });
 
 // Attention
