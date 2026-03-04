@@ -49,6 +49,14 @@ class AttendanceController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+            'section_id' => 'required|exists:sections,id',
+            'date'       => 'required|date',
+            'status'     => 'required|array',
+            'status.*'   => 'required|string|in:present,absent,late,excused',
+        ]);
+
         $teacherId = Auth::guard('teacher')->id();
         $this->teacherAttendance->saveAttendance(
             $teacherId,

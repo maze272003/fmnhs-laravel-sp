@@ -16,6 +16,8 @@
 </head>
 <body class="bg-[#f8fafc] text-slate-800 antialiased">
 
+    @include('components.loader')
+
     @include('components.teacher.sidebar')
 
     <div id="content-wrapper" class="min-h-screen flex flex-col transition-all duration-300 md:ml-20 lg:ml-64">

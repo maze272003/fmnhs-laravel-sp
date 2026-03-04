@@ -26,6 +26,8 @@
 </head>
 <body class="flex flex-col min-h-screen font-sans text-slate-800">
 
+    @include('components.loader')
+
     <nav class="bg-white/90 backdrop-blur-sm shadow-sm border-b border-gray-200 fixed w-full z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">

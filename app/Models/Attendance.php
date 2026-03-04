@@ -13,9 +13,13 @@ class Attendance extends Model
         'student_id', 
         'subject_id', 
         'teacher_id', 
-        'section_id', // Changed from 'section'
+        'section_id',
         'date', 
-        'status'
+        'status',
+    ];
+
+    protected $casts = [
+        'date' => 'date',
     ];
 
     public function section() { return $this->belongsTo(Section::class); }

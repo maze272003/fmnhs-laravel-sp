@@ -4,7 +4,11 @@ use Symfony\Component\Process\Process;
 
 Route::get('/dangerous-db-reset', function () {
 
-    // 1. Security Check
+    // 1. Security Check — block in production entirely
+    if (app()->environment('production')) {
+        abort(403, 'Database reset is disabled in production.');
+    }
+
     if (request()->query('key') !== 'resetdb') {
         abort(403, 'Unauthorized action.');
     }

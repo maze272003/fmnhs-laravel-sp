@@ -29,6 +29,8 @@
 </head>
 <body class="login-bg h-screen flex items-center justify-center p-4">
 
+    @include('components.loader')
+
     <div class="overlay absolute inset-0"></div>
 
     <div class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-white relative z-10 transition-all duration-500">
