@@ -56,12 +56,7 @@ class AdminAnnouncementController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
-        $allowedEmails = [
-            'admin@school.com',
-            'sangbaanstephaniemary@gmail.com',
-        ];
-
-        if (!$admin || !in_array($admin->email, $allowedEmails, true)) {
+        if (!$admin) {
             return back()->with('error', 'You are not authorized to delete this announcement.');
         }
 

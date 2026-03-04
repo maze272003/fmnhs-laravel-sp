@@ -24,15 +24,15 @@ Route::get('/', function () {
 
 // Authentication Routes
 Route::get('/student/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/student/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/student/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.login');
-Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.login.submit');
+Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->middleware('throttle:5,1')->name('teacher.login.submit');
 Route::post('/teacher/logout', [TeacherAuthController::class, 'logout'])->name('teacher.logout');
 
 Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1')->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
 // Public Meeting Join Page (student credentials required)

@@ -16,6 +16,10 @@ class Teacher extends Authenticatable
     protected $fillable = ['employee_id', 'first_name', 'last_name', 'email', 'password', 'department'];
     protected $hidden = ['password', 'remember_token'];
 
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
     // If the teacher is an advisor, this returns their section
     public function advisorySection()
     {
