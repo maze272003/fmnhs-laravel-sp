@@ -28,6 +28,7 @@
     </style>
 </head>
 <body class="login-bg h-screen flex items-center justify-center p-4">
+    @include('components.loader')
 
     <div class="overlay absolute inset-0"></div>
 

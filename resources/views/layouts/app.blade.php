@@ -10,6 +10,7 @@
     @stack('styles')
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 antialiased">
+    @include('components.loader')
 
     @if(session('success'))
         <div class="fixed top-4 right-4 z-[60] bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl shadow-lg" role="alert">

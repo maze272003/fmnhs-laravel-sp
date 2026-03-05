@@ -15,32 +15,39 @@ return new class extends Migration
     public function up(): void
     {
         // Submissions: one submission per student per assignment
-        Schema::table('submissions', function (Blueprint $table) {
-            $table->unique(['assignment_id', 'student_id'], 'submissions_assignment_student_unique');
-        });
+        $this->addUniqueIfMissing(
+            'submissions',
+            ['assignment_id', 'student_id'],
+            'submissions_assignment_student_unique'
+        );
 
         // Attendances: one attendance record per student per subject per date
-        Schema::table('attendances', function (Blueprint $table) {
-            $table->unique(['student_id', 'subject_id', 'date'], 'attendances_student_subject_date_unique');
-        });
+        $this->addUniqueIfMissing(
+            'attendances',
+            ['student_id', 'subject_id', 'date'],
+            'attendances_student_subject_date_unique'
+        );
 
         // Grades: one grade per student per subject per teacher per quarter per school year
-        Schema::table('grades', function (Blueprint $table) {
-            $table->unique(
-                ['student_id', 'subject_id', 'teacher_id', 'quarter', 'school_year_id'],
-                'grades_student_subject_teacher_quarter_year_unique'
-            );
-        });
+        $this->addUniqueIfMissing(
+            'grades',
+            ['student_id', 'subject_id', 'teacher_id', 'quarter', 'school_year_id'],
+            'grades_student_subject_teacher_quarter_year_unique'
+        );
 
         // Parent_Student: one relationship per parent-student pair
-        Schema::table('parent_student', function (Blueprint $table) {
-            $table->unique(['parent_id', 'student_id'], 'parent_student_parent_student_unique');
-        });
+        $this->addUniqueIfMissing(
+            'parent_student',
+            ['parent_id', 'student_id'],
+            'parent_student_parent_student_unique'
+        );
 
         // Study_group_members: one membership per student per group
-        Schema::table('study_group_members', function (Blueprint $table) {
-            $table->unique(['study_group_id', 'student_id'], 'study_group_members_group_student_unique');
-        });
+        $this->addUniqueIfMissing(
+            'study_group_members',
+            ['study_group_id', 'student_id'],
+            'study_group_members_group_student_unique'
+        );
     }
 
     /**
@@ -48,24 +55,49 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('submissions', function (Blueprint $table) {
-            $table->dropUnique('submissions_assignment_student_unique');
-        });
+        $this->dropUniqueIfExists('submissions', 'submissions_assignment_student_unique');
+        $this->dropUniqueIfExists('attendances', 'attendances_student_subject_date_unique');
+        $this->dropUniqueIfExists('grades', 'grades_student_subject_teacher_quarter_year_unique');
+        $this->dropUniqueIfExists('parent_student', 'parent_student_parent_student_unique');
+        $this->dropUniqueIfExists('study_group_members', 'study_group_members_group_student_unique');
+    }
 
-        Schema::table('attendances', function (Blueprint $table) {
-            $table->dropUnique('attendances_student_subject_date_unique');
-        });
+    private function addUniqueIfMissing(string $tableName, array $columns, string $indexName): void
+    {
+        if (! Schema::hasTable($tableName)) {
+            return;
+        }
 
-        Schema::table('grades', function (Blueprint $table) {
-            $table->dropUnique('grades_student_subject_teacher_quarter_year_unique');
-        });
+        foreach ($columns as $column) {
+            if (! Schema::hasColumn($tableName, $column)) {
+                return;
+            }
+        }
 
-        Schema::table('parent_student', function (Blueprint $table) {
-            $table->dropUnique('parent_student_parent_student_unique');
-        });
+        if (
+            Schema::hasIndex($tableName, $indexName, 'unique')
+            || Schema::hasIndex($tableName, $columns, 'unique')
+        ) {
+            return;
+        }
 
-        Schema::table('study_group_members', function (Blueprint $table) {
-            $table->dropUnique('study_group_members_group_student_unique');
+        Schema::table($tableName, function (Blueprint $table) use ($columns, $indexName) {
+            $table->unique($columns, $indexName);
+        });
+    }
+
+    private function dropUniqueIfExists(string $tableName, string $indexName): void
+    {
+        if (! Schema::hasTable($tableName)) {
+            return;
+        }
+
+        if (! Schema::hasIndex($tableName, $indexName, 'unique')) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($indexName) {
+            $table->dropUnique($indexName);
         });
     }
 };

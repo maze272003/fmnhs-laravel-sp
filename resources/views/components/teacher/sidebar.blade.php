@@ -1,3 +1,5 @@
+@include('components.loader')
+
 <div id="overlay" class="fixed inset-0 bg-slate-900 bg-opacity-40 z-40 hidden transition-opacity duration-300"></div>
 
 <nav id="sidebar" class="fixed top-0 left-0 h-full bg-white shadow-xl w-64 p-4 flex flex-col transition-all duration-300 z-50 transform -translate-x-full md:translate-x-0 md:w-20 lg:w-64 border-r border-gray-100">

@@ -1,9 +1,11 @@
+@include('components.loader')
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div id="overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden transition-opacity duration-300 backdrop-blur-sm"></div>
 
 <nav id="sidebar" class="fixed top-0 left-0 h-full bg-white shadow-2xl w-64 p-4 flex flex-col transition-all duration-300 z-50 transform -translate-x-full md:translate-x-0 md:w-20 lg:w-64 border-r border-slate-100">
-    
+
     <div class="flex items-center justify-between border-b border-slate-50 pb-5 mb-5 px-1">
         <div class="flex items-center gap-3 px-2">
             <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-100 transition-transform hover:rotate-12">
@@ -14,14 +16,14 @@
                 <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Control Panel</span>
             </div>
         </div>
-        
+
         <button id="desktop-collapse-btn" class="hidden lg:block p-1.5 rounded-lg hover:bg-slate-50 text-slate-400 transition-all active:scale-95">
             <i class="fa-solid fa-chevron-left text-xs"></i>
         </button>
     </div>
 
     <ul class="flex flex-col flex-1 space-y-1 overflow-y-auto custom-scrollbar pr-1">
-        
+
         <li>
             <a href="{{ route('admin.dashboard') }}" class="nav-link flex items-center px-3 py-3 rounded-xl group transition-all hover:bg-indigo-50 active:bg-indigo-100">
                 <i class="fa-solid fa-house nav-icon w-6 text-center text-slate-400 group-hover:text-indigo-600 transition-colors"></i>

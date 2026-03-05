@@ -10,6 +10,7 @@
     @stack('styles')
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 antialiased">
+    @include('components.loader')
 
     <nav class="bg-white shadow-sm border-b border-gray-200">
         <div class="container mx-auto px-4">
