@@ -12,9 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([__DIR__.'/../app/Console/Commands'])
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(\App\Http\Middleware\RedisResponseCache::class);
+        // $middleware->append(\App\Http\Middleware\RedisResponseCache::class);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
-        
+
         // Register alias for sensitive rate limiter middleware
         $middleware->alias([
             'sensitive-rate-limiter' => \App\Http\Middleware\SensitiveRateLimiter::class,
