@@ -43,7 +43,7 @@
             
             {{-- Main Print Button (Defaults to Latest/Current Year) --}}
             <div class="flex gap-2">
-                <a href="{{ route('admin.students.print', $student->id) }}" target="_blank" 
+                <a href="{{ route('admin.students.print', ['student' => $student->id]) }}" target="_blank" 
                    class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center gap-2">
                     <i class="fa-solid fa-print"></i> Print Latest Record
                 </a>
@@ -128,7 +128,7 @@
 
                             {{-- SPECIFIC PRINT BUTTON FOR THIS PAST YEAR --}}
                             {{-- This sends ?sy_id=X to the controller so it prints THAT year's card --}}
-                            <a href="{{ route('admin.students.print', ['id' => $student->id, 'sy_id' => $yearId]) }}" 
+                            <a href="{{ route('admin.students.print', ['student' => $student->id, 'sy_id' => $yearId]) }}" 
                                target="_blank"
                                class="flex items-center gap-2 px-4 py-1.5 bg-slate-800 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-slate-700 transition-colors shadow-sm">
                                 <i class="fa-solid fa-print"></i> Print Card
